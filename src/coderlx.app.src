@@ -1,13 +1,8 @@
 {application, coderlx, [
-    {description, "An OTP library"},
+    {description, "Erlang wrapper for Codex JSON stream protocol"},
     {vsn, "0.1.0"},
     {registered, []},
-    {applications, [
-        kernel,
-        stdlib
-    ]},
+    {applications, [kernel, stdlib, klsn, jsone]},
     {env, []},
-    {modules, []},
-    {licenses, ["Apache-2.0"]},
-    {links, []}
- ]}.
+    {modules, [coderlx, coderlx_thread]}
+]}.
