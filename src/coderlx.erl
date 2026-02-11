@@ -217,13 +217,13 @@ default_codex_path() ->
         Dir ->
             Dir
     end,
-    klsn_binstr:from_any(filename:join([PrivDir, "codex", "codex"])).
+    klsn_binstr:from_any(filename:join([PrivDir, "codex"])).
 
 ensure_codex_path(Path) ->
-    case file:read_file_info(Path) of
-        {ok, _} ->
+    case filelib:is_file(Path) of
+        true ->
             ok;
-        {error, _} ->
+        false ->
             erlang:error({codex_not_found, Path})
     end.
 
