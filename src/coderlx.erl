@@ -123,7 +123,6 @@ start(Opts) ->
         {value, _} ->
             erlang:error({badarg, Opts})
     end,
-    ok = ensure_codex_path(CodexPath),
     Stream = klsn_bwrap:open(build_command(CodexPath, CodexArgs), #{
         bwrap => BwrapOpts
     }),
@@ -218,14 +217,6 @@ default_codex_path() ->
             Dir
     end,
     klsn_binstr:from_any(filename:join([PrivDir, "codex"])).
-
-ensure_codex_path(Path) ->
-    case filelib:is_file(Path) of
-        true ->
-            ok;
-        false ->
-            erlang:error({codex_not_found, Path})
-    end.
 
 build_command(CodexPath, CodexArgs) ->
     [CodexPath, <<"app-server">> | CodexArgs].
