@@ -1,5 +1,6 @@
 -module(coderlx).
 -include_lib("klsn/include/klsn_rule_annotation.hrl").
+-include("coderlx_parameterized_rules.hrl").
 
 %% Public functions
 -export([
@@ -53,7 +54,6 @@
 -type opts() :: klsn_rule:alias(opts).
 -type message() :: klsn_rule:alias(message).
 -type jsonrpc_error_or(Response) :: {ok, Response} | {error, klsn_rule:alias(coderlx_app_server_rules, jsonrpc_error)}.
--define(JSONRPC_ERROR_OR(ResponseRule), {any_of, [{tuple, {{exact, ok}, {alias, {coderlx_app_server_rules, ResponseRule}}}}, {tuple, {{exact, error}, {alias, {coderlx_app_server_rules, jsonrpc_error}}}}]}).
 
 -spec start(opts()) -> coderlx().
 start(#{bwrap := Bwrap}=Opts) ->
