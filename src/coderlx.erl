@@ -1,4 +1,5 @@
 -module(coderlx).
+-include_lib("klsn/include/klsn_rule_annotation.hrl").
 
 %% Public functions
 -export([
@@ -22,6 +23,7 @@
         coderlx/0
       , opts/0
       , message/0
+      , jsonrpc_error_or/1
     ]).
 
 -klsn_rule_alias([
@@ -50,6 +52,8 @@
 -opaque coderlx() :: klsn_rule:alias(coderlx).
 -type opts() :: klsn_rule:alias(opts).
 -type message() :: klsn_rule:alias(message).
+-type jsonrpc_error_or(Response) :: {ok, Response} | {error, klsn_rule:alias(coderlx_app_server_rules, jsonrpc_error)}.
+-define(JSONRPC_ERROR_OR(ResponseRule), {any_of, [{tuple, {{exact, ok}, {alias, {coderlx_app_server_rules, ResponseRule}}}}, {tuple, {{exact, error}, {alias, {coderlx_app_server_rules, jsonrpc_error}}}}]}).
 
 -spec start(opts()) -> coderlx().
 start(#{bwrap := Bwrap}=Opts) ->
@@ -65,7 +69,7 @@ start(#{bwrap := Bwrap}=Opts) ->
       , stderr => <<>>
       , pending => []
       , next_id => 1
-      , request_timeout => 1000
+      , request_timeout => 60000
     }.
 
 -spec stop(coderlx()) -> ok.
@@ -91,12 +95,20 @@ request(Method, Params, Coderlx0) ->
         next_id := Id + 1
     }}.
 
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, initialize_params}}
+      , {alias, {?MODULE, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(initialize_response)
+      , {alias, {?MODULE, coderlx}}
+    ]}).
 initialize(Params, Coderlx) ->
     request(initialize, Params, Coderlx).
 
 -spec pop_response(
         pos_integer(), coderlx()
-    ) -> {message(), coderlx()}.
+    ) -> {jsonrpc_error_or(term()), coderlx()}.
 pop_response(Id, Coderlx0) ->
     case
         pop_message(
@@ -111,7 +123,14 @@ pop_response(Id, Coderlx0) ->
         )
     of
         {{value, Resp}, Coderlx} ->
-            {Resp, Coderlx};
+            %% Return result or jsonrpc error
+            Either = case Resp of
+                #{result := Result} ->
+                    {ok, Result};
+                _ ->
+                    {error, Resp}
+            end,
+            {Either, Coderlx};
         {none, _} ->
             erlang:error(response_timeout, [Id, Coderlx0])
     end.

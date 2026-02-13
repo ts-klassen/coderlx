@@ -42,6 +42,8 @@ schema_files() ->
       , {client_notification, to_json, "ClientNotification.json"}
       , {server_request, from_json, "ServerRequest.json"}
       , {server_notification, from_json, "ServerNotification.json"}
+      , {initialize_params, to_json, "v1/InitializeParams.json"}
+      , {initialize_response, from_json, "v1/InitializeResponse.json"}
     ].
 
 schema_aliases(SchemaDir, {AliasName, Direction, FileName})

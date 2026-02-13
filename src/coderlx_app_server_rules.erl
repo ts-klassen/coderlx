@@ -3477,6 +3477,26 @@
                                    {ref,<<"SessionConfiguredNotification">>}},
                                  method =>
                                   {required,{enum,[sessionConfigured]}}}}]}}}},
+    {initialize_params, {with_defs,
+                         {#{<<"ClientInfo">> =>
+                             {struct,
+                              #{name => {required,binstr},
+                                version => {required,binstr},
+                                title =>
+                                 {optional,{any_of,[binstr,{exact,null}]}}}},
+                            <<"InitializeCapabilities">> =>
+                             {struct,
+                              #{experimentalApi =>
+                                 {optional,{default,{false,boolean}}}}}},
+                          {struct,
+                           #{capabilities =>
+                              {optional,
+                               {any_of,
+                                [{ref,<<"InitializeCapabilities">>},
+                                 {exact,null}]}},
+                             clientInfo =>
+                              {required,{ref,<<"ClientInfo">>}}}}}}},
+    {initialize_response, {struct,#{userAgent => {required,binstr}}}},
     {codex_event_notification, {with_defs,
                                 {#{<<"McpStartupStatus">> =>
                                     {any_of,
