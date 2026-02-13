@@ -44,6 +44,8 @@ schema_files() ->
       , {server_notification, from_json, "ServerNotification.json"}
       , {initialize_params, to_json, "v1/InitializeParams.json"}
       , {initialize_response, from_json, "v1/InitializeResponse.json"}
+      , {thread_start_params, to_json, "v2/ThreadStartParams.json"}
+      , {thread_start_response, from_json, "v2/ThreadStartResponse.json"}
     ].
 
 schema_aliases(SchemaDir, {AliasName, Direction, FileName})

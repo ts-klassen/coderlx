@@ -303,7 +303,8 @@ test() ->
         ]
       , codex_path => <<"/cbin/codex">>
     }),
-    {Resp, C1} = initialize(#{clientInfo => #{name => coderlx, version => <<"0.1.0">>}}, C0),
+    {R10, C10} = initialize(#{clientInfo => #{name => coderlx, version => <<"0.1.0">>}}, C0),
+    {R20, C20} = coderlx_thread:start(#{}, C10),
     timer:sleep(1000),
-    stop(C1),
-    {Resp, C1}.
+    stop(C20),
+    {[R10, R20], C20}.
