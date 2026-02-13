@@ -34,26 +34,30 @@ add_code_paths() ->
 
 schema_files() ->
     [
-        {jsonrpc_message, "JSONRPCMessage.json"},
-        {jsonrpc_request, "JSONRPCRequest.json"},
-        {jsonrpc_notification, "JSONRPCNotification.json"},
-        {jsonrpc_response, "JSONRPCResponse.json"},
-        {jsonrpc_error, "JSONRPCError.json"},
-        {client_request, "ClientRequest.json"},
-        {client_notification, "ClientNotification.json"},
-        {server_request, "ServerRequest.json"},
-        {server_notification, "ServerNotification.json"}
+        {jsonrpc_request, from_json, "JSONRPCRequest.json"}
+      , {jsonrpc_notification, from_json, "JSONRPCNotification.json"}
+      , {jsonrpc_response, from_json, "JSONRPCResponse.json"}
+      , {jsonrpc_error, from_json, "JSONRPCError.json"}
+      , {client_request, to_json, "ClientRequest.json"}
+      , {client_notification, to_json, "ClientNotification.json"}
+      , {server_request, from_json, "ServerRequest.json"}
+      , {server_notification, from_json, "ServerNotification.json"}
     ].
 
-schema_aliases(SchemaDir, {AliasBase, FileName}) ->
+schema_aliases(SchemaDir, {AliasName, Direction, FileName})
+        when Direction =:= from_json; Direction =:= to_json ->
+    Rules = schema_rules(SchemaDir, FileName),
+    Rule = maps:get(Direction, Rules),
+    [{AliasName, Rule}];
+schema_aliases(_SchemaDir, Entry) ->
+    io:format("invalid schema entry (expected {AliasName, Direction, FileName}): ~p~n", [Entry]),
+    erlang:halt(1).
+
+schema_rules(SchemaDir, FileName) ->
     SchemaPath = filename:join([SchemaDir, FileName]),
     {ok, SchemaBin} = file:read_file(SchemaPath),
     Schema = jsone:decode(SchemaBin),
-    #{from_json := FromRule, to_json := ToRule} = klsn_rule_generator:from_json_schema(Schema),
-    [
-        {list_to_atom(atom_to_list(AliasBase) ++ "_from_json"), FromRule},
-        {list_to_atom(atom_to_list(AliasBase) ++ "_to_json"), ToRule}
-    ].
+    klsn_rule_generator:from_json_schema(Schema).
 
 codex_event_notification_aliases(SchemaDir) ->
     EventSchemaPath = filename:join([SchemaDir, "EventMsg.json"]),
@@ -62,10 +66,10 @@ codex_event_notification_aliases(SchemaDir) ->
     EventTypes = event_types(EventSchema0),
     MethodEnums = [<<"codex/event/", Type/binary>> || Type <- EventTypes],
     Schema = codex_event_notification_schema(EventSchema0, MethodEnums),
-    #{from_json := FromRule, to_json := ToRule} = klsn_rule_generator:from_json_schema(Schema),
+    #{from_json := FromRule} = klsn_rule_generator:from_json_schema(Schema),
     [
-        {codex_event_notification_from_json, FromRule},
-        {codex_event_notification_to_json, ToRule}
+        {codex_event_notification, FromRule}
+        %% {codex_event_notification_to_json, ToRule}
     ].
 
 event_types(EventSchema) ->

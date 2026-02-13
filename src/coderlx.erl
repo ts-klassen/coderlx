@@ -39,11 +39,11 @@
           , codex_path => {optional, binstr}
         }}}
       , {message, {any_of, [
-            {alias, {coderlx_app_server_rules, server_request_from_json}}
-          , {alias, {coderlx_app_server_rules, codex_event_notification_from_json}}
-          , {alias, {coderlx_app_server_rules, server_notification_from_json}}
-          , {alias, {coderlx_app_server_rules, jsonrpc_response_from_json}}
-          , {alias, {coderlx_app_server_rules, jsonrpc_error_from_json}}
+            {alias, {coderlx_app_server_rules, server_request}}
+          , {alias, {coderlx_app_server_rules, codex_event_notification}}
+          , {alias, {coderlx_app_server_rules, server_notification}}
+          , {alias, {coderlx_app_server_rules, jsonrpc_response}}
+          , {alias, {coderlx_app_server_rules, jsonrpc_error}}
         ]}}
     ]).
 
@@ -82,7 +82,7 @@ request(Method, Params, Coderlx0) ->
     },
     Normalized = klsn_rule:normalize(
         Message
-      , {alias, {coderlx_app_server_rules, client_request_to_json}}
+      , {alias, {coderlx_app_server_rules, client_request}}
     ),
     JSON = klsn_binstr:from_any(jsone:encode(Normalized)),
     klsn_bwrap:send(Stream, <<JSON/binary, "\n">>),
@@ -207,24 +207,24 @@ decode_message(Line) ->
     Json = jsone:decode(Line),
     case classify_message(Json) of
         request ->
-            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, server_request_from_json}});
+            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, server_request}});
         notification ->
             case maps:get(<<"method">>, Json) of
                 <<"codex/event/", _/binary>> ->
                     klsn_rule:normalize(
                         Json,
-                        {alias, {coderlx_app_server_rules, codex_event_notification_from_json}}
+                        {alias, {coderlx_app_server_rules, codex_event_notification}}
                     );
                 _ ->
                     klsn_rule:normalize(
                         Json,
-                        {alias, {coderlx_app_server_rules, server_notification_from_json}}
+                        {alias, {coderlx_app_server_rules, server_notification}}
                     )
             end;
         response ->
-            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, jsonrpc_response_from_json}});
+            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, jsonrpc_response}});
         error ->
-            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, jsonrpc_error_from_json}});
+            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, jsonrpc_error}});
         unknown ->
             erlang:error({unknown_message, Json})
     end.

@@ -80,13 +80,13 @@
         title => {optional, binstr},
         version => {required, binstr}
     }}},
-    {server_request, {alias, {coderlx_app_server_rules, server_request_from_json}}},
-    {server_notification, {alias, {coderlx_app_server_rules, server_notification_from_json}}},
-    {codex_event_notification, {alias, {coderlx_app_server_rules, codex_event_notification_from_json}}},
-    {jsonrpc_request, {alias, {coderlx_app_server_rules, jsonrpc_request_from_json}}},
-    {jsonrpc_notification, {alias, {coderlx_app_server_rules, jsonrpc_notification_from_json}}},
-    {jsonrpc_response, {alias, {coderlx_app_server_rules, jsonrpc_response_from_json}}},
-    {jsonrpc_error, {alias, {coderlx_app_server_rules, jsonrpc_error_from_json}}},
+    {server_request, {alias, {coderlx_app_server_rules, server_request}}},
+    {server_notification, {alias, {coderlx_app_server_rules, server_notification}}},
+    {codex_event_notification, {alias, {coderlx_app_server_rules, codex_event_notification}}},
+    {jsonrpc_request, {alias, {coderlx_app_server_rules, jsonrpc_request}}},
+    {jsonrpc_notification, {alias, {coderlx_app_server_rules, jsonrpc_notification}}},
+    {jsonrpc_response, {alias, {coderlx_app_server_rules, jsonrpc_response}}},
+    {jsonrpc_error, {alias, {coderlx_app_server_rules, jsonrpc_error}}},
     {server_message, {any_of, [
         {alias, {?MODULE, server_request}},
         {alias, {?MODULE, server_notification}},
@@ -150,7 +150,7 @@ send_request(Conn0, Method, Params) when is_atom(Method) ->
         method => Method,
         params => Params
     },
-    ok = send_json(Conn1, Request, client_request_to_json),
+    ok = send_json(Conn1, Request, client_request),
     {RequestId, Conn1};
 send_request(_Conn0, Method, _Params) ->
     erlang:error({badarg, Method}).
@@ -165,7 +165,7 @@ send_notification(Conn, Method, ParamsOpt) when is_atom(Method) ->
         {value, Params} ->
             #{method => Method, params => Params}
     end,
-    ok = send_json(Conn, Notification, client_notification_to_json),
+    ok = send_json(Conn, Notification, client_notification),
     Conn;
 send_notification(_Conn, Method, _ParamsOpt) ->
     erlang:error({badarg, Method}).
@@ -274,24 +274,24 @@ decode_message(Line) ->
     Json = jsone:decode(Line),
     case classify_message(Json) of
         request ->
-            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, server_request_from_json}});
+            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, server_request}});
         notification ->
             case maps:get(<<"method">>, Json) of
                 <<"codex/event/", _/binary>> ->
                     klsn_rule:normalize(
                         Json,
-                        {alias, {coderlx_app_server_rules, codex_event_notification_from_json}}
+                        {alias, {coderlx_app_server_rules, codex_event_notification}}
                     );
                 _ ->
                     klsn_rule:normalize(
                         Json,
-                        {alias, {coderlx_app_server_rules, server_notification_from_json}}
+                        {alias, {coderlx_app_server_rules, server_notification}}
                     )
             end;
         response ->
-            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, jsonrpc_response_from_json}});
+            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, jsonrpc_response}});
         error ->
-            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, jsonrpc_error_from_json}});
+            klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, jsonrpc_error}});
         unknown ->
             erlang:error({unknown_message, Json})
     end.
