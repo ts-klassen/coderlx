@@ -1,4 +1,4 @@
--module(coderlx_SUITE).
+-module(coderlx_poc_SUITE).
 
 -include_lib("common_test/include/ct.hrl").
 -include_lib("klsn/include/klsn_rule_annotation.hrl").
@@ -28,7 +28,7 @@ simple_response_test(_Config) ->
     TimeoutMs = 60000,
     CodexPath = codex_path(),
 
-    Conn0 = coderlx:start(#{
+    Conn0 = coderlx_poc:start(#{
         bwrap => BwrapOpts,
         codex_path => CodexPath
     }),
@@ -38,9 +38,9 @@ simple_response_test(_Config) ->
         title => <<"coderlx">>,
         version => <<"0.1.0">>
     },
-    {InitRespOpt, Conn1} = coderlx:initialize(Conn0, ClientInfo, TimeoutMs),
+    {InitRespOpt, Conn1} = coderlx_poc:initialize(Conn0, ClientInfo, TimeoutMs),
     _InitResp = ensure_success(expect_opt(initialize_response, InitRespOpt)),
-    Conn2 = coderlx:initialized(Conn1),
+    Conn2 = coderlx_poc:initialized(Conn1),
 
     {ThreadId, Conn3} = start_thread(Conn2, TimeoutMs),
 
@@ -54,7 +54,7 @@ simple_response_test(_Config) ->
     {FinalResponse2, Conn7} = collect_agent_message(Conn6, ThreadId, TurnId2, TimeoutMs),
     verify_contains(FinalResponse2, <<"This is a test">>),
 
-    ok = coderlx:stop(Conn7),
+    ok = coderlx_poc:stop(Conn7),
     ok.
 
 %%--------------------------------------------------------------------
@@ -64,7 +64,7 @@ simple_response_test(_Config) ->
 codex_path() ->
     Path = case os:getenv("CODEX_PATH") of
         false ->
-            coderlx:default_codex_path();
+            coderlx_poc:default_codex_path();
         Path0 ->
             klsn_binstr:from_any(Path0)
     end,
@@ -74,8 +74,8 @@ codex_path() ->
     end.
 
 start_thread(Conn0, TimeoutMs) ->
-    {RequestId, Conn1} = coderlx:send_request(Conn0, 'thread/start', #{}),
-    {RespOpt, Conn2} = coderlx:await_response(Conn1, RequestId, TimeoutMs),
+    {RequestId, Conn1} = coderlx_poc:send_request(Conn0, 'thread/start', #{}),
+    {RespOpt, Conn2} = coderlx_poc:await_response(Conn1, RequestId, TimeoutMs),
     Response = ensure_success(expect_opt(thread_start_response, RespOpt)),
     ThreadId = lookup_required([result, <<"thread">>, <<"id">>], Response),
     {ThreadId, Conn2}.
@@ -85,8 +85,8 @@ start_turn(Conn0, ThreadId, Prompt, TimeoutMs) ->
         threadId => ThreadId,
         input => [#{type => text, text => Prompt}]
     },
-    {RequestId, Conn1} = coderlx:send_request(Conn0, 'turn/start', Params),
-    {RespOpt, Conn2} = coderlx:await_response(Conn1, RequestId, TimeoutMs),
+    {RequestId, Conn1} = coderlx_poc:send_request(Conn0, 'turn/start', Params),
+    {RespOpt, Conn2} = coderlx_poc:await_response(Conn1, RequestId, TimeoutMs),
     Response = ensure_success(expect_opt(turn_start_response, RespOpt)),
     TurnId = lookup_required([result, <<"turn">>, <<"id">>], Response),
     {TurnId, Conn2}.
@@ -103,7 +103,7 @@ collect_agent_message_loop(Conn0, ThreadId, TurnId, Acc, Deadline) ->
         false ->
             erlang:error({turn_timeout, #{thread_id => ThreadId, turn_id => TurnId}})
     end,
-    {MessageOpt, Conn1} = coderlx:recv(Conn0, RemainingMs),
+    {MessageOpt, Conn1} = coderlx_poc:recv(Conn0, RemainingMs),
     case MessageOpt of
         none ->
             erlang:error({turn_timeout, #{thread_id => ThreadId, turn_id => TurnId}});

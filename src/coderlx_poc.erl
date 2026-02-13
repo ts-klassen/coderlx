@@ -1,4 +1,4 @@
--module(coderlx).
+-module(coderlx_poc).
 -include_lib("klsn/include/klsn_rule_annotation.hrl").
 
 -export([
