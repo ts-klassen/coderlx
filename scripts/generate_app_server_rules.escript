@@ -46,6 +46,8 @@ schema_files() ->
       , {initialize_response, from_json, "v1/InitializeResponse.json"}
       , {thread_start_params, to_json, "v2/ThreadStartParams.json"}
       , {thread_start_response, from_json, "v2/ThreadStartResponse.json"}
+      , {turn_start_params, to_json, "v2/TurnStartParams.json"}
+      , {turn_start_response, from_json, "v2/TurnStartResponse.json"}
     ].
 
 schema_aliases(SchemaDir, {AliasName, Direction, FileName})

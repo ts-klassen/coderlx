@@ -305,6 +305,12 @@ test() ->
     }),
     {R10, C10} = initialize(#{clientInfo => #{name => coderlx, version => <<"0.1.0">>}}, C0),
     {R20, C20} = coderlx_thread:start(#{}, C10),
+    {ok, #{thread := #{id := ThreadId}}} = R20,
+    TurnParams = #{
+        threadId => ThreadId,
+        input => [#{type => text, text => <<"Say this is a test">>}]
+    },
+    {R30, C30} = coderlx_turn:start(TurnParams, C20),
     timer:sleep(1000),
-    stop(C20),
-    {[R10, R20], C20}.
+    stop(C30),
+    {[R10, R20, R30], C30}.
