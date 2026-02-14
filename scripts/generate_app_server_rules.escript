@@ -70,13 +70,23 @@ codex_event_notification_aliases(SchemaDir) ->
     {ok, EventSchemaBin} = file:read_file(EventSchemaPath),
     EventSchema0 = jsone:decode(EventSchemaBin),
     EventTypes = event_types(EventSchema0),
-    MethodEnums = [<<"codex/event/", Type/binary>> || Type <- EventTypes],
-    Schema = codex_event_notification_schema(EventSchema0, MethodEnums),
-    #{from_json := FromRule} = klsn_rule_generator:from_json_schema(Schema),
+    Methods = lists:map(fun(Type) ->
+        binary_to_atom(<<"codex/event/", Type/binary>>)
+    end, EventTypes),
+    #{from_json := Msg} = klsn_rule_generator:from_json_schema(EventSchema0),
     [
-        {codex_event_notification, FromRule}
-        %% {codex_event_notification_to_json, ToRule}
+        {codex_event_notification, codex_event_notification_rule_(Methods, Msg)}
     ].
+
+codex_event_notification_rule_(Methods, Msg) ->
+    {struct, #{
+        method => {required, {enum, Methods}}
+      , params => {required, {struct, #{
+            conversationId => {required, binstr}
+          , id => {required, binstr}
+          , msg => {required, Msg}
+        }}}
+    }}.
 
 event_types(EventSchema) ->
     OneOf = maps:get(<<"oneOf">>, EventSchema, []),
@@ -89,46 +99,6 @@ event_type_from_entry(Entry) ->
     case maps:get(<<"enum">>, TypeProp, []) of
         [] -> [];
         Enums when is_list(Enums) -> Enums
-    end.
-
-codex_event_notification_schema(EventSchema0, MethodEnums) ->
-    EventSchema = maps:remove(<<"$schema">>, EventSchema0),
-    Definitions = maps:get(<<"definitions">>, EventSchema, #{}),
-    EventDefinition = maps:remove(<<"definitions">>, EventSchema),
-    EventPayload = event_payload_schema(EventDefinition),
-    #{
-        <<"type">> => <<"object">>,
-        <<"required">> => [<<"method">>, <<"params">>],
-        <<"properties">> => #{
-            <<"method">> => #{
-                <<"type">> => <<"string">>,
-                <<"enum">> => MethodEnums
-            },
-            <<"params">> => #{
-                <<"$ref">> => <<"#/definitions/EventMsgPayload">>
-            }
-        },
-        <<"definitions">> => Definitions#{
-            <<"EventMsg">> => EventDefinition,
-            <<"EventMsgPayload">> => EventPayload
-        }
-    }.
-
-event_payload_schema(EventSchema) ->
-    OneOf = maps:get(<<"oneOf">>, EventSchema, []),
-    PayloadOneOf = [strip_event_type(Entry) || Entry <- OneOf],
-    EventSchema#{<<"oneOf">> => PayloadOneOf}.
-
-strip_event_type(Entry) ->
-    Properties0 = maps:get(<<"properties">>, Entry, #{}),
-    Properties = maps:remove(<<"type">>, Properties0),
-    Entry1 = Entry#{<<"properties">> => Properties},
-    case maps:get(<<"required">>, Entry1, none) of
-        none ->
-            Entry1;
-        Required0 when is_list(Required0) ->
-            Required = [Field || Field <- Required0, Field =/= <<"type">>],
-            Entry1#{<<"required">> => Required}
     end.
 
 write_module(OutPath, Aliases) ->

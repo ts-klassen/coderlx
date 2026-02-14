@@ -6,6 +6,9 @@
 -export([
         start/1
       , stop/1
+      , initialize/2
+      , consume/3
+      , consume/4
       , default_codex_path/0
     ]).
 
@@ -25,6 +28,8 @@
       , opts/0
       , message/0
       , jsonrpc_error_or/1
+      , message_filter/0
+      , consumer/1
     ]).
 
 -klsn_rule_alias([
@@ -36,6 +41,7 @@
           , pending => {required, {list, term}}
           , next_id => {required, {range, {0, '<', integer}}}
           , request_timeout => {required, timeout}
+          , consume_timeout => {required, timeout}
         }}}
       , {opts, {struct, #{
             bwrap => {required, term}
@@ -54,6 +60,14 @@
 -type opts() :: klsn_rule:alias(opts).
 -type message() :: klsn_rule:alias(message).
 -type jsonrpc_error_or(Response) :: {ok, Response} | {error, klsn_rule:alias(coderlx_app_server_rules, jsonrpc_error)}.
+-type message_filter() :: fun((message()) -> boolean()).
+-type consumer(Acc) :: fun(
+                           ({request|notification, message()}|timeout, Acc) ->
+                               %% only valid for request
+                               {reply, term(), {continue|break, Acc}}
+                               %% notification and timeout return
+                             | {noreply, {continue|break, Acc}}
+                       ).
 
 -spec start(opts()) -> coderlx().
 start(#{bwrap := Bwrap}=Opts) ->
@@ -70,11 +84,55 @@ start(#{bwrap := Bwrap}=Opts) ->
       , pending => []
       , next_id => 1
       , request_timeout => 60000
+      , consume_timeout => 60000
     }.
 
 -spec stop(coderlx()) -> ok.
 stop(#{stream := Stream}) ->
     klsn_bwrap:stop(Stream).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, initialize_params}}
+      , {alias, {?MODULE, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(initialize_response)
+      , {alias, {?MODULE, coderlx}}
+    ]}).
+initialize(Params, Coderlx) ->
+    request(initialize, Params, Coderlx).
+
+-spec consume(consumer(Acc), Acc, coderlx()) -> {Acc, coderlx()}.
+consume(Consumer, Acc, Coderlx) ->
+    consume(Consumer, Acc, fun(_)-> true end, Coderlx).
+
+-spec consume(
+        consumer(Acc), Acc, message_filter(), coderlx()
+    ) -> {Acc, coderlx()}.
+consume(Consumer, Acc0, Filter, Coderlx0) ->
+    Timeout = maps:get(consume_timeout, Coderlx0),
+    {MaybeMessage, Coderlx} = pop_message(Filter, Timeout, Coderlx0),
+    Consumed = case MaybeMessage of
+        none ->
+            {noreply, Consumed0} = Consumer(timeout, Acc0),
+            Consumed0;
+        {value, Request = #{id := Id}} ->
+            {reply, Resp, Consumed0} = Consumer({request, Request}, Acc0),
+            %% TODO: respond
+            %% respond(Resp#{id => Id})
+            error(unimplemented),
+            Consumed0;
+        {value, Notification} ->
+            {noreply, Consumed0} = Consumer({notification, Notification}, Acc0),
+            Consumed0
+    end,
+    case Consumed of
+        {continue, Acc} ->
+            consume(Consumer, Acc, Filter, Coderlx);
+        {break, Acc} ->
+            {Acc, Coderlx}
+    end.
+
 
 request(Method, Params, Coderlx0) ->
     Id = maps:get(next_id, Coderlx0),
@@ -94,17 +152,6 @@ request(Method, Params, Coderlx0) ->
     {Response, Coderlx#{
         next_id := Id + 1
     }}.
-
--klsn_input_rule([
-        {alias, {coderlx_app_server_rules, initialize_params}}
-      , {alias, {?MODULE, coderlx}}
-    ]).
--klsn_output_rule({tuple, [
-        ?JSONRPC_ERROR_OR(initialize_response)
-      , {alias, {?MODULE, coderlx}}
-    ]}).
-initialize(Params, Coderlx) ->
-    request(initialize, Params, Coderlx).
 
 -spec pop_response(
         pos_integer(), coderlx()
@@ -137,14 +184,14 @@ pop_response(Id, Coderlx0) ->
 
 
 -spec pop_message(
-        fun((message()) -> boolean())
+        message_filter()
       , timeout()
       , coderlx()
     ) -> {klsn:optnl(message()), coderlx()}.
 pop_message(IsTarget, Timeout, Coderlx0) ->
     StartTime = erlang:monotonic_time(millisecond),
     Coderlx10 = dump_stream(Coderlx0),
-    Coderlx20 = consume_buffer(Coderlx10),
+    Coderlx20 = decode_buffer(Coderlx10),
     Pending0 = maps:get(pending, Coderlx20),
     case pop_matching_message_(IsTarget, Pending0, []) of
         {value, {Message, Pending}} ->
@@ -201,7 +248,7 @@ receive_stream(Timeout, Coderlx = #{stream := #{os_pid := OsPid}, buffer := StdO
         none
     end.
 
-consume_buffer(Coderlx = #{ buffer := Data, pending := Pending}) ->
+decode_buffer(Coderlx = #{ buffer := Data, pending := Pending}) ->
     Parts = binary:split(Data, <<"\n">>, [global]),
     {RevLines, Rest} = case lists:reverse(Parts) of
         [] ->
@@ -311,6 +358,13 @@ test() ->
         input => [#{type => text, text => <<"Say this is a test">>}]
     },
     {R30, C30} = coderlx_turn:start(TurnParams, C20),
-    timer:sleep(1000),
-    stop(C30),
-    {[R10, R20, R30], C30}.
+    {R40, C40} = consume(fun
+        (Msg = {notification, #{method := 'turn/completed'}}, _) ->
+            {noreply, {break, Msg}};
+        (Msg, Acc0) ->
+            io:format("ignored message:~n    ~p~n", [Msg]),
+            {noreply, {continue, Acc0}}
+    end, [], C30),
+    {none, C} = pop_message(fun(_)->false end, 0, C40),
+    stop(C),
+    {[R10, R20, R30, R40], C}.
