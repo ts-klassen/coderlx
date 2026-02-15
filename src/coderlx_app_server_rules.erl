@@ -3477,6 +3477,218 @@
                                    {ref,<<"SessionConfiguredNotification">>}},
                                  method =>
                                   {required,{enum,[sessionConfigured]}}}}]}}}},
+    {command_execution_request_approval_params, {with_defs,
+                                                 {#{<<"CommandAction">> =>
+                                                     {any_of,
+                                                      [{struct,
+                                                        #{command =>
+                                                           {required,binstr},
+                                                          name =>
+                                                           {required,binstr},
+                                                          type =>
+                                                           {required,
+                                                            {enum,[read]}},
+                                                          path =>
+                                                           {required,binstr}}},
+                                                       {struct,
+                                                        #{command =>
+                                                           {required,binstr},
+                                                          type =>
+                                                           {required,
+                                                            {enum,
+                                                             [listFiles]}},
+                                                          path =>
+                                                           {optional,
+                                                            {any_of,
+                                                             [binstr,
+                                                              {exact,
+                                                               null}]}}}},
+                                                       {struct,
+                                                        #{command =>
+                                                           {required,binstr},
+                                                          type =>
+                                                           {required,
+                                                            {enum,[search]}},
+                                                          path =>
+                                                           {optional,
+                                                            {any_of,
+                                                             [binstr,
+                                                              {exact,null}]}},
+                                                          query =>
+                                                           {optional,
+                                                            {any_of,
+                                                             [binstr,
+                                                              {exact,
+                                                               null}]}}}},
+                                                       {struct,
+                                                        #{command =>
+                                                           {required,binstr},
+                                                          type =>
+                                                           {required,
+                                                            {enum,
+                                                             [unknown]}}}}]}},
+                                                  {struct,
+                                                   #{command =>
+                                                      {optional,
+                                                       {any_of,
+                                                        [binstr,
+                                                         {exact,null}]}},
+                                                     reason =>
+                                                      {optional,
+                                                       {any_of,
+                                                        [binstr,
+                                                         {exact,null}]}},
+                                                     cwd =>
+                                                      {optional,
+                                                       {any_of,
+                                                        [binstr,
+                                                         {exact,null}]}},
+                                                     threadId =>
+                                                      {required,binstr},
+                                                     turnId =>
+                                                      {required,binstr},
+                                                     commandActions =>
+                                                      {optional,
+                                                       {any_of,
+                                                        [{list,
+                                                          {ref,
+                                                           <<"CommandAction">>}},
+                                                         {exact,null}]}},
+                                                     itemId =>
+                                                      {required,binstr},
+                                                     proposedExecpolicyAmendment =>
+                                                      {optional,
+                                                       {any_of,
+                                                        [{list,binstr},
+                                                         {exact,null}]}}}}}}},
+    {command_execution_request_approval_response, {with_defs,
+                                                   {#{<<"CommandExecutionApprovalDecision">> =>
+                                                       {any_of,
+                                                        [{enum,[accept]},
+                                                         {enum,
+                                                          [acceptForSession]},
+                                                         {struct,
+                                                          #{acceptWithExecpolicyAmendment =>
+                                                             {required,
+                                                              {struct,
+                                                               #{execpolicy_amendment =>
+                                                                  {required,
+                                                                   {list,
+                                                                    binstr}}}}}}},
+                                                         {enum,[decline]},
+                                                         {enum,[cancel]}]}},
+                                                    {struct,
+                                                     #{decision =>
+                                                        {required,
+                                                         {ref,
+                                                          <<"CommandExecutionApprovalDecision">>}}}}}}},
+    {file_change_request_approval_params, {struct,
+                                           #{reason =>
+                                              {optional,
+                                               {any_of,[binstr,{exact,null}]}},
+                                             threadId => {required,binstr},
+                                             turnId => {required,binstr},
+                                             grantRoot =>
+                                              {optional,
+                                               {any_of,[binstr,{exact,null}]}},
+                                             itemId => {required,binstr}}}},
+    {file_change_request_approval_response, {with_defs,
+                                             {#{<<"FileChangeApprovalDecision">> =>
+                                                 {any_of,
+                                                  [{enum,[accept]},
+                                                   {enum,[acceptForSession]},
+                                                   {enum,[decline]},
+                                                   {enum,[cancel]}]}},
+                                              {struct,
+                                               #{decision =>
+                                                  {required,
+                                                   {ref,
+                                                    <<"FileChangeApprovalDecision">>}}}}}}},
+    {tool_request_user_input_params, {with_defs,
+                                      {#{<<"ToolRequestUserInputOption">> =>
+                                          {struct,
+                                           #{label => {required,binstr},
+                                             description =>
+                                              {required,binstr}}},
+                                         <<"ToolRequestUserInputQuestion">> =>
+                                          {struct,
+                                           #{id => {required,binstr},
+                                             header => {required,binstr},
+                                             options =>
+                                              {optional,
+                                               {any_of,
+                                                [{list,
+                                                  {ref,
+                                                   <<"ToolRequestUserInputOption">>}},
+                                                 {exact,null}]}},
+                                             question => {required,binstr},
+                                             isOther =>
+                                              {optional,
+                                               {default,{false,boolean}}},
+                                             isSecret =>
+                                              {optional,
+                                               {default,{false,boolean}}}}}},
+                                       {struct,
+                                        #{threadId => {required,binstr},
+                                          turnId => {required,binstr},
+                                          itemId => {required,binstr},
+                                          questions =>
+                                           {required,
+                                            {list,
+                                             {ref,
+                                              <<"ToolRequestUserInputQuestion">>}}}}}}}},
+    {tool_request_user_input_response, {with_defs,
+                                        {#{<<"ToolRequestUserInputAnswer">> =>
+                                            {struct,
+                                             #{answers =>
+                                                {required,{list,binstr}}}}},
+                                         {struct,
+                                          #{answers =>
+                                             {required,
+                                              {map,
+                                               {binstr,
+                                                {ref,
+                                                 <<"ToolRequestUserInputAnswer">>}}}}}}}}},
+    {dynamic_tool_call_params, {struct,
+                                   #{arguments => {required,term},
+                                     threadId => {required,binstr},
+                                     turnId => {required,binstr},
+                                     callId => {required,binstr},
+                                     tool => {required,binstr}}}},
+    {dynamic_tool_call_response, {with_defs,
+                                  {#{<<"DynamicToolCallOutputContentItem">> =>
+                                      {any_of,
+                                       [{struct,
+                                         #{type =>
+                                            {required,{enum,[inputText]}},
+                                           text => {required,binstr}}},
+                                        {struct,
+                                         #{type =>
+                                            {required,{enum,[inputImage]}},
+                                           imageUrl => {required,binstr}}}]}},
+                                   {struct,
+                                    #{success => {required,boolean},
+                                      contentItems =>
+                                       {required,
+                                        {list,
+                                         {ref,
+                                          <<"DynamicToolCallOutputContentItem">>}}}}}}}},
+    {chatgpt_auth_tokens_refresh_params, {with_defs,
+                                          {#{<<"ChatgptAuthTokensRefreshReason">> =>
+                                              {any_of,
+                                               [{enum,[unauthorized]}]}},
+                                           {struct,
+                                            #{reason =>
+                                               {required,
+                                                {ref,
+                                                 <<"ChatgptAuthTokensRefreshReason">>}},
+                                              previousAccountId =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}}}}}}},
+    {chatgpt_auth_tokens_refresh_response, {struct,
+                                            #{accessToken => {required,binstr},
+                                              idToken => {required,binstr}}}},
     {initialize_params, {with_defs,
                          {#{<<"ClientInfo">> =>
                              {struct,
