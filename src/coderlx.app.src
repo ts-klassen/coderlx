@@ -4,5 +4,5 @@
     {registered, []},
     {applications, [kernel, stdlib, klsn, jsone]},
     {env, []},
-    {modules, [coderlx_poc, coderlx_app_server_rules]}
+    {modules, [coderlx, coderlx_thread, coderlx_turn, coderlx_opts_builder, coderlx_app_server_rules]}
 ]}.

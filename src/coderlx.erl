@@ -465,44 +465,14 @@ default_codex_path() ->
 
 
 test() ->
-    C0 = start(#{
-        bwrap => [
-            {tmpfs, <<"/">>}
-          , {proc, <<"/proc">>}
-          , {dev, <<"/dev">>}
-          , {dir, <<"/tmp">>}
-          , share_net
-          , new_session
-          , die_with_parent
-          , clearenv
-          , {setenv, <<"HOME">>, <<"/home/codex">>}
-          , {setenv, <<"USER">>, <<"codex">>}
-          , {setenv, <<"LOGNAME">>, <<"codex">>}
-          , {setenv, <<"PATH">>, <<"/cbin:/usr/bin:/bin">>}
-          , {setenv, <<"SHELL">>, <<"/bin/bash">>}
-          , {setenv, <<"TMPDIR">>, <<"/tmp">>}
-          , {dir, <<"/home">>}
-          , {dir, <<"/home/codex">>}
-          , {dir, <<"/home/codex/work">>}
-          , {ro_bind, <<"/usr">>, <<"/usr">>}
-          , {ro_bind, <<"/bin">>, <<"/bin">>}
-          , {ro_bind, <<"/lib">>, <<"/lib">>}
-          , {ro_bind, <<"/lib64">>, <<"/lib64">>}
-          , {ro_bind, <<"/etc">>, <<"/etc">>}
-          , {ro_bind, <<"/run">>, <<"/run">>}
-          , {ro_bind, <<"/sys">>, <<"/sys">>}
-          , {ro_bind, default_codex_path(), <<"/cbin/codex">>}
-          , {bind, <<"/home/codex/.codex">>, <<"/home/codex/.codex">>}
-        ]
-      , codex_path => <<"/cbin/codex">>
-    }),
+    C0 = start(coderlx_opts_builder:sandbox(#{})),
     {R10, C10} = initialize(#{clientInfo => #{name => coderlx, version => <<"0.1.0">>}}, C0),
     {R20, C20} = coderlx_thread:start(#{}, C10),
     {ok, #{thread := #{id := ThreadId}}} = R20,
     TurnParams = #{
         threadId => ThreadId,
       % input => [#{type => text, text => <<"Say this is a test">>}]
-        input => [#{type => text, text => <<"Create hello.txt with hello world">>}]
+        input => [#{type => text, text => <<"Create hello.txt with hello world. Tell me the exact path you created the file.">>}]
     },
     {R30, C30} = coderlx_turn:start(TurnParams, C20),
     {R40, C40} = consume(fun
