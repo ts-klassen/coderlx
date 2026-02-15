@@ -12,10 +12,12 @@
       , default_codex_path/0
     ]).
 
-%% Internal functions
+%% Low level api
 -export([
         request/3
       , pop_message/3
+      , respond_ok/3
+      , respond_error/4
     ]).
 
 %% Temporary test functions for dev
@@ -29,7 +31,12 @@
       , message/0
       , jsonrpc_error_or/1
       , message_filter/0
+      , consumer_entry/0
       , consumer/1
+      , server_request_method/0
+      , server_request_param/0
+      , server_request_response/0
+      , respond_error_reason/0
     ]).
 
 -klsn_rule_alias([
@@ -61,13 +68,36 @@
 -type message() :: klsn_rule:alias(message).
 -type jsonrpc_error_or(Response) :: {ok, Response} | {error, klsn_rule:alias(coderlx_app_server_rules, jsonrpc_error)}.
 -type message_filter() :: fun((message()) -> boolean()).
+-type consumer_entry() :: {request, server_request_method(), server_request_param()}
+                        | {notification, message()}
+                        | timeout
+                        .
 -type consumer(Acc) :: fun(
-                           ({request|notification, message()}|timeout, Acc) ->
+                           (consumer_entry(), Acc) ->
                                %% only valid for request
-                               {reply, term(), {continue|break, Acc}}
+                               {reply, {ok, server_request_response()} | error | {error, term()}, {continue|break, Acc}}
                                %% notification and timeout return
                              | {noreply, {continue|break, Acc}}
                        ).
+-type server_request_method() :: 'item/commandExecution/requestApproval'
+                               | 'item/fileChange/requestApproval'
+                               | 'item/tool/requestUserInput'
+                               | 'item/tool/call'
+                               | 'account/chatgptAuthTokens/refresh'
+                               .
+-type server_request_param() :: klsn:rule(coderlx_app_server_rules, command_execution_request_approval_params)
+                              | klsn:rule(coderlx_app_server_rules, file_change_request_approval_params)
+                              | klsn:rule(coderlx_app_server_rules, tool_request_user_input_params)
+                              | klsn:rule(coderlx_app_server_rules, dynamic_tool_call_params)
+                              | klsn:rule(coderlx_app_server_rules, chatgpt_auth_tokens_refresh_params)
+                              .
+-type server_request_response() :: klsn:rule(coderlx_app_server_rules, command_execution_request_approval_response)
+                                 | klsn:rule(coderlx_app_server_rules, file_change_request_approval_response)
+                                 | klsn:rule(coderlx_app_server_rules, tool_request_user_input_response)
+                                 | klsn:rule(coderlx_app_server_rules, dynamic_tool_call_response)
+                                 | klsn:rule(coderlx_app_server_rules, chatgpt_auth_tokens_refresh_response)
+                                 .
+-type respond_error_reason() :: unsupported | unhandled | consumer_error.
 
 -spec start(opts()) -> coderlx().
 start(#{bwrap := Bwrap}=Opts) ->
@@ -116,12 +146,31 @@ consume(Consumer, Acc0, Filter, Coderlx0) ->
         none ->
             {noreply, Consumed0} = Consumer(timeout, Acc0),
             Consumed0;
-        {value, Request = #{id := Id}} ->
-            {reply, Resp, Consumed0} = Consumer({request, Request}, Acc0),
-            %% TODO: respond
-            %% respond(Resp#{id => Id})
-            error(unimplemented),
-            Consumed0;
+        {value, Request = #{id := Id, method := Method}} ->
+            case server_request_rule_(Request) of
+                none ->
+                    respond_error(Id, unsupported, #{}, Coderlx),
+                    {continue, Acc0};
+                {value, {ParamRuleAlias, ResponseRuleAlias}} ->
+                    ParamRule = {alias, {coderlx_app_server_rules, ParamRuleAlias}},
+                    ResponseRule = {alias, {coderlx_app_server_rules, ResponseRuleAlias}},
+                    Param = klsn_rule:normalize(maps:get(params, Request), ParamRule),
+                    case Consumer({request, Method, Param}, Acc0) of
+                        {noreply, Consumed0} ->
+                            respond_error(Id, unhandled, #{}, Coderlx),
+                            Consumed0;
+                        {reply, error, Consumed0} ->
+                            respond_error(Id, consumer_error, #{}, Coderlx),
+                            Consumed0;
+                        {reply, {error, Reason}, Consumed0} ->
+                            respond_error(Id, consumer_error, Reason, Coderlx),
+                            Consumed0;
+                        {reply, {ok, Response0}, Consumed0} ->
+                            Response = klsn_rule:normalize(Response0, ResponseRule),
+                            respond_ok(Id, Response, Coderlx),
+                            Consumed0
+                    end
+            end;
         {value, Notification} ->
             {noreply, Consumed0} = Consumer({notification, Notification}, Acc0),
             Consumed0
@@ -132,6 +181,45 @@ consume(Consumer, Acc0, Filter, Coderlx0) ->
         {break, Acc} ->
             {Acc, Coderlx}
     end.
+
+
+-spec respond_error(
+        klsn:binstr(), respond_error_reason(), term(), coderlx()
+    ) -> ok.
+respond_error(Id, ReasonEnum, ReasonTerm, #{stream:=Stream}) ->
+    {Code, Msg} = case ReasonEnum of
+        unsupported ->
+            {-32601, <<"unsupported: Method is not supported by github.com/ts-klassen/coderlx.">>};
+        consumer_error ->
+            {-32000, <<"consumer_error:  Method is supported by github.com/ts-klassen/coderlx, but the consumer returned an error.">>};
+        unhandled ->
+            {-32001, <<"unhandled: Method is supported by github.com/ts-klassen/coderlx, but the consumer did not handle the request.">>};
+        _ ->
+            {-32603, <<"_: coderlx:respond_error/3 called with invalid reason.">>}
+    end,
+    Response = #{
+        id => Id
+      , error => #{
+            code => Code
+          , message => Msg
+          , data => ReasonTerm
+        }
+    },
+    JSON = klsn_binstr:from_any(jsone:encode(Response)),
+    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>),
+    ok.
+
+
+-spec respond_ok(klsn:binstr(), server_request_response(), coderlx()) -> ok.
+respond_ok(Id, Result, #{stream:=Stream}) ->
+    Response = #{
+        id => Id
+      , result => Result
+    },
+    JSON = klsn_binstr:from_any(jsone:encode(Response)),
+    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>),
+    ok.
+
 
 
 request(Method, Params, Coderlx0) ->
@@ -310,6 +398,64 @@ classify_message(Json) when is_map(Json) ->
 classify_message(_) ->
     unknown.
 
+-spec server_request_rule_(message()) -> klsn:optnl(
+        {command_execution_request_approval_params
+        ,command_execution_request_approval_response}
+      | {file_change_request_approval_params
+        ,file_change_request_approval_response}
+      | {tool_request_user_input_params
+        ,tool_request_user_input_response}
+      | {dynamic_tool_call_params
+        ,dynamic_tool_call_response}
+      | {chatgpt_auth_tokens_refresh_params
+        ,chatgpt_auth_tokens_refresh_response}
+    ).
+server_request_rule_(#{method := 'item/commandExecution/requestApproval'}) ->
+    {value, {
+        %% CommandExecutionRequestApprovalParams.json
+        command_execution_request_approval_params
+        %% CommandExecutionRequestApprovalResponse.json
+      , command_execution_request_approval_response
+    }};
+server_request_rule_(#{method := 'item/fileChange/requestApproval'}) ->
+    {value, {
+        %% FileChangeRequestApprovalParams.json
+        file_change_request_approval_params
+        %% FileChangeRequestApprovalResponse.json
+      , file_change_request_approval_response
+    }};
+server_request_rule_(#{method := 'item/tool/requestUserInput'}) ->
+    {value, {
+        %% ToolRequestUserInputParams.json
+        tool_request_user_input_params
+        %% ToolRequestUserInputResponse.json
+      , tool_request_user_input_response
+    }};
+server_request_rule_(#{method := 'item/tool/call'}) ->
+    {value, {
+        %% DynamicToolCallParams.json
+        dynamic_tool_call_params
+        %% DynamicToolCallResponse.json
+      , dynamic_tool_call_response
+    }};
+server_request_rule_(#{method := 'account/chatgptAuthTokens/refresh'}) ->
+    {value, {
+        %% ChatgptAuthTokensRefreshParams.json
+        chatgpt_auth_tokens_refresh_params
+        %% ChatgptAuthTokensRefreshResponse.json
+      , chatgpt_auth_tokens_refresh_response
+    }};
+%% Try to keep up to date with new methods. Add them above this comment.
+%% Update these types if you add more.
+%% -type server_request_method()
+%% -type server_request_param()
+%% -type server_request_response()
+%% We NEVER support legacy methods like:
+%%  - applyPatchApproval
+%%  - execCommandApproval
+server_request_rule_(_) ->
+    none.
+
 -spec default_codex_path() -> klsn:binstr().
 default_codex_path() ->
     klsn_binstr:from_any(filename:join([
@@ -355,10 +501,17 @@ test() ->
     {ok, #{thread := #{id := ThreadId}}} = R20,
     TurnParams = #{
         threadId => ThreadId,
-        input => [#{type => text, text => <<"Say this is a test">>}]
+      % input => [#{type => text, text => <<"Say this is a test">>}]
+        input => [#{type => text, text => <<"Create hello.txt with hello world">>}]
     },
     {R30, C30} = coderlx_turn:start(TurnParams, C20),
     {R40, C40} = consume(fun
+        (Msg = {request, 'item/commandExecution/requestApproval', _}, Acc0) ->
+            io:format("approved:~n    ~p~n", [Msg]),
+            Result = #{
+                decision => accept
+            },
+            {reply, {ok, Result}, {continue, Acc0}};
         (Msg = {notification, #{method := 'turn/completed'}}, _) ->
             {noreply, {break, Msg}};
         (Msg, Acc0) ->

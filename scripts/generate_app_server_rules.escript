@@ -42,6 +42,24 @@ schema_files() ->
       , {client_notification, to_json, "ClientNotification.json"}
       , {server_request, from_json, "ServerRequest.json"}
       , {server_notification, from_json, "ServerNotification.json"}
+      , {command_execution_request_approval_params, from_json,
+            "CommandExecutionRequestApprovalParams.json"}
+      , {command_execution_request_approval_response, to_json,
+            "CommandExecutionRequestApprovalResponse.json"}
+      , {file_change_request_approval_params, from_json,
+            "FileChangeRequestApprovalParams.json"}
+      , {file_change_request_approval_response, to_json,
+            "FileChangeRequestApprovalResponse.json"}
+      , {tool_request_user_input_params, from_json,
+            "ToolRequestUserInputParams.json"}
+      , {tool_request_user_input_response, to_json,
+            "ToolRequestUserInputResponse.json"}
+      , {dynamic_tool_call_params, from_json, "DynamicToolCallParams.json"}
+      , {dynamic_tool_call_response, to_json, "DynamicToolCallResponse.json"}
+      , {chatgpt_auth_tokens_refresh_params, from_json,
+            "ChatgptAuthTokensRefreshParams.json"}
+      , {chatgpt_auth_tokens_refresh_response, to_json,
+            "ChatgptAuthTokensRefreshResponse.json"}
       , {initialize_params, to_json, "v1/InitializeParams.json"}
       , {initialize_response, from_json, "v1/InitializeResponse.json"}
       , {thread_start_params, to_json, "v2/ThreadStartParams.json"}
