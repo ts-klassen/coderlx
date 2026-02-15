@@ -4,5 +4,19 @@
     {registered, []},
     {applications, [kernel, stdlib, klsn, jsone]},
     {env, []},
-    {modules, [coderlx, coderlx_thread, coderlx_turn, coderlx_opts_builder, coderlx_app_server_rules]}
+    {modules, [
+        coderlx
+      , coderlx_account
+      , coderlx_app_server_rules
+      , coderlx_apps
+      , coderlx_command
+      , coderlx_config
+      , coderlx_mcp
+      , coderlx_model
+      , coderlx_opts_builder
+      , coderlx_review
+      , coderlx_skills
+      , coderlx_thread
+      , coderlx_turn
+    ]}
 ]}.
