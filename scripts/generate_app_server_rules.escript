@@ -66,6 +66,63 @@ schema_files() ->
       , {thread_start_response, from_json, "v2/ThreadStartResponse.json"}
       , {turn_start_params, to_json, "v2/TurnStartParams.json"}
       , {turn_start_response, from_json, "v2/TurnStartResponse.json"}
+      , {turn_steer_params, to_json, "v2/TurnSteerParams.json"}
+      , {turn_steer_response, from_json, "v2/TurnSteerResponse.json"}
+      , {turn_interrupt_params, to_json, "v2/TurnInterruptParams.json"}
+      , {turn_interrupt_response, from_json, "v2/TurnInterruptResponse.json"}
+      , {thread_resume_params, to_json, "v2/ThreadResumeParams.json"}
+      , {thread_resume_response, from_json, "v2/ThreadResumeResponse.json"}
+      , {thread_fork_params, to_json, "v2/ThreadForkParams.json"}
+      , {thread_fork_response, from_json, "v2/ThreadForkResponse.json"}
+      , {thread_list_params, to_json, "v2/ThreadListParams.json"}
+      , {thread_list_response, from_json, "v2/ThreadListResponse.json"}
+      , {thread_loaded_list_params, to_json, "v2/ThreadLoadedListParams.json"}
+      , {thread_loaded_list_response, from_json, "v2/ThreadLoadedListResponse.json"}
+      , {thread_read_params, to_json, "v2/ThreadReadParams.json"}
+      , {thread_read_response, from_json, "v2/ThreadReadResponse.json"}
+      , {thread_archive_params, to_json, "v2/ThreadArchiveParams.json"}
+      , {thread_archive_response, from_json, "v2/ThreadArchiveResponse.json"}
+      , {thread_set_name_params, to_json, "v2/ThreadSetNameParams.json"}
+      , {thread_set_name_response, from_json, "v2/ThreadSetNameResponse.json"}
+      , {thread_unarchive_params, to_json, "v2/ThreadUnarchiveParams.json"}
+      , {thread_unarchive_response, from_json, "v2/ThreadUnarchiveResponse.json"}
+      , {thread_compact_start_params, to_json, "v2/ThreadCompactStartParams.json"}
+      , {thread_compact_start_response, from_json, "v2/ThreadCompactStartResponse.json"}
+      , {thread_rollback_params, to_json, "v2/ThreadRollbackParams.json"}
+      , {thread_rollback_response, from_json, "v2/ThreadRollbackResponse.json"}
+      , {review_start_params, to_json, "v2/ReviewStartParams.json"}
+      , {review_start_response, from_json, "v2/ReviewStartResponse.json"}
+      , {command_exec_params, to_json, "v2/CommandExecParams.json"}
+      , {command_exec_response, from_json, "v2/CommandExecResponse.json"}
+      , {model_list_params, to_json, "v2/ModelListParams.json"}
+      , {model_list_response, from_json, "v2/ModelListResponse.json"}
+      , {skills_list_params, to_json, "v2/SkillsListParams.json"}
+      , {skills_list_response, from_json, "v2/SkillsListResponse.json"}
+      , {skills_config_write_params, to_json, "v2/SkillsConfigWriteParams.json"}
+      , {skills_config_write_response, from_json,
+            "v2/SkillsConfigWriteResponse.json"}
+      , {apps_list_params, to_json, "v2/AppsListParams.json"}
+      , {apps_list_response, from_json, "v2/AppsListResponse.json"}
+      , {mcp_server_oauth_login_params, to_json, "v2/McpServerOauthLoginParams.json"}
+      , {mcp_server_oauth_login_response, from_json, "v2/McpServerOauthLoginResponse.json"}
+      , {mcp_server_status_list_params, to_json, "v2/ListMcpServerStatusParams.json"}
+      , {mcp_server_status_list_response, from_json, "v2/ListMcpServerStatusResponse.json"}
+      , {config_read_params, to_json, "v2/ConfigReadParams.json"}
+      , {config_read_response, from_json, "v2/ConfigReadResponse.json"}
+      , {config_batch_write_params, to_json, "v2/ConfigBatchWriteParams.json"}
+      , {config_value_write_params, to_json, "v2/ConfigValueWriteParams.json"}
+      , {config_write_response, from_json, "v2/ConfigWriteResponse.json"}
+      , {config_requirements_read_response, from_json, "v2/ConfigRequirementsReadResponse.json"}
+      , {mcp_server_refresh_response, from_json, "v2/McpServerRefreshResponse.json"}
+      , {account_read_params, to_json, "v2/GetAccountParams.json"}
+      , {account_read_response, from_json, "v2/GetAccountResponse.json"}
+      , {account_login_start_params, to_json, "v2/LoginAccountParams.json"}
+      , {account_login_start_response, from_json, "v2/LoginAccountResponse.json"}
+      , {account_login_cancel_params, to_json, "v2/CancelLoginAccountParams.json"}
+      , {account_login_cancel_response, from_json, "v2/CancelLoginAccountResponse.json"}
+      , {account_logout_response, from_json, "v2/LogoutAccountResponse.json"}
+      , {account_rate_limits_read_response, from_json,
+            "v2/GetAccountRateLimitsResponse.json"}
     ].
 
 schema_aliases(SchemaDir, {AliasName, Direction, FileName})

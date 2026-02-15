@@ -534,6 +534,11 @@
                             {struct,
                              #{type => {required,{enum,[text]}},
                                text => {required,binstr}}}]},
+                         <<"TurnSteerParams">> =>
+                          {struct,
+                           #{input => {required,{list,{ref,<<"UserInput">>}}},
+                             threadId => {required,binstr},
+                             expectedTurnId => {required,binstr}}},
                          <<"ThreadResumeParams">> =>
                           {struct,
                            #{config =>
@@ -913,6 +918,10 @@
                           #{id => {required,{ref,<<"RequestId">>}},
                             params => {required,{ref,<<"TurnStartParams">>}},
                             method => {required,{enum,['turn/start']}}}},
+                         {struct,
+                          #{id => {required,{ref,<<"RequestId">>}},
+                            params => {required,{ref,<<"TurnSteerParams">>}},
+                            method => {required,{enum,['turn/steer']}}}},
                          {struct,
                           #{id => {required,{ref,<<"RequestId">>}},
                             params =>
@@ -4633,6 +4642,4033 @@
                                  {struct,
                                   #{type => {required,{enum,[other]}}}}]}},
                             {struct,#{turn => {required,{ref,<<"Turn">>}}}}}}},
+    {turn_steer_params, {with_defs,
+                         {#{<<"ByteRange">> =>
+                             {struct,
+                              #{start => {required,integer},
+                                'end' => {required,integer}}},
+                            <<"TextElement">> =>
+                             {struct,
+                              #{byteRange =>
+                                 {required,{all_of,[{ref,<<"ByteRange">>}]}},
+                                placeholder =>
+                                 {optional,{any_of,[binstr,{exact,null}]}}}},
+                            <<"UserInput">> =>
+                             {any_of,
+                              [{struct,
+                                #{type => {required,{enum,[text]}},
+                                  text => {required,binstr},
+                                  text_elements =>
+                                   {optional,
+                                    {default,
+                                     {[],{list,{ref,<<"TextElement">>}}}}}}},
+                               {struct,
+                                #{type => {required,{enum,[image]}},
+                                  url => {required,binstr}}},
+                               {struct,
+                                #{type => {required,{enum,[localImage]}},
+                                  path => {required,binstr}}},
+                               {struct,
+                                #{name => {required,binstr},
+                                  type => {required,{enum,[skill]}},
+                                  path => {required,binstr}}},
+                               {struct,
+                                #{name => {required,binstr},
+                                  type => {required,{enum,[mention]}},
+                                  path => {required,binstr}}}]}},
+                          {struct,
+                           #{input => {required,{list,{ref,<<"UserInput">>}}},
+                             threadId => {required,binstr},
+                             expectedTurnId => {required,binstr}}}}}},
+    {turn_steer_response, {struct,#{turnId => {required,binstr}}}},
+    {turn_interrupt_params, {struct,#{threadId => {required,binstr},
+                                      turnId => {required,binstr}}}},
+    {turn_interrupt_response, {map,{binstr,term}}},
+    {thread_resume_params, {with_defs,
+                            {#{<<"AskForApproval">> =>
+                                {enum,
+                                 [untrusted,'on-failure','on-request',never]},
+                               <<"ContentItem">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[input_text]}},
+                                     text => {required,binstr}}},
+                                  {struct,
+                                   #{type => {required,{enum,[input_image]}},
+                                     image_url => {required,binstr}}},
+                                  {struct,
+                                   #{type => {required,{enum,[output_text]}},
+                                     text => {required,binstr}}}]},
+                               <<"FunctionCallOutputBody">> =>
+                                {any_of,
+                                 [binstr,
+                                  {list,
+                                   {ref,
+                                    <<"FunctionCallOutputContentItem">>}}]},
+                               <<"FunctionCallOutputContentItem">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[input_text]}},
+                                     text => {required,binstr}}},
+                                  {struct,
+                                   #{type => {required,{enum,[input_image]}},
+                                     image_url => {required,binstr}}}]},
+                               <<"FunctionCallOutputPayload">> =>
+                                {struct,
+                                 #{success =>
+                                    {optional,{any_of,[boolean,{exact,null}]}},
+                                   body =>
+                                    {required,
+                                     {ref,<<"FunctionCallOutputBody">>}}}},
+                               <<"GhostCommit">> =>
+                                {struct,
+                                 #{id => {required,binstr},
+                                   parent =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   preexisting_untracked_dirs =>
+                                    {required,{list,binstr}},
+                                   preexisting_untracked_files =>
+                                    {required,{list,binstr}}}},
+                               <<"LocalShellAction">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{command => {required,{list,binstr}},
+                                     env =>
+                                      {optional,
+                                       {any_of,
+                                        [{map,{binstr,term}},{exact,null}]}},
+                                     type => {required,{enum,[exec]}},
+                                     user =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     timeout_ms =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}},
+                                     working_directory =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}}]},
+                               <<"LocalShellStatus">> =>
+                                {enum,[completed,in_progress,incomplete]},
+                               <<"MessagePhase">> =>
+                                {enum,[commentary,final_answer]},
+                               <<"Personality">> =>
+                                {enum,[none,friendly,pragmatic]},
+                               <<"ReasoningItemContent">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type =>
+                                      {required,{enum,[reasoning_text]}},
+                                     text => {required,binstr}}},
+                                  {struct,
+                                   #{type => {required,{enum,[text]}},
+                                     text => {required,binstr}}}]},
+                               <<"ReasoningItemReasoningSummary">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[summary_text]}},
+                                     text => {required,binstr}}}]},
+                               <<"ResponseItem">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{id =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     type => {required,{enum,[message]}},
+                                     phase =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"MessagePhase">>},
+                                         {exact,null}]}},
+                                     content =>
+                                      {required,
+                                       {list,{ref,<<"ContentItem">>}}},
+                                     end_turn =>
+                                      {optional,
+                                       {any_of,[boolean,{exact,null}]}},
+                                     role => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[reasoning]}},
+                                     summary =>
+                                      {required,
+                                       {list,
+                                        {ref,
+                                         <<"ReasoningItemReasoningSummary">>}}},
+                                     content =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,
+                                          [{list,
+                                            {ref,<<"ReasoningItemContent">>}},
+                                           {exact,null}]}}}},
+                                     encrypted_content =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{id =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     status =>
+                                      {required,{ref,<<"LocalShellStatus">>}},
+                                     type =>
+                                      {required,{enum,[local_shell_call]}},
+                                     action =>
+                                      {required,{ref,<<"LocalShellAction">>}},
+                                     call_id =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{id =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     name => {required,binstr},
+                                     type => {required,{enum,[function_call]}},
+                                     arguments => {required,binstr},
+                                     call_id => {required,binstr}}},
+                                  {struct,
+                                   #{output =>
+                                      {required,
+                                       {ref,<<"FunctionCallOutputPayload">>}},
+                                     type =>
+                                      {required,{enum,[function_call_output]}},
+                                     call_id => {required,binstr}}},
+                                  {struct,
+                                   #{id =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     input => {required,binstr},
+                                     name => {required,binstr},
+                                     status =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     type =>
+                                      {required,{enum,[custom_tool_call]}},
+                                     call_id => {required,binstr}}},
+                                  {struct,
+                                   #{output => {required,binstr},
+                                     type =>
+                                      {required,
+                                       {enum,[custom_tool_call_output]}},
+                                     call_id => {required,binstr}}},
+                                  {struct,
+                                   #{id =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     status =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     type =>
+                                      {required,{enum,[web_search_call]}},
+                                     action =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"WebSearchAction">>},
+                                         {exact,null}]}}}},
+                                  {struct,
+                                   #{type =>
+                                      {required,{enum,[ghost_snapshot]}},
+                                     ghost_commit =>
+                                      {required,{ref,<<"GhostCommit">>}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[compaction]}},
+                                     encrypted_content => {required,binstr}}},
+                                  {struct,
+                                   #{type => {required,{enum,[other]}}}}]},
+                               <<"SandboxMode">> =>
+                                {enum,
+                                 ['read-only','workspace-write',
+                                  'danger-full-access']},
+                               <<"WebSearchAction">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[search]}},
+                                     query =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     queries =>
+                                      {optional,
+                                       {any_of,
+                                        [{list,binstr},{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[open_page]}},
+                                     url =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[find_in_page]}},
+                                     pattern =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     url =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[other]}}}}]}},
+                             {struct,
+                              #{config =>
+                                 {optional,
+                                  {any_of,[{map,{binstr,term}},{exact,null}]}},
+                                path =>
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                history =>
+                                 {optional,
+                                  {any_of,
+                                   [{list,{ref,<<"ResponseItem">>}},
+                                    {exact,null}]}},
+                                cwd =>
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                threadId => {required,binstr},
+                                approvalPolicy =>
+                                 {optional,
+                                  {any_of,
+                                   [{ref,<<"AskForApproval">>},{exact,null}]}},
+                                model =>
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                baseInstructions =>
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                developerInstructions =>
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                modelProvider =>
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                sandbox =>
+                                 {optional,
+                                  {any_of,
+                                   [{ref,<<"SandboxMode">>},{exact,null}]}},
+                                personality =>
+                                 {optional,
+                                  {any_of,
+                                   [{ref,<<"Personality">>},
+                                    {exact,null}]}}}}}}},
+    {thread_resume_response, {with_defs,
+                              {#{<<"AbsolutePathBuf">> => binstr,
+                                 <<"AskForApproval">> =>
+                                  {enum,
+                                   [untrusted,'on-failure','on-request',
+                                    never]},
+                                 <<"ByteRange">> =>
+                                  {struct,
+                                   #{start => {required,integer},
+                                     'end' => {required,integer}}},
+                                 <<"CodexErrorInfo">> =>
+                                  {any_of,
+                                   [{enum,
+                                     [contextWindowExceeded,
+                                      usageLimitExceeded,internalServerError,
+                                      unauthorized,badRequest,
+                                      threadRollbackFailed,sandboxError,
+                                      other]},
+                                    {struct,
+                                     #{modelCap =>
+                                        {required,
+                                         {struct,
+                                          #{model => {required,binstr},
+                                            reset_after_seconds =>
+                                             {optional,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}}}}},
+                                    {struct,
+                                     #{httpConnectionFailed =>
+                                        {required,
+                                         {struct,
+                                          #{httpStatusCode =>
+                                             {optional,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}}}}},
+                                    {struct,
+                                     #{responseStreamConnectionFailed =>
+                                        {required,
+                                         {struct,
+                                          #{httpStatusCode =>
+                                             {optional,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}}}}},
+                                    {struct,
+                                     #{responseStreamDisconnected =>
+                                        {required,
+                                         {struct,
+                                          #{httpStatusCode =>
+                                             {optional,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}}}}},
+                                    {struct,
+                                     #{responseTooManyFailedAttempts =>
+                                        {required,
+                                         {struct,
+                                          #{httpStatusCode =>
+                                             {optional,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}}}}}]},
+                                 <<"CollabAgentState">> =>
+                                  {struct,
+                                   #{message =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     status =>
+                                      {required,
+                                       {ref,<<"CollabAgentStatus">>}}}},
+                                 <<"CollabAgentStatus">> =>
+                                  {enum,
+                                   [pendingInit,running,completed,errored,
+                                    shutdown,notFound]},
+                                 <<"CollabAgentTool">> =>
+                                  {enum,
+                                   [spawnAgent,sendInput,wait,closeAgent]},
+                                 <<"CollabAgentToolCallStatus">> =>
+                                  {enum,[inProgress,completed,failed]},
+                                 <<"CommandAction">> =>
+                                  {any_of,
+                                   [{struct,
+                                     #{command => {required,binstr},
+                                       name => {required,binstr},
+                                       type => {required,{enum,[read]}},
+                                       path => {required,binstr}}},
+                                    {struct,
+                                     #{command => {required,binstr},
+                                       type => {required,{enum,[listFiles]}},
+                                       path =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}}}},
+                                    {struct,
+                                     #{command => {required,binstr},
+                                       type => {required,{enum,[search]}},
+                                       path =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       query =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}}}},
+                                    {struct,
+                                     #{command => {required,binstr},
+                                       type => {required,{enum,[unknown]}}}}]},
+                                 <<"CommandExecutionStatus">> =>
+                                  {enum,
+                                   [inProgress,completed,failed,declined]},
+                                 <<"FileUpdateChange">> =>
+                                  {struct,
+                                   #{path => {required,binstr},
+                                     diff => {required,binstr},
+                                     kind =>
+                                      {required,{ref,<<"PatchChangeKind">>}}}},
+                                 <<"GitInfo">> =>
+                                  {struct,
+                                   #{branch =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     sha =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     originUrl =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                 <<"McpToolCallError">> =>
+                                  {struct,#{message => {required,binstr}}},
+                                 <<"McpToolCallResult">> =>
+                                  {struct,
+                                   #{content => {required,{list,term}},
+                                     structuredContent => {optional,term}}},
+                                 <<"McpToolCallStatus">> =>
+                                  {enum,[inProgress,completed,failed]},
+                                 <<"NetworkAccess">> =>
+                                  {enum,[restricted,enabled]},
+                                 <<"PatchApplyStatus">> =>
+                                  {enum,
+                                   [inProgress,completed,failed,declined]},
+                                 <<"PatchChangeKind">> =>
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[add]}}}},
+                                    {struct,
+                                     #{type => {required,{enum,[delete]}}}},
+                                    {struct,
+                                     #{type => {required,{enum,[update]}},
+                                       move_path =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}}}}]},
+                                 <<"ReasoningEffort">> =>
+                                  {enum,[none,minimal,low,medium,high,xhigh]},
+                                 <<"SandboxPolicy">> =>
+                                  {any_of,
+                                   [{struct,
+                                     #{type =>
+                                        {required,{enum,[dangerFullAccess]}}}},
+                                    {struct,
+                                     #{type => {required,{enum,[readOnly]}}}},
+                                    {struct,
+                                     #{type =>
+                                        {required,{enum,[externalSandbox]}},
+                                       networkAccess =>
+                                        {optional,
+                                         {default,
+                                          {<<"restricted">>,
+                                           {all_of,
+                                            [{ref,<<"NetworkAccess">>}]}}}}}},
+                                    {struct,
+                                     #{type =>
+                                        {required,{enum,[workspaceWrite]}},
+                                       networkAccess =>
+                                        {optional,{default,{false,boolean}}},
+                                       excludeSlashTmp =>
+                                        {optional,{default,{false,boolean}}},
+                                       excludeTmpdirEnvVar =>
+                                        {optional,{default,{false,boolean}}},
+                                       writableRoots =>
+                                        {optional,
+                                         {default,
+                                          {[],
+                                           {list,
+                                            {ref,
+                                             <<"AbsolutePathBuf">>}}}}}}}]},
+                                 <<"SessionSource">> =>
+                                  {any_of,
+                                   [{enum,[cli,vscode,exec,appServer,unknown]},
+                                    {struct,
+                                     #{subAgent =>
+                                        {required,
+                                         {ref,<<"SubAgentSource">>}}}}]},
+                                 <<"SubAgentSource">> =>
+                                  {any_of,
+                                   [{enum,[review,compact]},
+                                    {struct,
+                                     #{thread_spawn =>
+                                        {required,
+                                         {struct,
+                                          #{depth => {required,integer},
+                                            parent_thread_id =>
+                                             {required,
+                                              {ref,<<"ThreadId">>}}}}}}},
+                                    {struct,#{other => {required,binstr}}}]},
+                                 <<"TextElement">> =>
+                                  {struct,
+                                   #{byteRange =>
+                                      {required,
+                                       {all_of,[{ref,<<"ByteRange">>}]}},
+                                     placeholder =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                 <<"Thread">> =>
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     source =>
+                                      {required,
+                                       {all_of,[{ref,<<"SessionSource">>}]}},
+                                     cwd => {required,binstr},
+                                     modelProvider => {required,binstr},
+                                     cliVersion => {required,binstr},
+                                     createdAt => {required,integer},
+                                     gitInfo =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"GitInfo">>},{exact,null}]}},
+                                     preview => {required,binstr},
+                                     turns =>
+                                      {required,{list,{ref,<<"Turn">>}}},
+                                     updatedAt => {required,integer}}},
+                                 <<"ThreadId">> => binstr,
+                                 <<"ThreadItem">> =>
+                                  {any_of,
+                                   [{struct,
+                                     #{id => {required,binstr},
+                                       type => {required,{enum,[userMessage]}},
+                                       content =>
+                                        {required,
+                                         {list,{ref,<<"UserInput">>}}}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       type =>
+                                        {required,{enum,[agentMessage]}},
+                                       text => {required,binstr}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       type => {required,{enum,[plan]}},
+                                       text => {required,binstr}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       type => {required,{enum,[reasoning]}},
+                                       summary =>
+                                        {optional,
+                                         {default,{[],{list,binstr}}}},
+                                       content =>
+                                        {optional,
+                                         {default,{[],{list,binstr}}}}}},
+                                    {struct,
+                                     #{command => {required,binstr},
+                                       id => {required,binstr},
+                                       status =>
+                                        {required,
+                                         {ref,<<"CommandExecutionStatus">>}},
+                                       type =>
+                                        {required,{enum,[commandExecution]}},
+                                       cwd => {required,binstr},
+                                       commandActions =>
+                                        {required,
+                                         {list,{ref,<<"CommandAction">>}}},
+                                       aggregatedOutput =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       durationMs =>
+                                        {optional,
+                                         {any_of,[integer,{exact,null}]}},
+                                       exitCode =>
+                                        {optional,
+                                         {any_of,[integer,{exact,null}]}},
+                                       processId =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       status =>
+                                        {required,
+                                         {ref,<<"PatchApplyStatus">>}},
+                                       type => {required,{enum,[fileChange]}},
+                                       changes =>
+                                        {required,
+                                         {list,
+                                          {ref,<<"FileUpdateChange">>}}}}},
+                                    {struct,
+                                     #{error =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"McpToolCallError">>},
+                                           {exact,null}]}},
+                                       id => {required,binstr},
+                                       status =>
+                                        {required,
+                                         {ref,<<"McpToolCallStatus">>}},
+                                       type => {required,{enum,[mcpToolCall]}},
+                                       arguments => {required,term},
+                                       result =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"McpToolCallResult">>},
+                                           {exact,null}]}},
+                                       server => {required,binstr},
+                                       tool => {required,binstr},
+                                       durationMs =>
+                                        {optional,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       status =>
+                                        {required,
+                                         {all_of,
+                                          [{ref,
+                                            <<"CollabAgentToolCallStatus">>}]}},
+                                       type =>
+                                        {required,
+                                         {enum,[collabAgentToolCall]}},
+                                       prompt =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       tool =>
+                                        {required,
+                                         {all_of,
+                                          [{ref,<<"CollabAgentTool">>}]}},
+                                       agentsStates =>
+                                        {required,
+                                         {map,
+                                          {binstr,
+                                           {ref,<<"CollabAgentState">>}}}},
+                                       receiverThreadIds =>
+                                        {required,{list,binstr}},
+                                       senderThreadId => {required,binstr}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       type => {required,{enum,[webSearch]}},
+                                       query => {required,binstr},
+                                       action =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"WebSearchAction">>},
+                                           {exact,null}]}}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       type => {required,{enum,[imageView]}},
+                                       path => {required,binstr}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       type =>
+                                        {required,{enum,[enteredReviewMode]}},
+                                       review => {required,binstr}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       type =>
+                                        {required,{enum,[exitedReviewMode]}},
+                                       review => {required,binstr}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       type =>
+                                        {required,
+                                         {enum,[contextCompaction]}}}}]},
+                                 <<"Turn">> =>
+                                  {struct,
+                                   #{error =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"TurnError">>},{exact,null}]}},
+                                     id => {required,binstr},
+                                     status =>
+                                      {required,{ref,<<"TurnStatus">>}},
+                                     items =>
+                                      {required,
+                                       {list,{ref,<<"ThreadItem">>}}}}},
+                                 <<"TurnError">> =>
+                                  {struct,
+                                   #{message => {required,binstr},
+                                     additionalDetails =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[binstr,{exact,null}]}}}},
+                                     codexErrorInfo =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"CodexErrorInfo">>},
+                                         {exact,null}]}}}},
+                                 <<"TurnStatus">> =>
+                                  {enum,
+                                   [completed,interrupted,failed,inProgress]},
+                                 <<"UserInput">> =>
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[text]}},
+                                       text => {required,binstr},
+                                       text_elements =>
+                                        {optional,
+                                         {default,
+                                          {[],
+                                           {list,{ref,<<"TextElement">>}}}}}}},
+                                    {struct,
+                                     #{type => {required,{enum,[image]}},
+                                       url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[localImage]}},
+                                       path => {required,binstr}}},
+                                    {struct,
+                                     #{name => {required,binstr},
+                                       type => {required,{enum,[skill]}},
+                                       path => {required,binstr}}},
+                                    {struct,
+                                     #{name => {required,binstr},
+                                       type => {required,{enum,[mention]}},
+                                       path => {required,binstr}}}]},
+                                 <<"WebSearchAction">> =>
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[search]}},
+                                       query =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       queries =>
+                                        {optional,
+                                         {any_of,
+                                          [{list,binstr},{exact,null}]}}}},
+                                    {struct,
+                                     #{type => {required,{enum,[openPage]}},
+                                       url =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}}}},
+                                    {struct,
+                                     #{type => {required,{enum,[findInPage]}},
+                                       pattern =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       url =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}}}},
+                                    {struct,
+                                     #{type => {required,{enum,[other]}}}}]}},
+                               {struct,
+                                #{thread => {required,{ref,<<"Thread">>}},
+                                  cwd => {required,binstr},
+                                  approvalPolicy =>
+                                   {required,{ref,<<"AskForApproval">>}},
+                                  model => {required,binstr},
+                                  modelProvider => {required,binstr},
+                                  sandbox =>
+                                   {required,{ref,<<"SandboxPolicy">>}},
+                                  reasoningEffort =>
+                                   {optional,
+                                    {any_of,
+                                     [{ref,<<"ReasoningEffort">>},
+                                      {exact,null}]}}}}}}},
+    {thread_fork_params, {with_defs,
+                          {#{<<"AskForApproval">> =>
+                              {enum,
+                               [untrusted,'on-failure','on-request',never]},
+                             <<"SandboxMode">> =>
+                              {enum,
+                               ['read-only','workspace-write',
+                                'danger-full-access']}},
+                           {struct,
+                            #{config =>
+                               {optional,
+                                {any_of,[{map,{binstr,term}},{exact,null}]}},
+                              path =>
+                               {optional,{any_of,[binstr,{exact,null}]}},
+                              cwd => {optional,{any_of,[binstr,{exact,null}]}},
+                              threadId => {required,binstr},
+                              approvalPolicy =>
+                               {optional,
+                                {any_of,
+                                 [{ref,<<"AskForApproval">>},{exact,null}]}},
+                              model =>
+                               {optional,{any_of,[binstr,{exact,null}]}},
+                              baseInstructions =>
+                               {optional,{any_of,[binstr,{exact,null}]}},
+                              developerInstructions =>
+                               {optional,{any_of,[binstr,{exact,null}]}},
+                              modelProvider =>
+                               {optional,{any_of,[binstr,{exact,null}]}},
+                              sandbox =>
+                               {optional,
+                                {any_of,
+                                 [{ref,<<"SandboxMode">>},{exact,null}]}}}}}}},
+    {thread_fork_response, {with_defs,
+                            {#{<<"AbsolutePathBuf">> => binstr,
+                               <<"AskForApproval">> =>
+                                {enum,
+                                 [untrusted,'on-failure','on-request',never]},
+                               <<"ByteRange">> =>
+                                {struct,
+                                 #{start => {required,integer},
+                                   'end' => {required,integer}}},
+                               <<"CodexErrorInfo">> =>
+                                {any_of,
+                                 [{enum,
+                                   [contextWindowExceeded,usageLimitExceeded,
+                                    internalServerError,unauthorized,
+                                    badRequest,threadRollbackFailed,
+                                    sandboxError,other]},
+                                  {struct,
+                                   #{modelCap =>
+                                      {required,
+                                       {struct,
+                                        #{model => {required,binstr},
+                                          reset_after_seconds =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{httpConnectionFailed =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{responseStreamConnectionFailed =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{responseStreamDisconnected =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{responseTooManyFailedAttempts =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}}]},
+                               <<"CollabAgentState">> =>
+                                {struct,
+                                 #{message =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   status =>
+                                    {required,{ref,<<"CollabAgentStatus">>}}}},
+                               <<"CollabAgentStatus">> =>
+                                {enum,
+                                 [pendingInit,running,completed,errored,
+                                  shutdown,notFound]},
+                               <<"CollabAgentTool">> =>
+                                {enum,[spawnAgent,sendInput,wait,closeAgent]},
+                               <<"CollabAgentToolCallStatus">> =>
+                                {enum,[inProgress,completed,failed]},
+                               <<"CommandAction">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{command => {required,binstr},
+                                     name => {required,binstr},
+                                     type => {required,{enum,[read]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     type => {required,{enum,[listFiles]}},
+                                     path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     type => {required,{enum,[search]}},
+                                     path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     query =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     type => {required,{enum,[unknown]}}}}]},
+                               <<"CommandExecutionStatus">> =>
+                                {enum,[inProgress,completed,failed,declined]},
+                               <<"FileUpdateChange">> =>
+                                {struct,
+                                 #{path => {required,binstr},
+                                   diff => {required,binstr},
+                                   kind =>
+                                    {required,{ref,<<"PatchChangeKind">>}}}},
+                               <<"GitInfo">> =>
+                                {struct,
+                                 #{branch =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   sha =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   originUrl =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"McpToolCallError">> =>
+                                {struct,#{message => {required,binstr}}},
+                               <<"McpToolCallResult">> =>
+                                {struct,
+                                 #{content => {required,{list,term}},
+                                   structuredContent => {optional,term}}},
+                               <<"McpToolCallStatus">> =>
+                                {enum,[inProgress,completed,failed]},
+                               <<"NetworkAccess">> =>
+                                {enum,[restricted,enabled]},
+                               <<"PatchApplyStatus">> =>
+                                {enum,[inProgress,completed,failed,declined]},
+                               <<"PatchChangeKind">> =>
+                                {any_of,
+                                 [{struct,#{type => {required,{enum,[add]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[delete]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[update]}},
+                                     move_path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}}]},
+                               <<"ReasoningEffort">> =>
+                                {enum,[none,minimal,low,medium,high,xhigh]},
+                               <<"SandboxPolicy">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type =>
+                                      {required,{enum,[dangerFullAccess]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[readOnly]}}}},
+                                  {struct,
+                                   #{type =>
+                                      {required,{enum,[externalSandbox]}},
+                                     networkAccess =>
+                                      {optional,
+                                       {default,
+                                        {<<"restricted">>,
+                                         {all_of,
+                                          [{ref,<<"NetworkAccess">>}]}}}}}},
+                                  {struct,
+                                   #{type =>
+                                      {required,{enum,[workspaceWrite]}},
+                                     networkAccess =>
+                                      {optional,{default,{false,boolean}}},
+                                     excludeSlashTmp =>
+                                      {optional,{default,{false,boolean}}},
+                                     excludeTmpdirEnvVar =>
+                                      {optional,{default,{false,boolean}}},
+                                     writableRoots =>
+                                      {optional,
+                                       {default,
+                                        {[],
+                                         {list,
+                                          {ref,<<"AbsolutePathBuf">>}}}}}}}]},
+                               <<"SessionSource">> =>
+                                {any_of,
+                                 [{enum,[cli,vscode,exec,appServer,unknown]},
+                                  {struct,
+                                   #{subAgent =>
+                                      {required,
+                                       {ref,<<"SubAgentSource">>}}}}]},
+                               <<"SubAgentSource">> =>
+                                {any_of,
+                                 [{enum,[review,compact]},
+                                  {struct,
+                                   #{thread_spawn =>
+                                      {required,
+                                       {struct,
+                                        #{depth => {required,integer},
+                                          parent_thread_id =>
+                                           {required,
+                                            {ref,<<"ThreadId">>}}}}}}},
+                                  {struct,#{other => {required,binstr}}}]},
+                               <<"TextElement">> =>
+                                {struct,
+                                 #{byteRange =>
+                                    {required,
+                                     {all_of,[{ref,<<"ByteRange">>}]}},
+                                   placeholder =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"Thread">> =>
+                                {struct,
+                                 #{id => {required,binstr},
+                                   path =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   source =>
+                                    {required,
+                                     {all_of,[{ref,<<"SessionSource">>}]}},
+                                   cwd => {required,binstr},
+                                   modelProvider => {required,binstr},
+                                   cliVersion => {required,binstr},
+                                   createdAt => {required,integer},
+                                   gitInfo =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"GitInfo">>},{exact,null}]}},
+                                   preview => {required,binstr},
+                                   turns => {required,{list,{ref,<<"Turn">>}}},
+                                   updatedAt => {required,integer}}},
+                               <<"ThreadId">> => binstr,
+                               <<"ThreadItem">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[userMessage]}},
+                                     content =>
+                                      {required,
+                                       {list,{ref,<<"UserInput">>}}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[agentMessage]}},
+                                     text => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[plan]}},
+                                     text => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[reasoning]}},
+                                     summary =>
+                                      {optional,{default,{[],{list,binstr}}}},
+                                     content =>
+                                      {optional,
+                                       {default,{[],{list,binstr}}}}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     id => {required,binstr},
+                                     status =>
+                                      {required,
+                                       {ref,<<"CommandExecutionStatus">>}},
+                                     type =>
+                                      {required,{enum,[commandExecution]}},
+                                     cwd => {required,binstr},
+                                     commandActions =>
+                                      {required,
+                                       {list,{ref,<<"CommandAction">>}}},
+                                     aggregatedOutput =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     durationMs =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}},
+                                     exitCode =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}},
+                                     processId =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     status =>
+                                      {required,{ref,<<"PatchApplyStatus">>}},
+                                     type => {required,{enum,[fileChange]}},
+                                     changes =>
+                                      {required,
+                                       {list,{ref,<<"FileUpdateChange">>}}}}},
+                                  {struct,
+                                   #{error =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"McpToolCallError">>},
+                                         {exact,null}]}},
+                                     id => {required,binstr},
+                                     status =>
+                                      {required,{ref,<<"McpToolCallStatus">>}},
+                                     type => {required,{enum,[mcpToolCall]}},
+                                     arguments => {required,term},
+                                     result =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"McpToolCallResult">>},
+                                         {exact,null}]}},
+                                     server => {required,binstr},
+                                     tool => {required,binstr},
+                                     durationMs =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     status =>
+                                      {required,
+                                       {all_of,
+                                        [{ref,
+                                          <<"CollabAgentToolCallStatus">>}]}},
+                                     type =>
+                                      {required,{enum,[collabAgentToolCall]}},
+                                     prompt =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     tool =>
+                                      {required,
+                                       {all_of,[{ref,<<"CollabAgentTool">>}]}},
+                                     agentsStates =>
+                                      {required,
+                                       {map,
+                                        {binstr,
+                                         {ref,<<"CollabAgentState">>}}}},
+                                     receiverThreadIds =>
+                                      {required,{list,binstr}},
+                                     senderThreadId => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[webSearch]}},
+                                     query => {required,binstr},
+                                     action =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"WebSearchAction">>},
+                                         {exact,null}]}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[imageView]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type =>
+                                      {required,{enum,[enteredReviewMode]}},
+                                     review => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type =>
+                                      {required,{enum,[exitedReviewMode]}},
+                                     review => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type =>
+                                      {required,
+                                       {enum,[contextCompaction]}}}}]},
+                               <<"Turn">> =>
+                                {struct,
+                                 #{error =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"TurnError">>},{exact,null}]}},
+                                   id => {required,binstr},
+                                   status => {required,{ref,<<"TurnStatus">>}},
+                                   items =>
+                                    {required,{list,{ref,<<"ThreadItem">>}}}}},
+                               <<"TurnError">> =>
+                                {struct,
+                                 #{message => {required,binstr},
+                                   additionalDetails =>
+                                    {optional,
+                                     {default,
+                                      {null,{any_of,[binstr,{exact,null}]}}}},
+                                   codexErrorInfo =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"CodexErrorInfo">>},
+                                       {exact,null}]}}}},
+                               <<"TurnStatus">> =>
+                                {enum,
+                                 [completed,interrupted,failed,inProgress]},
+                               <<"UserInput">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[text]}},
+                                     text => {required,binstr},
+                                     text_elements =>
+                                      {optional,
+                                       {default,
+                                        {[],
+                                         {list,{ref,<<"TextElement">>}}}}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[image]}},
+                                     url => {required,binstr}}},
+                                  {struct,
+                                   #{type => {required,{enum,[localImage]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{name => {required,binstr},
+                                     type => {required,{enum,[skill]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{name => {required,binstr},
+                                     type => {required,{enum,[mention]}},
+                                     path => {required,binstr}}}]},
+                               <<"WebSearchAction">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[search]}},
+                                     query =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     queries =>
+                                      {optional,
+                                       {any_of,
+                                        [{list,binstr},{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[openPage]}},
+                                     url =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[findInPage]}},
+                                     pattern =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     url =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[other]}}}}]}},
+                             {struct,
+                              #{thread => {required,{ref,<<"Thread">>}},
+                                cwd => {required,binstr},
+                                approvalPolicy =>
+                                 {required,{ref,<<"AskForApproval">>}},
+                                model => {required,binstr},
+                                modelProvider => {required,binstr},
+                                sandbox =>
+                                 {required,{ref,<<"SandboxPolicy">>}},
+                                reasoningEffort =>
+                                 {optional,
+                                  {any_of,
+                                   [{ref,<<"ReasoningEffort">>},
+                                    {exact,null}]}}}}}}},
+    {thread_list_params, {with_defs,
+                          {#{<<"ThreadSortKey">> =>
+                              {enum,[created_at,updated_at]},
+                             <<"ThreadSourceKind">> =>
+                              {enum,
+                               [cli,vscode,exec,appServer,subAgent,
+                                subAgentReview,subAgentCompact,
+                                subAgentThreadSpawn,subAgentOther,unknown]}},
+                           {struct,
+                            #{limit =>
+                               {optional,{any_of,[integer,{exact,null}]}},
+                              cursor =>
+                               {optional,{any_of,[binstr,{exact,null}]}},
+                              archived =>
+                               {optional,{any_of,[boolean,{exact,null}]}},
+                              modelProviders =>
+                               {optional,
+                                {any_of,[{list,binstr},{exact,null}]}},
+                              sortKey =>
+                               {optional,
+                                {any_of,
+                                 [{ref,<<"ThreadSortKey">>},{exact,null}]}},
+                              sourceKinds =>
+                               {optional,
+                                {any_of,
+                                 [{list,{ref,<<"ThreadSourceKind">>}},
+                                  {exact,null}]}}}}}}},
+    {thread_list_response, {with_defs,
+                            {#{<<"ByteRange">> =>
+                                {struct,
+                                 #{start => {required,integer},
+                                   'end' => {required,integer}}},
+                               <<"CodexErrorInfo">> =>
+                                {any_of,
+                                 [{enum,
+                                   [contextWindowExceeded,usageLimitExceeded,
+                                    internalServerError,unauthorized,
+                                    badRequest,threadRollbackFailed,
+                                    sandboxError,other]},
+                                  {struct,
+                                   #{modelCap =>
+                                      {required,
+                                       {struct,
+                                        #{model => {required,binstr},
+                                          reset_after_seconds =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{httpConnectionFailed =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{responseStreamConnectionFailed =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{responseStreamDisconnected =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{responseTooManyFailedAttempts =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}}]},
+                               <<"CollabAgentState">> =>
+                                {struct,
+                                 #{message =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   status =>
+                                    {required,{ref,<<"CollabAgentStatus">>}}}},
+                               <<"CollabAgentStatus">> =>
+                                {enum,
+                                 [pendingInit,running,completed,errored,
+                                  shutdown,notFound]},
+                               <<"CollabAgentTool">> =>
+                                {enum,[spawnAgent,sendInput,wait,closeAgent]},
+                               <<"CollabAgentToolCallStatus">> =>
+                                {enum,[inProgress,completed,failed]},
+                               <<"CommandAction">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{command => {required,binstr},
+                                     name => {required,binstr},
+                                     type => {required,{enum,[read]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     type => {required,{enum,[listFiles]}},
+                                     path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     type => {required,{enum,[search]}},
+                                     path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     query =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     type => {required,{enum,[unknown]}}}}]},
+                               <<"CommandExecutionStatus">> =>
+                                {enum,[inProgress,completed,failed,declined]},
+                               <<"FileUpdateChange">> =>
+                                {struct,
+                                 #{path => {required,binstr},
+                                   diff => {required,binstr},
+                                   kind =>
+                                    {required,{ref,<<"PatchChangeKind">>}}}},
+                               <<"GitInfo">> =>
+                                {struct,
+                                 #{branch =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   sha =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   originUrl =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"McpToolCallError">> =>
+                                {struct,#{message => {required,binstr}}},
+                               <<"McpToolCallResult">> =>
+                                {struct,
+                                 #{content => {required,{list,term}},
+                                   structuredContent => {optional,term}}},
+                               <<"McpToolCallStatus">> =>
+                                {enum,[inProgress,completed,failed]},
+                               <<"PatchApplyStatus">> =>
+                                {enum,[inProgress,completed,failed,declined]},
+                               <<"PatchChangeKind">> =>
+                                {any_of,
+                                 [{struct,#{type => {required,{enum,[add]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[delete]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[update]}},
+                                     move_path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}}]},
+                               <<"SessionSource">> =>
+                                {any_of,
+                                 [{enum,[cli,vscode,exec,appServer,unknown]},
+                                  {struct,
+                                   #{subAgent =>
+                                      {required,
+                                       {ref,<<"SubAgentSource">>}}}}]},
+                               <<"SubAgentSource">> =>
+                                {any_of,
+                                 [{enum,[review,compact]},
+                                  {struct,
+                                   #{thread_spawn =>
+                                      {required,
+                                       {struct,
+                                        #{depth => {required,integer},
+                                          parent_thread_id =>
+                                           {required,
+                                            {ref,<<"ThreadId">>}}}}}}},
+                                  {struct,#{other => {required,binstr}}}]},
+                               <<"TextElement">> =>
+                                {struct,
+                                 #{byteRange =>
+                                    {required,
+                                     {all_of,[{ref,<<"ByteRange">>}]}},
+                                   placeholder =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"Thread">> =>
+                                {struct,
+                                 #{id => {required,binstr},
+                                   path =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   source =>
+                                    {required,
+                                     {all_of,[{ref,<<"SessionSource">>}]}},
+                                   cwd => {required,binstr},
+                                   modelProvider => {required,binstr},
+                                   cliVersion => {required,binstr},
+                                   createdAt => {required,integer},
+                                   gitInfo =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"GitInfo">>},{exact,null}]}},
+                                   preview => {required,binstr},
+                                   turns => {required,{list,{ref,<<"Turn">>}}},
+                                   updatedAt => {required,integer}}},
+                               <<"ThreadId">> => binstr,
+                               <<"ThreadItem">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[userMessage]}},
+                                     content =>
+                                      {required,
+                                       {list,{ref,<<"UserInput">>}}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[agentMessage]}},
+                                     text => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[plan]}},
+                                     text => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[reasoning]}},
+                                     summary =>
+                                      {optional,{default,{[],{list,binstr}}}},
+                                     content =>
+                                      {optional,
+                                       {default,{[],{list,binstr}}}}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     id => {required,binstr},
+                                     status =>
+                                      {required,
+                                       {ref,<<"CommandExecutionStatus">>}},
+                                     type =>
+                                      {required,{enum,[commandExecution]}},
+                                     cwd => {required,binstr},
+                                     commandActions =>
+                                      {required,
+                                       {list,{ref,<<"CommandAction">>}}},
+                                     aggregatedOutput =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     durationMs =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}},
+                                     exitCode =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}},
+                                     processId =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     status =>
+                                      {required,{ref,<<"PatchApplyStatus">>}},
+                                     type => {required,{enum,[fileChange]}},
+                                     changes =>
+                                      {required,
+                                       {list,{ref,<<"FileUpdateChange">>}}}}},
+                                  {struct,
+                                   #{error =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"McpToolCallError">>},
+                                         {exact,null}]}},
+                                     id => {required,binstr},
+                                     status =>
+                                      {required,{ref,<<"McpToolCallStatus">>}},
+                                     type => {required,{enum,[mcpToolCall]}},
+                                     arguments => {required,term},
+                                     result =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"McpToolCallResult">>},
+                                         {exact,null}]}},
+                                     server => {required,binstr},
+                                     tool => {required,binstr},
+                                     durationMs =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     status =>
+                                      {required,
+                                       {all_of,
+                                        [{ref,
+                                          <<"CollabAgentToolCallStatus">>}]}},
+                                     type =>
+                                      {required,{enum,[collabAgentToolCall]}},
+                                     prompt =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     tool =>
+                                      {required,
+                                       {all_of,[{ref,<<"CollabAgentTool">>}]}},
+                                     agentsStates =>
+                                      {required,
+                                       {map,
+                                        {binstr,
+                                         {ref,<<"CollabAgentState">>}}}},
+                                     receiverThreadIds =>
+                                      {required,{list,binstr}},
+                                     senderThreadId => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[webSearch]}},
+                                     query => {required,binstr},
+                                     action =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"WebSearchAction">>},
+                                         {exact,null}]}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[imageView]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type =>
+                                      {required,{enum,[enteredReviewMode]}},
+                                     review => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type =>
+                                      {required,{enum,[exitedReviewMode]}},
+                                     review => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type =>
+                                      {required,
+                                       {enum,[contextCompaction]}}}}]},
+                               <<"Turn">> =>
+                                {struct,
+                                 #{error =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"TurnError">>},{exact,null}]}},
+                                   id => {required,binstr},
+                                   status => {required,{ref,<<"TurnStatus">>}},
+                                   items =>
+                                    {required,{list,{ref,<<"ThreadItem">>}}}}},
+                               <<"TurnError">> =>
+                                {struct,
+                                 #{message => {required,binstr},
+                                   additionalDetails =>
+                                    {optional,
+                                     {default,
+                                      {null,{any_of,[binstr,{exact,null}]}}}},
+                                   codexErrorInfo =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"CodexErrorInfo">>},
+                                       {exact,null}]}}}},
+                               <<"TurnStatus">> =>
+                                {enum,
+                                 [completed,interrupted,failed,inProgress]},
+                               <<"UserInput">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[text]}},
+                                     text => {required,binstr},
+                                     text_elements =>
+                                      {optional,
+                                       {default,
+                                        {[],
+                                         {list,{ref,<<"TextElement">>}}}}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[image]}},
+                                     url => {required,binstr}}},
+                                  {struct,
+                                   #{type => {required,{enum,[localImage]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{name => {required,binstr},
+                                     type => {required,{enum,[skill]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{name => {required,binstr},
+                                     type => {required,{enum,[mention]}},
+                                     path => {required,binstr}}}]},
+                               <<"WebSearchAction">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[search]}},
+                                     query =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     queries =>
+                                      {optional,
+                                       {any_of,
+                                        [{list,binstr},{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[openPage]}},
+                                     url =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[findInPage]}},
+                                     pattern =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     url =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[other]}}}}]}},
+                             {struct,
+                              #{data => {required,{list,{ref,<<"Thread">>}}},
+                                nextCursor =>
+                                 {optional,{any_of,[binstr,{exact,null}]}}}}}}},
+    {thread_loaded_list_params, {struct,
+                                 #{limit =>
+                                    {optional,{any_of,[integer,{exact,null}]}},
+                                   cursor =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}}},
+    {thread_loaded_list_response, {struct,
+                                   #{data => {required,{list,binstr}},
+                                     nextCursor =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}}},
+    {thread_read_params, {struct,#{threadId => {required,binstr},
+                                   includeTurns =>
+                                       {optional,{default,{false,boolean}}}}}},
+    {thread_read_response, {with_defs,
+                            {#{<<"ByteRange">> =>
+                                {struct,
+                                 #{start => {required,integer},
+                                   'end' => {required,integer}}},
+                               <<"CodexErrorInfo">> =>
+                                {any_of,
+                                 [{enum,
+                                   [contextWindowExceeded,usageLimitExceeded,
+                                    internalServerError,unauthorized,
+                                    badRequest,threadRollbackFailed,
+                                    sandboxError,other]},
+                                  {struct,
+                                   #{modelCap =>
+                                      {required,
+                                       {struct,
+                                        #{model => {required,binstr},
+                                          reset_after_seconds =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{httpConnectionFailed =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{responseStreamConnectionFailed =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{responseStreamDisconnected =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}},
+                                  {struct,
+                                   #{responseTooManyFailedAttempts =>
+                                      {required,
+                                       {struct,
+                                        #{httpStatusCode =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}}}}]},
+                               <<"CollabAgentState">> =>
+                                {struct,
+                                 #{message =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   status =>
+                                    {required,{ref,<<"CollabAgentStatus">>}}}},
+                               <<"CollabAgentStatus">> =>
+                                {enum,
+                                 [pendingInit,running,completed,errored,
+                                  shutdown,notFound]},
+                               <<"CollabAgentTool">> =>
+                                {enum,[spawnAgent,sendInput,wait,closeAgent]},
+                               <<"CollabAgentToolCallStatus">> =>
+                                {enum,[inProgress,completed,failed]},
+                               <<"CommandAction">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{command => {required,binstr},
+                                     name => {required,binstr},
+                                     type => {required,{enum,[read]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     type => {required,{enum,[listFiles]}},
+                                     path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     type => {required,{enum,[search]}},
+                                     path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     query =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     type => {required,{enum,[unknown]}}}}]},
+                               <<"CommandExecutionStatus">> =>
+                                {enum,[inProgress,completed,failed,declined]},
+                               <<"FileUpdateChange">> =>
+                                {struct,
+                                 #{path => {required,binstr},
+                                   diff => {required,binstr},
+                                   kind =>
+                                    {required,{ref,<<"PatchChangeKind">>}}}},
+                               <<"GitInfo">> =>
+                                {struct,
+                                 #{branch =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   sha =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   originUrl =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"McpToolCallError">> =>
+                                {struct,#{message => {required,binstr}}},
+                               <<"McpToolCallResult">> =>
+                                {struct,
+                                 #{content => {required,{list,term}},
+                                   structuredContent => {optional,term}}},
+                               <<"McpToolCallStatus">> =>
+                                {enum,[inProgress,completed,failed]},
+                               <<"PatchApplyStatus">> =>
+                                {enum,[inProgress,completed,failed,declined]},
+                               <<"PatchChangeKind">> =>
+                                {any_of,
+                                 [{struct,#{type => {required,{enum,[add]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[delete]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[update]}},
+                                     move_path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}}]},
+                               <<"SessionSource">> =>
+                                {any_of,
+                                 [{enum,[cli,vscode,exec,appServer,unknown]},
+                                  {struct,
+                                   #{subAgent =>
+                                      {required,
+                                       {ref,<<"SubAgentSource">>}}}}]},
+                               <<"SubAgentSource">> =>
+                                {any_of,
+                                 [{enum,[review,compact]},
+                                  {struct,
+                                   #{thread_spawn =>
+                                      {required,
+                                       {struct,
+                                        #{depth => {required,integer},
+                                          parent_thread_id =>
+                                           {required,
+                                            {ref,<<"ThreadId">>}}}}}}},
+                                  {struct,#{other => {required,binstr}}}]},
+                               <<"TextElement">> =>
+                                {struct,
+                                 #{byteRange =>
+                                    {required,
+                                     {all_of,[{ref,<<"ByteRange">>}]}},
+                                   placeholder =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"Thread">> =>
+                                {struct,
+                                 #{id => {required,binstr},
+                                   path =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   source =>
+                                    {required,
+                                     {all_of,[{ref,<<"SessionSource">>}]}},
+                                   cwd => {required,binstr},
+                                   modelProvider => {required,binstr},
+                                   cliVersion => {required,binstr},
+                                   createdAt => {required,integer},
+                                   gitInfo =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"GitInfo">>},{exact,null}]}},
+                                   preview => {required,binstr},
+                                   turns => {required,{list,{ref,<<"Turn">>}}},
+                                   updatedAt => {required,integer}}},
+                               <<"ThreadId">> => binstr,
+                               <<"ThreadItem">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[userMessage]}},
+                                     content =>
+                                      {required,
+                                       {list,{ref,<<"UserInput">>}}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[agentMessage]}},
+                                     text => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[plan]}},
+                                     text => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[reasoning]}},
+                                     summary =>
+                                      {optional,{default,{[],{list,binstr}}}},
+                                     content =>
+                                      {optional,
+                                       {default,{[],{list,binstr}}}}}},
+                                  {struct,
+                                   #{command => {required,binstr},
+                                     id => {required,binstr},
+                                     status =>
+                                      {required,
+                                       {ref,<<"CommandExecutionStatus">>}},
+                                     type =>
+                                      {required,{enum,[commandExecution]}},
+                                     cwd => {required,binstr},
+                                     commandActions =>
+                                      {required,
+                                       {list,{ref,<<"CommandAction">>}}},
+                                     aggregatedOutput =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     durationMs =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}},
+                                     exitCode =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}},
+                                     processId =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     status =>
+                                      {required,{ref,<<"PatchApplyStatus">>}},
+                                     type => {required,{enum,[fileChange]}},
+                                     changes =>
+                                      {required,
+                                       {list,{ref,<<"FileUpdateChange">>}}}}},
+                                  {struct,
+                                   #{error =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"McpToolCallError">>},
+                                         {exact,null}]}},
+                                     id => {required,binstr},
+                                     status =>
+                                      {required,{ref,<<"McpToolCallStatus">>}},
+                                     type => {required,{enum,[mcpToolCall]}},
+                                     arguments => {required,term},
+                                     result =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"McpToolCallResult">>},
+                                         {exact,null}]}},
+                                     server => {required,binstr},
+                                     tool => {required,binstr},
+                                     durationMs =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     status =>
+                                      {required,
+                                       {all_of,
+                                        [{ref,
+                                          <<"CollabAgentToolCallStatus">>}]}},
+                                     type =>
+                                      {required,{enum,[collabAgentToolCall]}},
+                                     prompt =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     tool =>
+                                      {required,
+                                       {all_of,[{ref,<<"CollabAgentTool">>}]}},
+                                     agentsStates =>
+                                      {required,
+                                       {map,
+                                        {binstr,
+                                         {ref,<<"CollabAgentState">>}}}},
+                                     receiverThreadIds =>
+                                      {required,{list,binstr}},
+                                     senderThreadId => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[webSearch]}},
+                                     query => {required,binstr},
+                                     action =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"WebSearchAction">>},
+                                         {exact,null}]}}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type => {required,{enum,[imageView]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type =>
+                                      {required,{enum,[enteredReviewMode]}},
+                                     review => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type =>
+                                      {required,{enum,[exitedReviewMode]}},
+                                     review => {required,binstr}}},
+                                  {struct,
+                                   #{id => {required,binstr},
+                                     type =>
+                                      {required,
+                                       {enum,[contextCompaction]}}}}]},
+                               <<"Turn">> =>
+                                {struct,
+                                 #{error =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"TurnError">>},{exact,null}]}},
+                                   id => {required,binstr},
+                                   status => {required,{ref,<<"TurnStatus">>}},
+                                   items =>
+                                    {required,{list,{ref,<<"ThreadItem">>}}}}},
+                               <<"TurnError">> =>
+                                {struct,
+                                 #{message => {required,binstr},
+                                   additionalDetails =>
+                                    {optional,
+                                     {default,
+                                      {null,{any_of,[binstr,{exact,null}]}}}},
+                                   codexErrorInfo =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"CodexErrorInfo">>},
+                                       {exact,null}]}}}},
+                               <<"TurnStatus">> =>
+                                {enum,
+                                 [completed,interrupted,failed,inProgress]},
+                               <<"UserInput">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[text]}},
+                                     text => {required,binstr},
+                                     text_elements =>
+                                      {optional,
+                                       {default,
+                                        {[],
+                                         {list,{ref,<<"TextElement">>}}}}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[image]}},
+                                     url => {required,binstr}}},
+                                  {struct,
+                                   #{type => {required,{enum,[localImage]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{name => {required,binstr},
+                                     type => {required,{enum,[skill]}},
+                                     path => {required,binstr}}},
+                                  {struct,
+                                   #{name => {required,binstr},
+                                     type => {required,{enum,[mention]}},
+                                     path => {required,binstr}}}]},
+                               <<"WebSearchAction">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[search]}},
+                                     query =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     queries =>
+                                      {optional,
+                                       {any_of,
+                                        [{list,binstr},{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[openPage]}},
+                                     url =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[findInPage]}},
+                                     pattern =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     url =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[other]}}}}]}},
+                             {struct,
+                              #{thread => {required,{ref,<<"Thread">>}}}}}}},
+    {thread_archive_params, {struct,#{threadId => {required,binstr}}}},
+    {thread_archive_response, {map,{binstr,term}}},
+    {thread_set_name_params, {struct,#{name => {required,binstr},
+                                       threadId => {required,binstr}}}},
+    {thread_set_name_response, {map,{binstr,term}}},
+    {thread_unarchive_params, {struct,#{threadId => {required,binstr}}}},
+    {thread_unarchive_response, {with_defs,
+                                 {#{<<"ByteRange">> =>
+                                     {struct,
+                                      #{start => {required,integer},
+                                        'end' => {required,integer}}},
+                                    <<"CodexErrorInfo">> =>
+                                     {any_of,
+                                      [{enum,
+                                        [contextWindowExceeded,
+                                         usageLimitExceeded,
+                                         internalServerError,unauthorized,
+                                         badRequest,threadRollbackFailed,
+                                         sandboxError,other]},
+                                       {struct,
+                                        #{modelCap =>
+                                           {required,
+                                            {struct,
+                                             #{model => {required,binstr},
+                                               reset_after_seconds =>
+                                                {optional,
+                                                 {any_of,
+                                                  [integer,
+                                                   {exact,null}]}}}}}}},
+                                       {struct,
+                                        #{httpConnectionFailed =>
+                                           {required,
+                                            {struct,
+                                             #{httpStatusCode =>
+                                                {optional,
+                                                 {any_of,
+                                                  [integer,
+                                                   {exact,null}]}}}}}}},
+                                       {struct,
+                                        #{responseStreamConnectionFailed =>
+                                           {required,
+                                            {struct,
+                                             #{httpStatusCode =>
+                                                {optional,
+                                                 {any_of,
+                                                  [integer,
+                                                   {exact,null}]}}}}}}},
+                                       {struct,
+                                        #{responseStreamDisconnected =>
+                                           {required,
+                                            {struct,
+                                             #{httpStatusCode =>
+                                                {optional,
+                                                 {any_of,
+                                                  [integer,
+                                                   {exact,null}]}}}}}}},
+                                       {struct,
+                                        #{responseTooManyFailedAttempts =>
+                                           {required,
+                                            {struct,
+                                             #{httpStatusCode =>
+                                                {optional,
+                                                 {any_of,
+                                                  [integer,
+                                                   {exact,null}]}}}}}}}]},
+                                    <<"CollabAgentState">> =>
+                                     {struct,
+                                      #{message =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        status =>
+                                         {required,
+                                          {ref,<<"CollabAgentStatus">>}}}},
+                                    <<"CollabAgentStatus">> =>
+                                     {enum,
+                                      [pendingInit,running,completed,errored,
+                                       shutdown,notFound]},
+                                    <<"CollabAgentTool">> =>
+                                     {enum,
+                                      [spawnAgent,sendInput,wait,closeAgent]},
+                                    <<"CollabAgentToolCallStatus">> =>
+                                     {enum,[inProgress,completed,failed]},
+                                    <<"CommandAction">> =>
+                                     {any_of,
+                                      [{struct,
+                                        #{command => {required,binstr},
+                                          name => {required,binstr},
+                                          type => {required,{enum,[read]}},
+                                          path => {required,binstr}}},
+                                       {struct,
+                                        #{command => {required,binstr},
+                                          type =>
+                                           {required,{enum,[listFiles]}},
+                                          path =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}}}},
+                                       {struct,
+                                        #{command => {required,binstr},
+                                          type => {required,{enum,[search]}},
+                                          path =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}},
+                                          query =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}}}},
+                                       {struct,
+                                        #{command => {required,binstr},
+                                          type =>
+                                           {required,{enum,[unknown]}}}}]},
+                                    <<"CommandExecutionStatus">> =>
+                                     {enum,
+                                      [inProgress,completed,failed,declined]},
+                                    <<"FileUpdateChange">> =>
+                                     {struct,
+                                      #{path => {required,binstr},
+                                        diff => {required,binstr},
+                                        kind =>
+                                         {required,
+                                          {ref,<<"PatchChangeKind">>}}}},
+                                    <<"GitInfo">> =>
+                                     {struct,
+                                      #{branch =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        sha =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        originUrl =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}}}},
+                                    <<"McpToolCallError">> =>
+                                     {struct,#{message => {required,binstr}}},
+                                    <<"McpToolCallResult">> =>
+                                     {struct,
+                                      #{content => {required,{list,term}},
+                                        structuredContent => {optional,term}}},
+                                    <<"McpToolCallStatus">> =>
+                                     {enum,[inProgress,completed,failed]},
+                                    <<"PatchApplyStatus">> =>
+                                     {enum,
+                                      [inProgress,completed,failed,declined]},
+                                    <<"PatchChangeKind">> =>
+                                     {any_of,
+                                      [{struct,
+                                        #{type => {required,{enum,[add]}}}},
+                                       {struct,
+                                        #{type => {required,{enum,[delete]}}}},
+                                       {struct,
+                                        #{type => {required,{enum,[update]}},
+                                          move_path =>
+                                           {optional,
+                                            {any_of,
+                                             [binstr,{exact,null}]}}}}]},
+                                    <<"SessionSource">> =>
+                                     {any_of,
+                                      [{enum,
+                                        [cli,vscode,exec,appServer,unknown]},
+                                       {struct,
+                                        #{subAgent =>
+                                           {required,
+                                            {ref,<<"SubAgentSource">>}}}}]},
+                                    <<"SubAgentSource">> =>
+                                     {any_of,
+                                      [{enum,[review,compact]},
+                                       {struct,
+                                        #{thread_spawn =>
+                                           {required,
+                                            {struct,
+                                             #{depth => {required,integer},
+                                               parent_thread_id =>
+                                                {required,
+                                                 {ref,<<"ThreadId">>}}}}}}},
+                                       {struct,
+                                        #{other => {required,binstr}}}]},
+                                    <<"TextElement">> =>
+                                     {struct,
+                                      #{byteRange =>
+                                         {required,
+                                          {all_of,[{ref,<<"ByteRange">>}]}},
+                                        placeholder =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}}}},
+                                    <<"Thread">> =>
+                                     {struct,
+                                      #{id => {required,binstr},
+                                        path =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        source =>
+                                         {required,
+                                          {all_of,
+                                           [{ref,<<"SessionSource">>}]}},
+                                        cwd => {required,binstr},
+                                        modelProvider => {required,binstr},
+                                        cliVersion => {required,binstr},
+                                        createdAt => {required,integer},
+                                        gitInfo =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"GitInfo">>},
+                                            {exact,null}]}},
+                                        preview => {required,binstr},
+                                        turns =>
+                                         {required,{list,{ref,<<"Turn">>}}},
+                                        updatedAt => {required,integer}}},
+                                    <<"ThreadId">> => binstr,
+                                    <<"ThreadItem">> =>
+                                     {any_of,
+                                      [{struct,
+                                        #{id => {required,binstr},
+                                          type =>
+                                           {required,{enum,[userMessage]}},
+                                          content =>
+                                           {required,
+                                            {list,{ref,<<"UserInput">>}}}}},
+                                       {struct,
+                                        #{id => {required,binstr},
+                                          type =>
+                                           {required,{enum,[agentMessage]}},
+                                          text => {required,binstr}}},
+                                       {struct,
+                                        #{id => {required,binstr},
+                                          type => {required,{enum,[plan]}},
+                                          text => {required,binstr}}},
+                                       {struct,
+                                        #{id => {required,binstr},
+                                          type =>
+                                           {required,{enum,[reasoning]}},
+                                          summary =>
+                                           {optional,
+                                            {default,{[],{list,binstr}}}},
+                                          content =>
+                                           {optional,
+                                            {default,{[],{list,binstr}}}}}},
+                                       {struct,
+                                        #{command => {required,binstr},
+                                          id => {required,binstr},
+                                          status =>
+                                           {required,
+                                            {ref,
+                                             <<"CommandExecutionStatus">>}},
+                                          type =>
+                                           {required,
+                                            {enum,[commandExecution]}},
+                                          cwd => {required,binstr},
+                                          commandActions =>
+                                           {required,
+                                            {list,{ref,<<"CommandAction">>}}},
+                                          aggregatedOutput =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}},
+                                          durationMs =>
+                                           {optional,
+                                            {any_of,[integer,{exact,null}]}},
+                                          exitCode =>
+                                           {optional,
+                                            {any_of,[integer,{exact,null}]}},
+                                          processId =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}}}},
+                                       {struct,
+                                        #{id => {required,binstr},
+                                          status =>
+                                           {required,
+                                            {ref,<<"PatchApplyStatus">>}},
+                                          type =>
+                                           {required,{enum,[fileChange]}},
+                                          changes =>
+                                           {required,
+                                            {list,
+                                             {ref,<<"FileUpdateChange">>}}}}},
+                                       {struct,
+                                        #{error =>
+                                           {optional,
+                                            {any_of,
+                                             [{ref,<<"McpToolCallError">>},
+                                              {exact,null}]}},
+                                          id => {required,binstr},
+                                          status =>
+                                           {required,
+                                            {ref,<<"McpToolCallStatus">>}},
+                                          type =>
+                                           {required,{enum,[mcpToolCall]}},
+                                          arguments => {required,term},
+                                          result =>
+                                           {optional,
+                                            {any_of,
+                                             [{ref,<<"McpToolCallResult">>},
+                                              {exact,null}]}},
+                                          server => {required,binstr},
+                                          tool => {required,binstr},
+                                          durationMs =>
+                                           {optional,
+                                            {any_of,[integer,{exact,null}]}}}},
+                                       {struct,
+                                        #{id => {required,binstr},
+                                          status =>
+                                           {required,
+                                            {all_of,
+                                             [{ref,
+                                               <<"CollabAgentToolCallStatus">>}]}},
+                                          type =>
+                                           {required,
+                                            {enum,[collabAgentToolCall]}},
+                                          prompt =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}},
+                                          tool =>
+                                           {required,
+                                            {all_of,
+                                             [{ref,<<"CollabAgentTool">>}]}},
+                                          agentsStates =>
+                                           {required,
+                                            {map,
+                                             {binstr,
+                                              {ref,<<"CollabAgentState">>}}}},
+                                          receiverThreadIds =>
+                                           {required,{list,binstr}},
+                                          senderThreadId =>
+                                           {required,binstr}}},
+                                       {struct,
+                                        #{id => {required,binstr},
+                                          type =>
+                                           {required,{enum,[webSearch]}},
+                                          query => {required,binstr},
+                                          action =>
+                                           {optional,
+                                            {any_of,
+                                             [{ref,<<"WebSearchAction">>},
+                                              {exact,null}]}}}},
+                                       {struct,
+                                        #{id => {required,binstr},
+                                          type =>
+                                           {required,{enum,[imageView]}},
+                                          path => {required,binstr}}},
+                                       {struct,
+                                        #{id => {required,binstr},
+                                          type =>
+                                           {required,
+                                            {enum,[enteredReviewMode]}},
+                                          review => {required,binstr}}},
+                                       {struct,
+                                        #{id => {required,binstr},
+                                          type =>
+                                           {required,
+                                            {enum,[exitedReviewMode]}},
+                                          review => {required,binstr}}},
+                                       {struct,
+                                        #{id => {required,binstr},
+                                          type =>
+                                           {required,
+                                            {enum,[contextCompaction]}}}}]},
+                                    <<"Turn">> =>
+                                     {struct,
+                                      #{error =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"TurnError">>},
+                                            {exact,null}]}},
+                                        id => {required,binstr},
+                                        status =>
+                                         {required,{ref,<<"TurnStatus">>}},
+                                        items =>
+                                         {required,
+                                          {list,{ref,<<"ThreadItem">>}}}}},
+                                    <<"TurnError">> =>
+                                     {struct,
+                                      #{message => {required,binstr},
+                                        additionalDetails =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[binstr,{exact,null}]}}}},
+                                        codexErrorInfo =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"CodexErrorInfo">>},
+                                            {exact,null}]}}}},
+                                    <<"TurnStatus">> =>
+                                     {enum,
+                                      [completed,interrupted,failed,
+                                       inProgress]},
+                                    <<"UserInput">> =>
+                                     {any_of,
+                                      [{struct,
+                                        #{type => {required,{enum,[text]}},
+                                          text => {required,binstr},
+                                          text_elements =>
+                                           {optional,
+                                            {default,
+                                             {[],
+                                              {list,
+                                               {ref,<<"TextElement">>}}}}}}},
+                                       {struct,
+                                        #{type => {required,{enum,[image]}},
+                                          url => {required,binstr}}},
+                                       {struct,
+                                        #{type =>
+                                           {required,{enum,[localImage]}},
+                                          path => {required,binstr}}},
+                                       {struct,
+                                        #{name => {required,binstr},
+                                          type => {required,{enum,[skill]}},
+                                          path => {required,binstr}}},
+                                       {struct,
+                                        #{name => {required,binstr},
+                                          type => {required,{enum,[mention]}},
+                                          path => {required,binstr}}}]},
+                                    <<"WebSearchAction">> =>
+                                     {any_of,
+                                      [{struct,
+                                        #{type => {required,{enum,[search]}},
+                                          query =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}},
+                                          queries =>
+                                           {optional,
+                                            {any_of,
+                                             [{list,binstr},{exact,null}]}}}},
+                                       {struct,
+                                        #{type => {required,{enum,[openPage]}},
+                                          url =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}}}},
+                                       {struct,
+                                        #{type =>
+                                           {required,{enum,[findInPage]}},
+                                          pattern =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}},
+                                          url =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}}}},
+                                       {struct,
+                                        #{type =>
+                                           {required,{enum,[other]}}}}]}},
+                                  {struct,
+                                   #{thread =>
+                                      {required,{ref,<<"Thread">>}}}}}}},
+    {thread_compact_start_params, {struct,#{threadId => {required,binstr}}}},
+    {thread_compact_start_response, {map,{binstr,term}}},
+    {thread_rollback_params, {struct,#{threadId => {required,binstr},
+                                       numTurns => {required,integer}}}},
+    {thread_rollback_response, {with_defs,
+                                {#{<<"ByteRange">> =>
+                                    {struct,
+                                     #{start => {required,integer},
+                                       'end' => {required,integer}}},
+                                   <<"CodexErrorInfo">> =>
+                                    {any_of,
+                                     [{enum,
+                                       [contextWindowExceeded,
+                                        usageLimitExceeded,
+                                        internalServerError,unauthorized,
+                                        badRequest,threadRollbackFailed,
+                                        sandboxError,other]},
+                                      {struct,
+                                       #{modelCap =>
+                                          {required,
+                                           {struct,
+                                            #{model => {required,binstr},
+                                              reset_after_seconds =>
+                                               {optional,
+                                                {any_of,
+                                                 [integer,{exact,null}]}}}}}}},
+                                      {struct,
+                                       #{httpConnectionFailed =>
+                                          {required,
+                                           {struct,
+                                            #{httpStatusCode =>
+                                               {optional,
+                                                {any_of,
+                                                 [integer,{exact,null}]}}}}}}},
+                                      {struct,
+                                       #{responseStreamConnectionFailed =>
+                                          {required,
+                                           {struct,
+                                            #{httpStatusCode =>
+                                               {optional,
+                                                {any_of,
+                                                 [integer,{exact,null}]}}}}}}},
+                                      {struct,
+                                       #{responseStreamDisconnected =>
+                                          {required,
+                                           {struct,
+                                            #{httpStatusCode =>
+                                               {optional,
+                                                {any_of,
+                                                 [integer,{exact,null}]}}}}}}},
+                                      {struct,
+                                       #{responseTooManyFailedAttempts =>
+                                          {required,
+                                           {struct,
+                                            #{httpStatusCode =>
+                                               {optional,
+                                                {any_of,
+                                                 [integer,
+                                                  {exact,null}]}}}}}}}]},
+                                   <<"CollabAgentState">> =>
+                                    {struct,
+                                     #{message =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       status =>
+                                        {required,
+                                         {ref,<<"CollabAgentStatus">>}}}},
+                                   <<"CollabAgentStatus">> =>
+                                    {enum,
+                                     [pendingInit,running,completed,errored,
+                                      shutdown,notFound]},
+                                   <<"CollabAgentTool">> =>
+                                    {enum,
+                                     [spawnAgent,sendInput,wait,closeAgent]},
+                                   <<"CollabAgentToolCallStatus">> =>
+                                    {enum,[inProgress,completed,failed]},
+                                   <<"CommandAction">> =>
+                                    {any_of,
+                                     [{struct,
+                                       #{command => {required,binstr},
+                                         name => {required,binstr},
+                                         type => {required,{enum,[read]}},
+                                         path => {required,binstr}}},
+                                      {struct,
+                                       #{command => {required,binstr},
+                                         type => {required,{enum,[listFiles]}},
+                                         path =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}}}},
+                                      {struct,
+                                       #{command => {required,binstr},
+                                         type => {required,{enum,[search]}},
+                                         path =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         query =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}}}},
+                                      {struct,
+                                       #{command => {required,binstr},
+                                         type =>
+                                          {required,{enum,[unknown]}}}}]},
+                                   <<"CommandExecutionStatus">> =>
+                                    {enum,
+                                     [inProgress,completed,failed,declined]},
+                                   <<"FileUpdateChange">> =>
+                                    {struct,
+                                     #{path => {required,binstr},
+                                       diff => {required,binstr},
+                                       kind =>
+                                        {required,
+                                         {ref,<<"PatchChangeKind">>}}}},
+                                   <<"GitInfo">> =>
+                                    {struct,
+                                     #{branch =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       sha =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       originUrl =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}}}},
+                                   <<"McpToolCallError">> =>
+                                    {struct,#{message => {required,binstr}}},
+                                   <<"McpToolCallResult">> =>
+                                    {struct,
+                                     #{content => {required,{list,term}},
+                                       structuredContent => {optional,term}}},
+                                   <<"McpToolCallStatus">> =>
+                                    {enum,[inProgress,completed,failed]},
+                                   <<"PatchApplyStatus">> =>
+                                    {enum,
+                                     [inProgress,completed,failed,declined]},
+                                   <<"PatchChangeKind">> =>
+                                    {any_of,
+                                     [{struct,
+                                       #{type => {required,{enum,[add]}}}},
+                                      {struct,
+                                       #{type => {required,{enum,[delete]}}}},
+                                      {struct,
+                                       #{type => {required,{enum,[update]}},
+                                         move_path =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}}}}]},
+                                   <<"SessionSource">> =>
+                                    {any_of,
+                                     [{enum,
+                                       [cli,vscode,exec,appServer,unknown]},
+                                      {struct,
+                                       #{subAgent =>
+                                          {required,
+                                           {ref,<<"SubAgentSource">>}}}}]},
+                                   <<"SubAgentSource">> =>
+                                    {any_of,
+                                     [{enum,[review,compact]},
+                                      {struct,
+                                       #{thread_spawn =>
+                                          {required,
+                                           {struct,
+                                            #{depth => {required,integer},
+                                              parent_thread_id =>
+                                               {required,
+                                                {ref,<<"ThreadId">>}}}}}}},
+                                      {struct,#{other => {required,binstr}}}]},
+                                   <<"TextElement">> =>
+                                    {struct,
+                                     #{byteRange =>
+                                        {required,
+                                         {all_of,[{ref,<<"ByteRange">>}]}},
+                                       placeholder =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}}}},
+                                   <<"Thread">> =>
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       path =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       source =>
+                                        {required,
+                                         {all_of,[{ref,<<"SessionSource">>}]}},
+                                       cwd => {required,binstr},
+                                       modelProvider => {required,binstr},
+                                       cliVersion => {required,binstr},
+                                       createdAt => {required,integer},
+                                       gitInfo =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"GitInfo">>},{exact,null}]}},
+                                       preview => {required,binstr},
+                                       turns =>
+                                        {required,{list,{ref,<<"Turn">>}}},
+                                       updatedAt => {required,integer}}},
+                                   <<"ThreadId">> => binstr,
+                                   <<"ThreadItem">> =>
+                                    {any_of,
+                                     [{struct,
+                                       #{id => {required,binstr},
+                                         type =>
+                                          {required,{enum,[userMessage]}},
+                                         content =>
+                                          {required,
+                                           {list,{ref,<<"UserInput">>}}}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         type =>
+                                          {required,{enum,[agentMessage]}},
+                                         text => {required,binstr}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         type => {required,{enum,[plan]}},
+                                         text => {required,binstr}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         type => {required,{enum,[reasoning]}},
+                                         summary =>
+                                          {optional,
+                                           {default,{[],{list,binstr}}}},
+                                         content =>
+                                          {optional,
+                                           {default,{[],{list,binstr}}}}}},
+                                      {struct,
+                                       #{command => {required,binstr},
+                                         id => {required,binstr},
+                                         status =>
+                                          {required,
+                                           {ref,<<"CommandExecutionStatus">>}},
+                                         type =>
+                                          {required,{enum,[commandExecution]}},
+                                         cwd => {required,binstr},
+                                         commandActions =>
+                                          {required,
+                                           {list,{ref,<<"CommandAction">>}}},
+                                         aggregatedOutput =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         durationMs =>
+                                          {optional,
+                                           {any_of,[integer,{exact,null}]}},
+                                         exitCode =>
+                                          {optional,
+                                           {any_of,[integer,{exact,null}]}},
+                                         processId =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         status =>
+                                          {required,
+                                           {ref,<<"PatchApplyStatus">>}},
+                                         type =>
+                                          {required,{enum,[fileChange]}},
+                                         changes =>
+                                          {required,
+                                           {list,
+                                            {ref,<<"FileUpdateChange">>}}}}},
+                                      {struct,
+                                       #{error =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"McpToolCallError">>},
+                                             {exact,null}]}},
+                                         id => {required,binstr},
+                                         status =>
+                                          {required,
+                                           {ref,<<"McpToolCallStatus">>}},
+                                         type =>
+                                          {required,{enum,[mcpToolCall]}},
+                                         arguments => {required,term},
+                                         result =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"McpToolCallResult">>},
+                                             {exact,null}]}},
+                                         server => {required,binstr},
+                                         tool => {required,binstr},
+                                         durationMs =>
+                                          {optional,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         status =>
+                                          {required,
+                                           {all_of,
+                                            [{ref,
+                                              <<"CollabAgentToolCallStatus">>}]}},
+                                         type =>
+                                          {required,
+                                           {enum,[collabAgentToolCall]}},
+                                         prompt =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         tool =>
+                                          {required,
+                                           {all_of,
+                                            [{ref,<<"CollabAgentTool">>}]}},
+                                         agentsStates =>
+                                          {required,
+                                           {map,
+                                            {binstr,
+                                             {ref,<<"CollabAgentState">>}}}},
+                                         receiverThreadIds =>
+                                          {required,{list,binstr}},
+                                         senderThreadId => {required,binstr}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         type => {required,{enum,[webSearch]}},
+                                         query => {required,binstr},
+                                         action =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"WebSearchAction">>},
+                                             {exact,null}]}}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         type => {required,{enum,[imageView]}},
+                                         path => {required,binstr}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         type =>
+                                          {required,
+                                           {enum,[enteredReviewMode]}},
+                                         review => {required,binstr}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         type =>
+                                          {required,{enum,[exitedReviewMode]}},
+                                         review => {required,binstr}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         type =>
+                                          {required,
+                                           {enum,[contextCompaction]}}}}]},
+                                   <<"Turn">> =>
+                                    {struct,
+                                     #{error =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"TurnError">>},
+                                           {exact,null}]}},
+                                       id => {required,binstr},
+                                       status =>
+                                        {required,{ref,<<"TurnStatus">>}},
+                                       items =>
+                                        {required,
+                                         {list,{ref,<<"ThreadItem">>}}}}},
+                                   <<"TurnError">> =>
+                                    {struct,
+                                     #{message => {required,binstr},
+                                       additionalDetails =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[binstr,{exact,null}]}}}},
+                                       codexErrorInfo =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"CodexErrorInfo">>},
+                                           {exact,null}]}}}},
+                                   <<"TurnStatus">> =>
+                                    {enum,
+                                     [completed,interrupted,failed,
+                                      inProgress]},
+                                   <<"UserInput">> =>
+                                    {any_of,
+                                     [{struct,
+                                       #{type => {required,{enum,[text]}},
+                                         text => {required,binstr},
+                                         text_elements =>
+                                          {optional,
+                                           {default,
+                                            {[],
+                                             {list,
+                                              {ref,<<"TextElement">>}}}}}}},
+                                      {struct,
+                                       #{type => {required,{enum,[image]}},
+                                         url => {required,binstr}}},
+                                      {struct,
+                                       #{type =>
+                                          {required,{enum,[localImage]}},
+                                         path => {required,binstr}}},
+                                      {struct,
+                                       #{name => {required,binstr},
+                                         type => {required,{enum,[skill]}},
+                                         path => {required,binstr}}},
+                                      {struct,
+                                       #{name => {required,binstr},
+                                         type => {required,{enum,[mention]}},
+                                         path => {required,binstr}}}]},
+                                   <<"WebSearchAction">> =>
+                                    {any_of,
+                                     [{struct,
+                                       #{type => {required,{enum,[search]}},
+                                         query =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         queries =>
+                                          {optional,
+                                           {any_of,
+                                            [{list,binstr},{exact,null}]}}}},
+                                      {struct,
+                                       #{type => {required,{enum,[openPage]}},
+                                         url =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}}}},
+                                      {struct,
+                                       #{type =>
+                                          {required,{enum,[findInPage]}},
+                                         pattern =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         url =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}}}},
+                                      {struct,
+                                       #{type =>
+                                          {required,{enum,[other]}}}}]}},
+                                 {struct,
+                                  #{thread =>
+                                     {required,
+                                      {all_of,[{ref,<<"Thread">>}]}}}}}}},
+    {review_start_params, {with_defs,
+                           {#{<<"ReviewDelivery">> => {enum,[inline,detached]},
+                              <<"ReviewTarget">> =>
+                               {any_of,
+                                [{struct,
+                                  #{type =>
+                                     {required,{enum,[uncommittedChanges]}}}},
+                                 {struct,
+                                  #{type => {required,{enum,[baseBranch]}},
+                                    branch => {required,binstr}}},
+                                 {struct,
+                                  #{type => {required,{enum,[commit]}},
+                                    title =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    sha => {required,binstr}}},
+                                 {struct,
+                                  #{type => {required,{enum,[custom]}},
+                                    instructions => {required,binstr}}}]}},
+                            {struct,
+                             #{threadId => {required,binstr},
+                               delivery =>
+                                {optional,
+                                 {default,
+                                  {null,
+                                   {any_of,
+                                    [{ref,<<"ReviewDelivery">>},
+                                     {exact,null}]}}}},
+                               target =>
+                                {required,{ref,<<"ReviewTarget">>}}}}}}},
+    {review_start_response, {with_defs,
+                             {#{<<"ByteRange">> =>
+                                 {struct,
+                                  #{start => {required,integer},
+                                    'end' => {required,integer}}},
+                                <<"CodexErrorInfo">> =>
+                                 {any_of,
+                                  [{enum,
+                                    [contextWindowExceeded,usageLimitExceeded,
+                                     internalServerError,unauthorized,
+                                     badRequest,threadRollbackFailed,
+                                     sandboxError,other]},
+                                   {struct,
+                                    #{modelCap =>
+                                       {required,
+                                        {struct,
+                                         #{model => {required,binstr},
+                                           reset_after_seconds =>
+                                            {optional,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}}}}},
+                                   {struct,
+                                    #{httpConnectionFailed =>
+                                       {required,
+                                        {struct,
+                                         #{httpStatusCode =>
+                                            {optional,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}}}}},
+                                   {struct,
+                                    #{responseStreamConnectionFailed =>
+                                       {required,
+                                        {struct,
+                                         #{httpStatusCode =>
+                                            {optional,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}}}}},
+                                   {struct,
+                                    #{responseStreamDisconnected =>
+                                       {required,
+                                        {struct,
+                                         #{httpStatusCode =>
+                                            {optional,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}}}}},
+                                   {struct,
+                                    #{responseTooManyFailedAttempts =>
+                                       {required,
+                                        {struct,
+                                         #{httpStatusCode =>
+                                            {optional,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}}}}}]},
+                                <<"CollabAgentState">> =>
+                                 {struct,
+                                  #{message =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    status =>
+                                     {required,
+                                      {ref,<<"CollabAgentStatus">>}}}},
+                                <<"CollabAgentStatus">> =>
+                                 {enum,
+                                  [pendingInit,running,completed,errored,
+                                   shutdown,notFound]},
+                                <<"CollabAgentTool">> =>
+                                 {enum,[spawnAgent,sendInput,wait,closeAgent]},
+                                <<"CollabAgentToolCallStatus">> =>
+                                 {enum,[inProgress,completed,failed]},
+                                <<"CommandAction">> =>
+                                 {any_of,
+                                  [{struct,
+                                    #{command => {required,binstr},
+                                      name => {required,binstr},
+                                      type => {required,{enum,[read]}},
+                                      path => {required,binstr}}},
+                                   {struct,
+                                    #{command => {required,binstr},
+                                      type => {required,{enum,[listFiles]}},
+                                      path =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}}}},
+                                   {struct,
+                                    #{command => {required,binstr},
+                                      type => {required,{enum,[search]}},
+                                      path =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
+                                      query =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}}}},
+                                   {struct,
+                                    #{command => {required,binstr},
+                                      type => {required,{enum,[unknown]}}}}]},
+                                <<"CommandExecutionStatus">> =>
+                                 {enum,[inProgress,completed,failed,declined]},
+                                <<"FileUpdateChange">> =>
+                                 {struct,
+                                  #{path => {required,binstr},
+                                    diff => {required,binstr},
+                                    kind =>
+                                     {required,{ref,<<"PatchChangeKind">>}}}},
+                                <<"McpToolCallError">> =>
+                                 {struct,#{message => {required,binstr}}},
+                                <<"McpToolCallResult">> =>
+                                 {struct,
+                                  #{content => {required,{list,term}},
+                                    structuredContent => {optional,term}}},
+                                <<"McpToolCallStatus">> =>
+                                 {enum,[inProgress,completed,failed]},
+                                <<"PatchApplyStatus">> =>
+                                 {enum,[inProgress,completed,failed,declined]},
+                                <<"PatchChangeKind">> =>
+                                 {any_of,
+                                  [{struct,#{type => {required,{enum,[add]}}}},
+                                   {struct,
+                                    #{type => {required,{enum,[delete]}}}},
+                                   {struct,
+                                    #{type => {required,{enum,[update]}},
+                                      move_path =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}}}}]},
+                                <<"TextElement">> =>
+                                 {struct,
+                                  #{byteRange =>
+                                     {required,
+                                      {all_of,[{ref,<<"ByteRange">>}]}},
+                                    placeholder =>
+                                     {optional,
+                                      {any_of,[binstr,{exact,null}]}}}},
+                                <<"ThreadItem">> =>
+                                 {any_of,
+                                  [{struct,
+                                    #{id => {required,binstr},
+                                      type => {required,{enum,[userMessage]}},
+                                      content =>
+                                       {required,
+                                        {list,{ref,<<"UserInput">>}}}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      type => {required,{enum,[agentMessage]}},
+                                      text => {required,binstr}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      type => {required,{enum,[plan]}},
+                                      text => {required,binstr}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      type => {required,{enum,[reasoning]}},
+                                      summary =>
+                                       {optional,{default,{[],{list,binstr}}}},
+                                      content =>
+                                       {optional,
+                                        {default,{[],{list,binstr}}}}}},
+                                   {struct,
+                                    #{command => {required,binstr},
+                                      id => {required,binstr},
+                                      status =>
+                                       {required,
+                                        {ref,<<"CommandExecutionStatus">>}},
+                                      type =>
+                                       {required,{enum,[commandExecution]}},
+                                      cwd => {required,binstr},
+                                      commandActions =>
+                                       {required,
+                                        {list,{ref,<<"CommandAction">>}}},
+                                      aggregatedOutput =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
+                                      durationMs =>
+                                       {optional,
+                                        {any_of,[integer,{exact,null}]}},
+                                      exitCode =>
+                                       {optional,
+                                        {any_of,[integer,{exact,null}]}},
+                                      processId =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      status =>
+                                       {required,{ref,<<"PatchApplyStatus">>}},
+                                      type => {required,{enum,[fileChange]}},
+                                      changes =>
+                                       {required,
+                                        {list,{ref,<<"FileUpdateChange">>}}}}},
+                                   {struct,
+                                    #{error =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"McpToolCallError">>},
+                                          {exact,null}]}},
+                                      id => {required,binstr},
+                                      status =>
+                                       {required,
+                                        {ref,<<"McpToolCallStatus">>}},
+                                      type => {required,{enum,[mcpToolCall]}},
+                                      arguments => {required,term},
+                                      result =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"McpToolCallResult">>},
+                                          {exact,null}]}},
+                                      server => {required,binstr},
+                                      tool => {required,binstr},
+                                      durationMs =>
+                                       {optional,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      status =>
+                                       {required,
+                                        {all_of,
+                                         [{ref,
+                                           <<"CollabAgentToolCallStatus">>}]}},
+                                      type =>
+                                       {required,{enum,[collabAgentToolCall]}},
+                                      prompt =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
+                                      tool =>
+                                       {required,
+                                        {all_of,
+                                         [{ref,<<"CollabAgentTool">>}]}},
+                                      agentsStates =>
+                                       {required,
+                                        {map,
+                                         {binstr,
+                                          {ref,<<"CollabAgentState">>}}}},
+                                      receiverThreadIds =>
+                                       {required,{list,binstr}},
+                                      senderThreadId => {required,binstr}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      type => {required,{enum,[webSearch]}},
+                                      query => {required,binstr},
+                                      action =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"WebSearchAction">>},
+                                          {exact,null}]}}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      type => {required,{enum,[imageView]}},
+                                      path => {required,binstr}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      type =>
+                                       {required,{enum,[enteredReviewMode]}},
+                                      review => {required,binstr}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      type =>
+                                       {required,{enum,[exitedReviewMode]}},
+                                      review => {required,binstr}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      type =>
+                                       {required,
+                                        {enum,[contextCompaction]}}}}]},
+                                <<"Turn">> =>
+                                 {struct,
+                                  #{error =>
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"TurnError">>},{exact,null}]}},
+                                    id => {required,binstr},
+                                    status =>
+                                     {required,{ref,<<"TurnStatus">>}},
+                                    items =>
+                                     {required,
+                                      {list,{ref,<<"ThreadItem">>}}}}},
+                                <<"TurnError">> =>
+                                 {struct,
+                                  #{message => {required,binstr},
+                                    additionalDetails =>
+                                     {optional,
+                                      {default,
+                                       {null,{any_of,[binstr,{exact,null}]}}}},
+                                    codexErrorInfo =>
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"CodexErrorInfo">>},
+                                        {exact,null}]}}}},
+                                <<"TurnStatus">> =>
+                                 {enum,
+                                  [completed,interrupted,failed,inProgress]},
+                                <<"UserInput">> =>
+                                 {any_of,
+                                  [{struct,
+                                    #{type => {required,{enum,[text]}},
+                                      text => {required,binstr},
+                                      text_elements =>
+                                       {optional,
+                                        {default,
+                                         {[],
+                                          {list,{ref,<<"TextElement">>}}}}}}},
+                                   {struct,
+                                    #{type => {required,{enum,[image]}},
+                                      url => {required,binstr}}},
+                                   {struct,
+                                    #{type => {required,{enum,[localImage]}},
+                                      path => {required,binstr}}},
+                                   {struct,
+                                    #{name => {required,binstr},
+                                      type => {required,{enum,[skill]}},
+                                      path => {required,binstr}}},
+                                   {struct,
+                                    #{name => {required,binstr},
+                                      type => {required,{enum,[mention]}},
+                                      path => {required,binstr}}}]},
+                                <<"WebSearchAction">> =>
+                                 {any_of,
+                                  [{struct,
+                                    #{type => {required,{enum,[search]}},
+                                      query =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
+                                      queries =>
+                                       {optional,
+                                        {any_of,
+                                         [{list,binstr},{exact,null}]}}}},
+                                   {struct,
+                                    #{type => {required,{enum,[openPage]}},
+                                      url =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}}}},
+                                   {struct,
+                                    #{type => {required,{enum,[findInPage]}},
+                                      pattern =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
+                                      url =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}}}},
+                                   {struct,
+                                    #{type => {required,{enum,[other]}}}}]}},
+                              {struct,
+                               #{turn => {required,{ref,<<"Turn">>}},
+                                 reviewThreadId => {required,binstr}}}}}},
+    {command_exec_params, {with_defs,
+                           {#{<<"AbsolutePathBuf">> => binstr,
+                              <<"NetworkAccess">> =>
+                               {enum,[restricted,enabled]},
+                              <<"SandboxPolicy">> =>
+                               {any_of,
+                                [{struct,
+                                  #{type =>
+                                     {required,{enum,[dangerFullAccess]}}}},
+                                 {struct,
+                                  #{type => {required,{enum,[readOnly]}}}},
+                                 {struct,
+                                  #{type =>
+                                     {required,{enum,[externalSandbox]}},
+                                    networkAccess =>
+                                     {optional,
+                                      {default,
+                                       {<<"restricted">>,
+                                        {all_of,
+                                         [{ref,<<"NetworkAccess">>}]}}}}}},
+                                 {struct,
+                                  #{type => {required,{enum,[workspaceWrite]}},
+                                    networkAccess =>
+                                     {optional,{default,{false,boolean}}},
+                                    excludeSlashTmp =>
+                                     {optional,{default,{false,boolean}}},
+                                    excludeTmpdirEnvVar =>
+                                     {optional,{default,{false,boolean}}},
+                                    writableRoots =>
+                                     {optional,
+                                      {default,
+                                       {[],
+                                        {list,
+                                         {ref,<<"AbsolutePathBuf">>}}}}}}}]}},
+                            {struct,
+                             #{command => {required,{list,binstr}},
+                               cwd =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
+                               sandboxPolicy =>
+                                {optional,
+                                 {any_of,
+                                  [{ref,<<"SandboxPolicy">>},{exact,null}]}},
+                               timeoutMs =>
+                                {optional,{any_of,[integer,{exact,null}]}}}}}}},
+    {command_exec_response, {struct,#{stdout => {required,binstr},
+                                      stderr => {required,binstr},
+                                      exitCode => {required,integer}}}},
+    {model_list_params, {struct,
+                            #{limit =>
+                                  {optional,{any_of,[integer,{exact,null}]}},
+                              cursor =>
+                                  {optional,{any_of,[binstr,{exact,null}]}}}}},
+    {model_list_response, {with_defs,
+                           {#{<<"InputModality">> =>
+                               {any_of,[{enum,[text]},{enum,[image]}]},
+                              <<"Model">> =>
+                               {struct,
+                                #{id => {required,binstr},
+                                  description => {required,binstr},
+                                  model => {required,binstr},
+                                  defaultReasoningEffort =>
+                                   {required,{ref,<<"ReasoningEffort">>}},
+                                  displayName => {required,binstr},
+                                  inputModalities =>
+                                   {optional,
+                                    {default,
+                                     {[<<"text">>,<<"image">>],
+                                      {list,{ref,<<"InputModality">>}}}}},
+                                  isDefault => {required,boolean},
+                                  supportedReasoningEfforts =>
+                                   {required,
+                                    {list,{ref,<<"ReasoningEffortOption">>}}},
+                                  supportsPersonality =>
+                                   {optional,{default,{false,boolean}}},
+                                  upgrade =>
+                                   {optional,{any_of,[binstr,{exact,null}]}}}},
+                              <<"ReasoningEffort">> =>
+                               {enum,[none,minimal,low,medium,high,xhigh]},
+                              <<"ReasoningEffortOption">> =>
+                               {struct,
+                                #{description => {required,binstr},
+                                  reasoningEffort =>
+                                   {required,{ref,<<"ReasoningEffort">>}}}}},
+                            {struct,
+                             #{data => {required,{list,{ref,<<"Model">>}}},
+                               nextCursor =>
+                                {optional,{any_of,[binstr,{exact,null}]}}}}}}},
+    {skills_list_params, {struct,#{cwds => {optional,{list,binstr}},
+                                   forceReload => {optional,boolean}}}},
+    {skills_list_response, {with_defs,
+                            {#{<<"SkillDependencies">> =>
+                                {struct,
+                                 #{tools =>
+                                    {required,
+                                     {list,{ref,<<"SkillToolDependency">>}}}}},
+                               <<"SkillErrorInfo">> =>
+                                {struct,
+                                 #{message => {required,binstr},
+                                   path => {required,binstr}}},
+                               <<"SkillInterface">> =>
+                                {struct,
+                                 #{displayName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   brandColor =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   defaultPrompt =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   iconLarge =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   iconSmall =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   shortDescription =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"SkillMetadata">> =>
+                                {struct,
+                                 #{enabled => {required,boolean},
+                                   name => {required,binstr},
+                                   scope => {required,{ref,<<"SkillScope">>}},
+                                   path => {required,binstr},
+                                   interface =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"SkillInterface">>},
+                                       {exact,null}]}},
+                                   description => {required,binstr},
+                                   dependencies =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"SkillDependencies">>},
+                                       {exact,null}]}},
+                                   shortDescription =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"SkillScope">> =>
+                                {enum,[user,repo,system,admin]},
+                               <<"SkillToolDependency">> =>
+                                {struct,
+                                 #{command =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   type => {required,binstr},
+                                   value => {required,binstr},
+                                   description =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   url =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   transport =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"SkillsListEntry">> =>
+                                {struct,
+                                 #{errors =>
+                                    {required,
+                                     {list,{ref,<<"SkillErrorInfo">>}}},
+                                   cwd => {required,binstr},
+                                   skills =>
+                                    {required,
+                                     {list,{ref,<<"SkillMetadata">>}}}}}},
+                             {struct,
+                              #{data =>
+                                 {required,
+                                  {list,{ref,<<"SkillsListEntry">>}}}}}}}},
+    {skills_config_write_params, {struct,
+                                     #{enabled => {required,boolean},
+                                       path => {required,binstr}}}},
+    {skills_config_write_response, {struct,
+                                       #{effectiveEnabled =>
+                                             {required,boolean}}}},
+    {apps_list_params, {struct,
+                           #{limit =>
+                                 {optional,{any_of,[integer,{exact,null}]}},
+                             cursor =>
+                                 {optional,{any_of,[binstr,{exact,null}]}}}}},
+    {apps_list_response, {with_defs,
+                          {#{<<"AppInfo">> =>
+                              {struct,
+                               #{id => {required,binstr},
+                                 name => {required,binstr},
+                                 description =>
+                                  {optional,{any_of,[binstr,{exact,null}]}},
+                                 distributionChannel =>
+                                  {optional,{any_of,[binstr,{exact,null}]}},
+                                 installUrl =>
+                                  {optional,{any_of,[binstr,{exact,null}]}},
+                                 isAccessible =>
+                                  {optional,{default,{false,boolean}}},
+                                 logoUrl =>
+                                  {optional,{any_of,[binstr,{exact,null}]}},
+                                 logoUrlDark =>
+                                  {optional,{any_of,[binstr,{exact,null}]}}}}},
+                           {struct,
+                            #{data => {required,{list,{ref,<<"AppInfo">>}}},
+                              nextCursor =>
+                               {optional,{any_of,[binstr,{exact,null}]}}}}}}},
+    {mcp_server_oauth_login_params, {struct,
+                                     #{name => {required,binstr},
+                                       scopes =>
+                                        {optional,
+                                         {any_of,
+                                          [{list,binstr},{exact,null}]}},
+                                       timeoutSecs =>
+                                        {optional,
+                                         {any_of,[integer,{exact,null}]}}}}},
+    {mcp_server_oauth_login_response, {struct,
+                                       #{authorizationUrl =>
+                                          {required,binstr}}}},
+    {mcp_server_status_list_params, {struct,
+                                     #{limit =>
+                                        {optional,
+                                         {any_of,[integer,{exact,null}]}},
+                                       cursor =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}}}}},
+    {mcp_server_status_list_response, {with_defs,
+                                       {#{<<"McpAuthStatus">> =>
+                                           {enum,
+                                            [unsupported,notLoggedIn,
+                                             bearerToken,oAuth]},
+                                          <<"McpServerStatus">> =>
+                                           {struct,
+                                            #{name => {required,binstr},
+                                              tools =>
+                                               {required,
+                                                {map,
+                                                 {binstr,{ref,<<"Tool">>}}}},
+                                              resources =>
+                                               {required,
+                                                {list,{ref,<<"Resource">>}}},
+                                              authStatus =>
+                                               {required,
+                                                {ref,<<"McpAuthStatus">>}},
+                                              resourceTemplates =>
+                                               {required,
+                                                {list,
+                                                 {ref,
+                                                  <<"ResourceTemplate">>}}}}},
+                                          <<"Resource">> =>
+                                           {struct,
+                                            #{name => {required,binstr},
+                                              size =>
+                                               {optional,
+                                                {any_of,
+                                                 [integer,{exact,null}]}},
+                                              description =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              title =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              uri => {required,binstr},
+                                              annotations => {optional,term},
+                                              mimeType =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              '_meta' => {optional,term},
+                                              icons =>
+                                               {optional,
+                                                {any_of,
+                                                 [{list,term},
+                                                  {exact,null}]}}}},
+                                          <<"ResourceTemplate">> =>
+                                           {struct,
+                                            #{name => {required,binstr},
+                                              description =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              title =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              annotations => {optional,term},
+                                              mimeType =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              uriTemplate =>
+                                               {required,binstr}}},
+                                          <<"Tool">> =>
+                                           {struct,
+                                            #{name => {required,binstr},
+                                              description =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              title =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              outputSchema => {optional,term},
+                                              inputSchema => {required,term},
+                                              annotations => {optional,term},
+                                              '_meta' => {optional,term},
+                                              icons =>
+                                               {optional,
+                                                {any_of,
+                                                 [{list,term},
+                                                  {exact,null}]}}}}},
+                                        {struct,
+                                         #{data =>
+                                            {required,
+                                             {list,
+                                              {ref,<<"McpServerStatus">>}}},
+                                           nextCursor =>
+                                            {optional,
+                                             {any_of,
+                                              [binstr,{exact,null}]}}}}}}},
+    {config_read_params, {struct,
+                             #{cwd =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                               includeLayers =>
+                                   {optional,{default,{false,boolean}}}}}},
+    {config_read_response, {with_defs,
+                            {#{<<"AbsolutePathBuf">> => binstr,
+                               <<"AnalyticsConfig">> =>
+                                {struct,
+                                 #{enabled =>
+                                    {optional,
+                                     {any_of,[boolean,{exact,null}]}}}},
+                               <<"AskForApproval">> =>
+                                {enum,
+                                 [untrusted,'on-failure','on-request',never]},
+                               <<"Config">> =>
+                                {struct,
+                                 #{profile =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   instructions =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   tools =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ToolsV2">>},{exact,null}]}},
+                                   model =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   developer_instructions =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   model_context_window =>
+                                    {optional,{any_of,[integer,{exact,null}]}},
+                                   approval_policy =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AskForApproval">>},
+                                       {exact,null}]}},
+                                   analytics =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AnalyticsConfig">>},
+                                       {exact,null}]}},
+                                   compact_prompt =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   forced_chatgpt_workspace_id =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   forced_login_method =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ForcedLoginMethod">>},
+                                       {exact,null}]}},
+                                   model_auto_compact_token_limit =>
+                                    {optional,{any_of,[integer,{exact,null}]}},
+                                   model_provider =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   model_reasoning_effort =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ReasoningEffort">>},
+                                       {exact,null}]}},
+                                   model_reasoning_summary =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ReasoningSummary">>},
+                                       {exact,null}]}},
+                                   model_verbosity =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"Verbosity">>},{exact,null}]}},
+                                   profiles =>
+                                    {optional,
+                                     {default,
+                                      {#{},
+                                       {map,{binstr,{ref,<<"ProfileV2">>}}}}}},
+                                   review_model =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   sandbox_mode =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"SandboxMode">>},{exact,null}]}},
+                                   sandbox_workspace_write =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"SandboxWorkspaceWrite">>},
+                                       {exact,null}]}},
+                                   web_search =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"WebSearchMode">>},
+                                       {exact,null}]}}}},
+                               <<"ConfigLayer">> =>
+                                {struct,
+                                 #{name =>
+                                    {required,{ref,<<"ConfigLayerSource">>}},
+                                   version => {required,binstr},
+                                   config => {required,term},
+                                   disabledReason =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"ConfigLayerMetadata">> =>
+                                {struct,
+                                 #{name =>
+                                    {required,{ref,<<"ConfigLayerSource">>}},
+                                   version => {required,binstr}}},
+                               <<"ConfigLayerSource">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[mdm]}},
+                                     domain => {required,binstr},
+                                     key => {required,binstr}}},
+                                  {struct,
+                                   #{type => {required,{enum,[system]}},
+                                     file =>
+                                      {required,
+                                       {all_of,
+                                        [{ref,<<"AbsolutePathBuf">>}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[user]}},
+                                     file =>
+                                      {required,
+                                       {all_of,
+                                        [{ref,<<"AbsolutePathBuf">>}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[project]}},
+                                     dotCodexFolder =>
+                                      {required,{ref,<<"AbsolutePathBuf">>}}}},
+                                  {struct,
+                                   #{type =>
+                                      {required,{enum,[sessionFlags]}}}},
+                                  {struct,
+                                   #{type =>
+                                      {required,
+                                       {enum,
+                                        [legacyManagedConfigTomlFromFile]}},
+                                     file =>
+                                      {required,{ref,<<"AbsolutePathBuf">>}}}},
+                                  {struct,
+                                   #{type =>
+                                      {required,
+                                       {enum,
+                                        [legacyManagedConfigTomlFromMdm]}}}}]},
+                               <<"ForcedLoginMethod">> => {enum,[chatgpt,api]},
+                               <<"ProfileV2">> =>
+                                {struct,
+                                 #{model =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   approval_policy =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AskForApproval">>},
+                                       {exact,null}]}},
+                                   model_provider =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   model_reasoning_effort =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ReasoningEffort">>},
+                                       {exact,null}]}},
+                                   model_reasoning_summary =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ReasoningSummary">>},
+                                       {exact,null}]}},
+                                   model_verbosity =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"Verbosity">>},{exact,null}]}},
+                                   web_search =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"WebSearchMode">>},
+                                       {exact,null}]}},
+                                   chatgpt_base_url =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"ReasoningEffort">> =>
+                                {enum,[none,minimal,low,medium,high,xhigh]},
+                               <<"ReasoningSummary">> =>
+                                {any_of,
+                                 [{enum,[auto,concise,detailed]},
+                                  {enum,[none]}]},
+                               <<"SandboxMode">> =>
+                                {enum,
+                                 ['read-only','workspace-write',
+                                  'danger-full-access']},
+                               <<"SandboxWorkspaceWrite">> =>
+                                {struct,
+                                 #{network_access =>
+                                    {optional,{default,{false,boolean}}},
+                                   exclude_slash_tmp =>
+                                    {optional,{default,{false,boolean}}},
+                                   exclude_tmpdir_env_var =>
+                                    {optional,{default,{false,boolean}}},
+                                   writable_roots =>
+                                    {optional,{default,{[],{list,binstr}}}}}},
+                               <<"ToolsV2">> =>
+                                {struct,
+                                 #{web_search =>
+                                    {optional,{any_of,[boolean,{exact,null}]}},
+                                   view_image =>
+                                    {optional,
+                                     {any_of,[boolean,{exact,null}]}}}},
+                               <<"Verbosity">> => {enum,[low,medium,high]},
+                               <<"WebSearchMode">> =>
+                                {enum,[disabled,cached,live]}},
+                             {struct,
+                              #{config => {required,{ref,<<"Config">>}},
+                                layers =>
+                                 {optional,
+                                  {any_of,
+                                   [{list,{ref,<<"ConfigLayer">>}},
+                                    {exact,null}]}},
+                                origins =>
+                                 {required,
+                                  {map,
+                                   {binstr,
+                                    {ref,<<"ConfigLayerMetadata">>}}}}}}}}},
+    {config_batch_write_params, {with_defs,
+                                 {#{<<"ConfigEdit">> =>
+                                     {struct,
+                                      #{value => {required,term},
+                                        keyPath => {required,binstr},
+                                        mergeStrategy =>
+                                         {required,
+                                          {ref,<<"MergeStrategy">>}}}},
+                                    <<"MergeStrategy">> =>
+                                     {enum,[replace,upsert]}},
+                                  {struct,
+                                   #{expectedVersion =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     filePath =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     edits =>
+                                      {required,
+                                       {list,{ref,<<"ConfigEdit">>}}}}}}}},
+    {config_value_write_params, {with_defs,
+                                 {#{<<"MergeStrategy">> =>
+                                     {enum,[replace,upsert]}},
+                                  {struct,
+                                   #{value => {required,term},
+                                     expectedVersion =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     filePath =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     keyPath => {required,binstr},
+                                     mergeStrategy =>
+                                      {required,{ref,<<"MergeStrategy">>}}}}}}},
+    {config_write_response, {with_defs,
+                             {#{<<"AbsolutePathBuf">> => binstr,
+                                <<"ConfigLayerMetadata">> =>
+                                 {struct,
+                                  #{name =>
+                                     {required,{ref,<<"ConfigLayerSource">>}},
+                                    version => {required,binstr}}},
+                                <<"ConfigLayerSource">> =>
+                                 {any_of,
+                                  [{struct,
+                                    #{type => {required,{enum,[mdm]}},
+                                      domain => {required,binstr},
+                                      key => {required,binstr}}},
+                                   {struct,
+                                    #{type => {required,{enum,[system]}},
+                                      file =>
+                                       {required,
+                                        {all_of,
+                                         [{ref,<<"AbsolutePathBuf">>}]}}}},
+                                   {struct,
+                                    #{type => {required,{enum,[user]}},
+                                      file =>
+                                       {required,
+                                        {all_of,
+                                         [{ref,<<"AbsolutePathBuf">>}]}}}},
+                                   {struct,
+                                    #{type => {required,{enum,[project]}},
+                                      dotCodexFolder =>
+                                       {required,
+                                        {ref,<<"AbsolutePathBuf">>}}}},
+                                   {struct,
+                                    #{type =>
+                                       {required,{enum,[sessionFlags]}}}},
+                                   {struct,
+                                    #{type =>
+                                       {required,
+                                        {enum,
+                                         [legacyManagedConfigTomlFromFile]}},
+                                      file =>
+                                       {required,
+                                        {ref,<<"AbsolutePathBuf">>}}}},
+                                   {struct,
+                                    #{type =>
+                                       {required,
+                                        {enum,
+                                         [legacyManagedConfigTomlFromMdm]}}}}]},
+                                <<"OverriddenMetadata">> =>
+                                 {struct,
+                                  #{message => {required,binstr},
+                                    effectiveValue => {required,term},
+                                    overridingLayer =>
+                                     {required,
+                                      {ref,<<"ConfigLayerMetadata">>}}}},
+                                <<"WriteStatus">> => {enum,[ok,okOverridden]}},
+                              {struct,
+                               #{status => {required,{ref,<<"WriteStatus">>}},
+                                 version => {required,binstr},
+                                 filePath =>
+                                  {required,
+                                   {all_of,[{ref,<<"AbsolutePathBuf">>}]}},
+                                 overriddenMetadata =>
+                                  {optional,
+                                   {any_of,
+                                    [{ref,<<"OverriddenMetadata">>},
+                                     {exact,null}]}}}}}}},
+    {config_requirements_read_response, {with_defs,
+                                         {#{<<"AskForApproval">> =>
+                                             {enum,
+                                              [untrusted,'on-failure',
+                                               'on-request',never]},
+                                            <<"ConfigRequirements">> =>
+                                             {struct,
+                                              #{allowedApprovalPolicies =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{list,
+                                                     {ref,
+                                                      <<"AskForApproval">>}},
+                                                    {exact,null}]}},
+                                                allowedSandboxModes =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{list,
+                                                     {ref,<<"SandboxMode">>}},
+                                                    {exact,null}]}},
+                                                enforceResidency =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"ResidencyRequirement">>},
+                                                    {exact,null}]}}}},
+                                            <<"ResidencyRequirement">> =>
+                                             {enum,[us]},
+                                            <<"SandboxMode">> =>
+                                             {enum,
+                                              ['read-only','workspace-write',
+                                               'danger-full-access']}},
+                                          {struct,
+                                           #{requirements =>
+                                              {optional,
+                                               {any_of,
+                                                [{ref,
+                                                  <<"ConfigRequirements">>},
+                                                 {exact,null}]}}}}}}},
+    {mcp_server_refresh_response, {map,{binstr,term}}},
+    {account_read_params, {struct,#{refreshToken =>
+                                        {optional,{default,{false,boolean}}}}}},
+    {account_read_response, {with_defs,
+                             {#{<<"Account">> =>
+                                 {any_of,
+                                  [{struct,
+                                    #{type => {required,{enum,[apiKey]}}}},
+                                   {struct,
+                                    #{type => {required,{enum,[chatgpt]}},
+                                      planType =>
+                                       {required,{ref,<<"PlanType">>}},
+                                      email => {required,binstr}}}]},
+                                <<"PlanType">> =>
+                                 {enum,
+                                  [free,go,plus,pro,team,business,enterprise,
+                                   edu,unknown]}},
+                              {struct,
+                               #{account =>
+                                  {optional,
+                                   {any_of,
+                                    [{ref,<<"Account">>},{exact,null}]}},
+                                 requiresOpenaiAuth => {required,boolean}}}}}},
+    {account_login_start_params, {any_of,
+                                  [{struct,
+                                    #{type => {required,{enum,[apiKey]}},
+                                      apiKey => {required,binstr}}},
+                                   {struct,
+                                    #{type => {required,{enum,[chatgpt]}}}},
+                                   {struct,
+                                    #{type =>
+                                       {required,{enum,[chatgptAuthTokens]}},
+                                      accessToken => {required,binstr},
+                                      idToken => {required,binstr}}}]}},
+    {account_login_start_response, {any_of,
+                                    [{struct,
+                                      #{type => {required,{enum,[apiKey]}}}},
+                                     {struct,
+                                      #{type => {required,{enum,[chatgpt]}},
+                                        loginId => {required,binstr},
+                                        authUrl => {required,binstr}}},
+                                     {struct,
+                                      #{type =>
+                                         {required,
+                                          {enum,[chatgptAuthTokens]}}}}]}},
+    {account_login_cancel_params, {struct,#{loginId => {required,binstr}}}},
+    {account_login_cancel_response, {with_defs,
+                                     {#{<<"CancelLoginAccountStatus">> =>
+                                         {enum,[canceled,notFound]}},
+                                      {struct,
+                                       #{status =>
+                                          {required,
+                                           {ref,
+                                            <<"CancelLoginAccountStatus">>}}}}}}},
+    {account_logout_response, {map,{binstr,term}}},
+    {account_rate_limits_read_response, {with_defs,
+                                         {#{<<"CreditsSnapshot">> =>
+                                             {struct,
+                                              #{unlimited =>
+                                                 {required,boolean},
+                                                balance =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                hasCredits =>
+                                                 {required,boolean}}},
+                                            <<"PlanType">> =>
+                                             {enum,
+                                              [free,go,plus,pro,team,business,
+                                               enterprise,edu,unknown]},
+                                            <<"RateLimitSnapshot">> =>
+                                             {struct,
+                                              #{primary =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"RateLimitWindow">>},
+                                                    {exact,null}]}},
+                                                credits =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"CreditsSnapshot">>},
+                                                    {exact,null}]}},
+                                                secondary =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"RateLimitWindow">>},
+                                                    {exact,null}]}},
+                                                planType =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,<<"PlanType">>},
+                                                    {exact,null}]}}}},
+                                            <<"RateLimitWindow">> =>
+                                             {struct,
+                                              #{resetsAt =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [integer,{exact,null}]}},
+                                                usedPercent =>
+                                                 {required,integer},
+                                                windowDurationMins =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [integer,{exact,null}]}}}}},
+                                          {struct,
+                                           #{rateLimits =>
+                                              {required,
+                                               {ref,
+                                                <<"RateLimitSnapshot">>}}}}}}},
     {codex_event_notification, {struct,
                                 #{params =>
                                    {required,
