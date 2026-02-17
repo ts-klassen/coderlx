@@ -49,6 +49,8 @@
           , next_id => {required, {range, {0, '<', integer}}}
           , request_timeout => {required, timeout}
           , consume_timeout => {required, timeout}
+          , raise_consume_permanent_error => {required, boolean}
+          , warn_consume_transient_error => {required, boolean}
         }}}
       , {opts, {struct, #{
             bwrap => {required, term}
@@ -115,6 +117,8 @@ start(#{bwrap := Bwrap}=Opts) ->
       , next_id => 1
       , request_timeout => 60000
       , consume_timeout => 60000
+      , raise_consume_permanent_error => true
+      , warn_consume_transient_error => false
     }.
 
 -spec stop(coderlx()) -> ok.
@@ -141,6 +145,7 @@ consume(Consumer, Acc, Coderlx) ->
     ) -> {Acc, coderlx()}.
 consume(Consumer, Acc0, Filter, Coderlx0) ->
     Timeout = maps:get(consume_timeout, Coderlx0),
+    RaisePermanent = maps:get(raise_consume_permanent_error, Coderlx0),
     {MaybeMessage, Coderlx} = pop_message(Filter, Timeout, Coderlx0),
     Consumed = case MaybeMessage of
         none ->
@@ -171,7 +176,19 @@ consume(Consumer, Acc0, Filter, Coderlx0) ->
                             Consumed0
                     end
             end;
+        {value, Notification = #{method := error, params := #{ willRetry := false }}} when RaisePermanent ->
+            error({consume_permanent_error, Notification});
         {value, Notification} ->
+            case {maps:get(warn_consume_transient_error, Coderlx), Notification} of
+                {true, #{method := error, params := #{ willRetry := true}}} ->
+                    logger:warning(#{
+                        mfa => {?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY}
+                      , label => consume_transient_error
+                      , notification => Notification
+                    });
+                _ ->
+                    ok
+            end,
             {noreply, Consumed0} = Consumer({notification, Notification}, Acc0),
             Consumed0
     end,

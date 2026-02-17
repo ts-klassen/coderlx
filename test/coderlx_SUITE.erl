@@ -19,7 +19,7 @@ simple_response_test(_Config) ->
     {{ok, #{turn := #{error := null, id := TurnId}}}, Hnd3} = coderlx_turn:start(TurnStartParams, Hnd2),
     {Res, Hnd4} = coderlx:consume(fun
         (timeout, _Acc) ->
-            error(timeout);
+            error(coderlx_consume_timeout);
         ({notification, #{method := 'item/completed', params := #{threadId := ThreadId0, turnId := TurnId0, item := #{type := agentMessage, text := Text}}}}, Acc) when ThreadId0 =:= ThreadId, TurnId0 =:= TurnId ->
             {noreply, {continue, <<Acc/binary, Text/binary>>}};
         ({notification, #{method := 'turn/completed', params := #{threadId := ThreadId0, turn := #{id := TurnId0}}}}, Acc) when ThreadId0 =:= ThreadId, TurnId0 =:= TurnId ->
