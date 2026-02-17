@@ -88,7 +88,6 @@ sandbox(Args) ->
           , {setenv, <<"PATH">>, <<"/cbin:/usr/bin:/bin">>}
           , {setenv, <<"SHELL">>, <<"/bin/bash">>}
           , {setenv, <<"TMPDIR">>, <<"/tmp">>}
-          , {dir, <<"/home">>}
           , Chdir
         ]
       , codex_path => <<"/cbin/codex">>
