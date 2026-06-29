@@ -58,7 +58,6 @@
         }}}
       , {message, {any_of, [
             {alias, {coderlx_app_server_rules, server_request}}
-          , {alias, {coderlx_app_server_rules, codex_event_notification}}
           , {alias, {coderlx_app_server_rules, server_notification}}
           , {alias, {coderlx_app_server_rules, jsonrpc_response}}
           , {alias, {coderlx_app_server_rules, jsonrpc_error}}
@@ -84,20 +83,29 @@
 -type server_request_method() :: 'item/commandExecution/requestApproval'
                                | 'item/fileChange/requestApproval'
                                | 'item/tool/requestUserInput'
+                               | 'mcpServer/elicitation/request'
+                               | 'item/permissions/requestApproval'
                                | 'item/tool/call'
                                | 'account/chatgptAuthTokens/refresh'
+                               | 'attestation/generate'
                                .
 -type server_request_param() :: klsn:rule(coderlx_app_server_rules, command_execution_request_approval_params)
                               | klsn:rule(coderlx_app_server_rules, file_change_request_approval_params)
                               | klsn:rule(coderlx_app_server_rules, tool_request_user_input_params)
+                              | klsn:rule(coderlx_app_server_rules, mcp_server_elicitation_request_params)
+                              | klsn:rule(coderlx_app_server_rules, permissions_request_approval_params)
                               | klsn:rule(coderlx_app_server_rules, dynamic_tool_call_params)
                               | klsn:rule(coderlx_app_server_rules, chatgpt_auth_tokens_refresh_params)
+                              | klsn:rule(coderlx_app_server_rules, attestation_generate_params)
                               .
 -type server_request_response() :: klsn:rule(coderlx_app_server_rules, command_execution_request_approval_response)
                                  | klsn:rule(coderlx_app_server_rules, file_change_request_approval_response)
                                  | klsn:rule(coderlx_app_server_rules, tool_request_user_input_response)
+                                 | klsn:rule(coderlx_app_server_rules, mcp_server_elicitation_request_response)
+                                 | klsn:rule(coderlx_app_server_rules, permissions_request_approval_response)
                                  | klsn:rule(coderlx_app_server_rules, dynamic_tool_call_response)
                                  | klsn:rule(coderlx_app_server_rules, chatgpt_auth_tokens_refresh_response)
+                                 | klsn:rule(coderlx_app_server_rules, attestation_generate_response)
                                  .
 -type respond_error_reason() :: unsupported | unhandled | consumer_error.
 
@@ -380,18 +388,10 @@ decode_message(Line) ->
         request ->
             klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, server_request}});
         notification ->
-            case maps:get(<<"method">>, Json) of
-                <<"codex/event/", _/binary>> ->
-                    klsn_rule:normalize(
-                        Json,
-                        {alias, {coderlx_app_server_rules, codex_event_notification}}
-                    );
-                _ ->
-                    klsn_rule:normalize(
-                        Json,
-                        {alias, {coderlx_app_server_rules, server_notification}}
-                    )
-            end;
+            klsn_rule:normalize(
+                Json,
+                {alias, {coderlx_app_server_rules, server_notification}}
+            );
         response ->
             klsn_rule:normalize(Json, {alias, {coderlx_app_server_rules, jsonrpc_response}});
         error ->
@@ -422,10 +422,16 @@ classify_message(_) ->
         ,file_change_request_approval_response}
       | {tool_request_user_input_params
         ,tool_request_user_input_response}
+      | {mcp_server_elicitation_request_params
+        ,mcp_server_elicitation_request_response}
+      | {permissions_request_approval_params
+        ,permissions_request_approval_response}
       | {dynamic_tool_call_params
         ,dynamic_tool_call_response}
       | {chatgpt_auth_tokens_refresh_params
         ,chatgpt_auth_tokens_refresh_response}
+      | {attestation_generate_params
+        ,attestation_generate_response}
     ).
 server_request_rule_(#{method := 'item/commandExecution/requestApproval'}) ->
     {value, {
@@ -448,6 +454,20 @@ server_request_rule_(#{method := 'item/tool/requestUserInput'}) ->
         %% ToolRequestUserInputResponse.json
       , tool_request_user_input_response
     }};
+server_request_rule_(#{method := 'mcpServer/elicitation/request'}) ->
+    {value, {
+        %% McpServerElicitationRequestParams.json
+        mcp_server_elicitation_request_params
+        %% McpServerElicitationRequestResponse.json
+      , mcp_server_elicitation_request_response
+    }};
+server_request_rule_(#{method := 'item/permissions/requestApproval'}) ->
+    {value, {
+        %% PermissionsRequestApprovalParams.json
+        permissions_request_approval_params
+        %% PermissionsRequestApprovalResponse.json
+      , permissions_request_approval_response
+    }};
 server_request_rule_(#{method := 'item/tool/call'}) ->
     {value, {
         %% DynamicToolCallParams.json
@@ -461,6 +481,13 @@ server_request_rule_(#{method := 'account/chatgptAuthTokens/refresh'}) ->
         chatgpt_auth_tokens_refresh_params
         %% ChatgptAuthTokensRefreshResponse.json
       , chatgpt_auth_tokens_refresh_response
+    }};
+server_request_rule_(#{method := 'attestation/generate'}) ->
+    {value, {
+        %% AttestationGenerateParams.json
+        attestation_generate_params
+        %% AttestationGenerateResponse.json
+      , attestation_generate_response
     }};
 %% Try to keep up to date with new methods. Add them above this comment.
 %% Update these types if you add more.

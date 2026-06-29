@@ -4,8 +4,7 @@
 main([SchemaDir, OutPath]) ->
     ok = add_code_paths(),
     SchemaFiles = schema_files(),
-    Aliases = lists:append([schema_aliases(SchemaDir, Entry) || Entry <- SchemaFiles]) ++
-        codex_event_notification_aliases(SchemaDir),
+    Aliases = lists:append([schema_aliases(SchemaDir, Entry) || Entry <- SchemaFiles]),
     ok = write_module(OutPath, Aliases);
 main(_) ->
     usage().
@@ -54,12 +53,22 @@ schema_files() ->
             "ToolRequestUserInputParams.json"}
       , {tool_request_user_input_response, to_json,
             "ToolRequestUserInputResponse.json"}
+      , {mcp_server_elicitation_request_params, from_json,
+            "McpServerElicitationRequestParams.json"}
+      , {mcp_server_elicitation_request_response, to_json,
+            "McpServerElicitationRequestResponse.json"}
+      , {permissions_request_approval_params, from_json,
+            "PermissionsRequestApprovalParams.json"}
+      , {permissions_request_approval_response, to_json,
+            "PermissionsRequestApprovalResponse.json"}
       , {dynamic_tool_call_params, from_json, "DynamicToolCallParams.json"}
       , {dynamic_tool_call_response, to_json, "DynamicToolCallResponse.json"}
       , {chatgpt_auth_tokens_refresh_params, from_json,
             "ChatgptAuthTokensRefreshParams.json"}
       , {chatgpt_auth_tokens_refresh_response, to_json,
             "ChatgptAuthTokensRefreshResponse.json"}
+      , {attestation_generate_params, from_json, "AttestationGenerateParams.json"}
+      , {attestation_generate_response, to_json, "AttestationGenerateResponse.json"}
       , {initialize_params, to_json, "v1/InitializeParams.json"}
       , {initialize_response, from_json, "v1/InitializeResponse.json"}
       , {thread_start_params, to_json, "v2/ThreadStartParams.json"}
@@ -137,44 +146,69 @@ schema_aliases(_SchemaDir, Entry) ->
 schema_rules(SchemaDir, FileName) ->
     SchemaPath = filename:join([SchemaDir, FileName]),
     {ok, SchemaBin} = file:read_file(SchemaPath),
-    Schema = jsone:decode(SchemaBin),
+    Schema = prepare_schema(jsone:decode(SchemaBin)),
     klsn_rule_generator:from_json_schema(Schema).
 
-codex_event_notification_aliases(SchemaDir) ->
-    EventSchemaPath = filename:join([SchemaDir, "EventMsg.json"]),
-    {ok, EventSchemaBin} = file:read_file(EventSchemaPath),
-    EventSchema0 = jsone:decode(EventSchemaBin),
-    EventTypes = event_types(EventSchema0),
-    Methods = lists:map(fun(Type) ->
-        binary_to_atom(<<"codex/event/", Type/binary>>)
-    end, EventTypes),
-    #{from_json := Msg} = klsn_rule_generator:from_json_schema(EventSchema0),
-    [
-        {codex_event_notification, codex_event_notification_rule_(Methods, Msg)}
-    ].
+prepare_schema(Schema) ->
+    merge_mcp_server_elicitation_request_params(Schema).
 
-codex_event_notification_rule_(Methods, Msg) ->
-    {struct, #{
-        method => {required, {enum, Methods}}
-      , params => {required, {struct, #{
-            conversationId => {required, binstr}
-          , id => {required, binstr}
-          , msg => {required, Msg}
-        }}}
-    }}.
+%% klsn_rule_generator emits oneOf as alternatives and drops sibling object
+%% fields, so copy the MCP elicitation context fields into each branch.
+%% FIXME: Remove this workaround once klsn handles oneOf sibling keywords:
+%% https://github.com/ts-klassen/klsn/issues/49
+merge_mcp_server_elicitation_request_params(Schema0) ->
+    Schema = case maps:get(<<"title">>, Schema0, undefined) of
+        <<"McpServerElicitationRequestParams">> ->
+            merge_root_properties_into_one_of(Schema0);
+        _ ->
+            Schema0
+    end,
+    update_definition(
+        <<"McpServerElicitationRequestParams">>,
+        fun merge_root_properties_into_one_of/1,
+        Schema
+    ).
 
-event_types(EventSchema) ->
-    OneOf = maps:get(<<"oneOf">>, EventSchema, []),
-    Types = lists:append([event_type_from_entry(Entry) || Entry <- OneOf]),
-    lists:usort(Types).
+update_definition(Name, Fun, Schema = #{<<"definitions">> := Definitions}) ->
+    case maps:find(Name, Definitions) of
+        {ok, Definition} ->
+            Schema#{<<"definitions">> := Definitions#{Name := Fun(Definition)}};
+        error ->
+            Schema
+    end;
+update_definition(_Name, _Fun, Schema) ->
+    Schema.
 
-event_type_from_entry(Entry) ->
-    Properties = maps:get(<<"properties">>, Entry, #{}),
-    TypeProp = maps:get(<<"type">>, Properties, #{}),
-    case maps:get(<<"enum">>, TypeProp, []) of
-        [] -> [];
-        Enums when is_list(Enums) -> Enums
-    end.
+merge_root_properties_into_one_of(
+        Schema = #{<<"oneOf">> := OneOf, <<"properties">> := RootProperties})
+        when is_list(OneOf), is_map(RootProperties) ->
+    RootRequired = maps:get(<<"required">>, Schema, []),
+    MergedOneOf = [
+        merge_root_properties_into_branch(RootProperties, RootRequired, Branch)
+        || Branch <- OneOf
+    ],
+    maps:remove(
+        <<"required">>,
+        maps:remove(<<"properties">>, Schema#{<<"oneOf">> => MergedOneOf})
+    );
+merge_root_properties_into_one_of(Schema) ->
+    Schema.
+
+merge_root_properties_into_branch(
+        RootProperties,
+        RootRequired,
+        Branch = #{<<"properties">> := BranchProperties})
+        when is_map(BranchProperties) ->
+    BranchRequired = maps:get(<<"required">>, Branch, []),
+    Branch#{
+        <<"properties">> => maps:merge(RootProperties, BranchProperties),
+        <<"required">> => append_unique(RootRequired, BranchRequired)
+    };
+merge_root_properties_into_branch(_RootProperties, _RootRequired, Branch) ->
+    Branch.
+
+append_unique(First, Second) ->
+    First ++ [Item || Item <- Second, not lists:member(Item, First)].
 
 write_module(OutPath, Aliases) ->
     Header = [
