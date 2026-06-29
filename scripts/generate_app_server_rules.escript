@@ -1,4 +1,4 @@
-#!/opt/qrpc/pkg/bin/escript
+#!/usr/bin/escript
 %%! -noshell
 
 main([SchemaDir, OutPath]) ->

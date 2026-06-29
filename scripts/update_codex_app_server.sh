@@ -85,7 +85,7 @@ chmod +x "${PRIV_BIN_PATH}"
 
 "${PRIV_BIN_PATH}" app-server generate-json-schema --out "${SCHEMA_DIR}"
 
-ESCRIPT_BIN="/opt/qrpc/pkg/bin/escript"
+ESCRIPT_BIN="/usr/bin/escript"
 if [ ! -x "${ESCRIPT_BIN}" ]; then
     echo "missing ${ESCRIPT_BIN}" >&2
     exit 1
