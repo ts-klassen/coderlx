@@ -11,12 +11,20 @@
       , coderlx_apps
       , coderlx_command
       , coderlx_config
+      , coderlx_experimental_feature
+      , coderlx_external_agent_config
+      , coderlx_fs
+      , coderlx_hooks
+      , coderlx_marketplace
       , coderlx_mcp
       , coderlx_model
       , coderlx_opts_builder
+      , coderlx_permission_profile
+      , coderlx_plugin
       , coderlx_review
       , coderlx_skills
       , coderlx_thread
       , coderlx_turn
+      , coderlx_windows_sandbox
     ]}
 ]}.

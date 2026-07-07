@@ -9,6 +9,10 @@
       , login_cancel/2
       , logout/2
       , rate_limits_read/2
+      , rate_limit_reset_credit_consume/2
+      , usage_read/2
+      , workspace_messages_read/2
+      , send_add_credits_nudge_email/2
     ]).
 
 -klsn_input_rule([
@@ -65,3 +69,47 @@ logout(Params, Coderlx) ->
     ]}).
 rate_limits_read(Params, Coderlx) ->
     coderlx:request('account/rateLimits/read', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, account_rate_limit_reset_credit_consume_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(account_rate_limit_reset_credit_consume_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+rate_limit_reset_credit_consume(Params, Coderlx) ->
+    coderlx:request('account/rateLimitResetCredit/consume', Params, Coderlx).
+
+-klsn_input_rule([
+        {exact, null}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(account_usage_read_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+usage_read(Params, Coderlx) ->
+    coderlx:request('account/usage/read', Params, Coderlx).
+
+-klsn_input_rule([
+        {exact, null}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(account_workspace_messages_read_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+workspace_messages_read(Params, Coderlx) ->
+    coderlx:request('account/workspaceMessages/read', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, account_send_add_credits_nudge_email_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(account_send_add_credits_nudge_email_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+send_add_credits_nudge_email(Params, Coderlx) ->
+    coderlx:request('account/sendAddCreditsNudgeEmail', Params, Coderlx).

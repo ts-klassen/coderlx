@@ -15,6 +15,15 @@
       , unarchive/2
       , compact_start/2
       , rollback/2
+      , delete/2
+      , unsubscribe/2
+      , goal_set/2
+      , goal_get/2
+      , goal_clear/2
+      , metadata_update/2
+      , shell_command/2
+      , approve_guardian_denied_action/2
+      , inject_items/2
     ]).
 
 -export_type([
@@ -144,3 +153,102 @@ compact_start(Params, Coderlx) ->
     ]}).
 rollback(Params, Coderlx) ->
     coderlx:request('thread/rollback', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_delete_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_delete_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+delete(Params, Coderlx) ->
+    coderlx:request('thread/delete', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_unsubscribe_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_unsubscribe_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+unsubscribe(Params, Coderlx) ->
+    coderlx:request('thread/unsubscribe', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_goal_set_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_goal_set_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+goal_set(Params, Coderlx) ->
+    coderlx:request('thread/goal/set', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_goal_get_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_goal_get_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+goal_get(Params, Coderlx) ->
+    coderlx:request('thread/goal/get', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_goal_clear_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_goal_clear_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+goal_clear(Params, Coderlx) ->
+    coderlx:request('thread/goal/clear', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_metadata_update_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_metadata_update_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+metadata_update(Params, Coderlx) ->
+    coderlx:request('thread/metadata/update', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_shell_command_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_shell_command_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+shell_command(Params, Coderlx) ->
+    coderlx:request('thread/shellCommand', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_approve_guardian_denied_action_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_approve_guardian_denied_action_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+approve_guardian_denied_action(Params, Coderlx) ->
+    coderlx:request('thread/approveGuardianDeniedAction', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_inject_items_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_inject_items_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+inject_items(Params, Coderlx) ->
+    coderlx:request('thread/inject_items', Params, Coderlx).

@@ -6,6 +6,8 @@
 -export([
         server_auth_login/2
       , server_status_list/2
+      , server_resource_read/2
+      , server_tool_call/2
     ]).
 
 -klsn_input_rule([
@@ -29,3 +31,25 @@ server_auth_login(Params, Coderlx) ->
     ]}).
 server_status_list(Params, Coderlx) ->
     coderlx:request('mcpServerStatus/list', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, mcp_server_resource_read_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(mcp_server_resource_read_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+server_resource_read(Params, Coderlx) ->
+    coderlx:request('mcpServer/resource/read', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, mcp_server_tool_call_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(mcp_server_tool_call_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+server_tool_call(Params, Coderlx) ->
+    coderlx:request('mcpServer/tool/call', Params, Coderlx).
