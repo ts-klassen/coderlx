@@ -77,6 +77,22 @@
 
    `_build` と `priv/codex` は差分対象にしない。
 
+## 新しい client request method が追加された場合
+
+`b533012`, `03fa3d8`, `7ebbff0` と同じように、次の 3 つに分ける。
+
+1. `b533012`: `scripts/generate_app_server_rules.escript` だけを変更する。
+   - `schema_files()` に新しい method の schema alias を追加する。
+   - params は `to_json`、response は `from_json`。
+   - params schema が無い method は response だけ追加する。
+
+2. `03fa3d8`: `src/coderlx_app_server_rules.erl` だけを再生成する。
+
+3. `7ebbff0`: client request wrapper だけを追加する。
+   - 既存 namespace は既存 module に関数を追加する。
+   - 新規 namespace は `src/coderlx_<namespace>.erl` を作り、`src/coderlx.app.src` に追加する。
+   - params schema が無い method の `-klsn_input_rule` は `{exact, null}`。
+
 ## 完了条件
 
 - `rebar3 compile` が成功している。
