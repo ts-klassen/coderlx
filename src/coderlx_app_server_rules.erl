@@ -1935,11 +1935,11 @@
                               {required,{ref,<<"McpElicitationArrayType">>}},
                              description =>
                               {optional,{any_of,[binstr,{exact,null}]}},
+                             title =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
                              items =>
                               {required,
                                {ref,<<"McpElicitationUntitledEnumItems">>}},
-                             title =>
-                              {optional,{any_of,[binstr,{exact,null}]}},
                              maxItems =>
                               {optional,{any_of,[integer,{exact,null}]}},
                              minItems =>
@@ -2270,11 +2270,11 @@
                               {required,{ref,<<"McpElicitationArrayType">>}},
                              description =>
                               {optional,{any_of,[binstr,{exact,null}]}},
+                             title =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
                              items =>
                               {required,
                                {ref,<<"McpElicitationTitledEnumItems">>}},
-                             title =>
-                              {optional,{any_of,[binstr,{exact,null}]}},
                              maxItems =>
                               {optional,{any_of,[integer,{exact,null}]}},
                              minItems =>
@@ -5175,14 +5175,14 @@
                                                      {optional,
                                                       {any_of,
                                                        [binstr,{exact,null}]}},
-                                                    items =>
-                                                     {required,
-                                                      {ref,
-                                                       <<"McpElicitationTitledEnumItems">>}},
                                                     title =>
                                                      {optional,
                                                       {any_of,
                                                        [binstr,{exact,null}]}},
+                                                    items =>
+                                                     {required,
+                                                      {ref,
+                                                       <<"McpElicitationTitledEnumItems">>}},
                                                     maxItems =>
                                                      {optional,
                                                       {any_of,
@@ -5240,14 +5240,14 @@
                                                      {optional,
                                                       {any_of,
                                                        [binstr,{exact,null}]}},
-                                                    items =>
-                                                     {required,
-                                                      {ref,
-                                                       <<"McpElicitationUntitledEnumItems">>}},
                                                     title =>
                                                      {optional,
                                                       {any_of,
                                                        [binstr,{exact,null}]}},
+                                                    items =>
+                                                     {required,
+                                                      {ref,
+                                                       <<"McpElicitationUntitledEnumItems">>}},
                                                     maxItems =>
                                                      {optional,
                                                       {any_of,
@@ -12085,6 +12085,958 @@
                                   #{thread =>
                                      {required,
                                       {all_of,[{ref,<<"Thread">>}]}}}}}}},
+    {thread_delete_params, {struct,#{threadId => {required,binstr}}}},
+    {thread_delete_response, {map,{binstr,term}}},
+    {thread_unsubscribe_params, {struct,#{threadId => {required,binstr}}}},
+    {thread_unsubscribe_response, {with_defs,
+                                   {#{<<"ThreadUnsubscribeStatus">> =>
+                                       {enum,
+                                        [notLoaded,notSubscribed,
+                                         unsubscribed]}},
+                                    {struct,
+                                     #{status =>
+                                        {required,
+                                         {ref,
+                                          <<"ThreadUnsubscribeStatus">>}}}}}}},
+    {thread_goal_set_params, {with_defs,
+                              {#{<<"ThreadGoalStatus">> =>
+                                  {enum,
+                                   [active,paused,blocked,usageLimited,
+                                    budgetLimited,complete]}},
+                               {struct,
+                                #{status =>
+                                   {optional,
+                                    {any_of,
+                                     [{ref,<<"ThreadGoalStatus">>},
+                                      {exact,null}]}},
+                                  threadId => {required,binstr},
+                                  objective =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  tokenBudget =>
+                                   {optional,
+                                    {any_of,[integer,{exact,null}]}}}}}}},
+    {thread_goal_set_response, {with_defs,
+                                {#{<<"ThreadGoal">> =>
+                                    {struct,
+                                     #{status =>
+                                        {required,
+                                         {ref,<<"ThreadGoalStatus">>}},
+                                       threadId => {required,binstr},
+                                       objective => {required,binstr},
+                                       tokenBudget =>
+                                        {optional,
+                                         {any_of,[integer,{exact,null}]}},
+                                       createdAt => {required,integer},
+                                       updatedAt => {required,integer},
+                                       timeUsedSeconds => {required,integer},
+                                       tokensUsed => {required,integer}}},
+                                   <<"ThreadGoalStatus">> =>
+                                    {enum,
+                                     [active,paused,blocked,usageLimited,
+                                      budgetLimited,complete]}},
+                                 {struct,
+                                  #{goal =>
+                                     {required,{ref,<<"ThreadGoal">>}}}}}}},
+    {thread_goal_get_params, {struct,#{threadId => {required,binstr}}}},
+    {thread_goal_get_response, {with_defs,
+                                {#{<<"ThreadGoal">> =>
+                                    {struct,
+                                     #{status =>
+                                        {required,
+                                         {ref,<<"ThreadGoalStatus">>}},
+                                       threadId => {required,binstr},
+                                       objective => {required,binstr},
+                                       tokenBudget =>
+                                        {optional,
+                                         {any_of,[integer,{exact,null}]}},
+                                       createdAt => {required,integer},
+                                       updatedAt => {required,integer},
+                                       timeUsedSeconds => {required,integer},
+                                       tokensUsed => {required,integer}}},
+                                   <<"ThreadGoalStatus">> =>
+                                    {enum,
+                                     [active,paused,blocked,usageLimited,
+                                      budgetLimited,complete]}},
+                                 {struct,
+                                  #{goal =>
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"ThreadGoal">>},
+                                        {exact,null}]}}}}}}},
+    {thread_goal_clear_params, {struct,#{threadId => {required,binstr}}}},
+    {thread_goal_clear_response, {struct,#{cleared => {required,boolean}}}},
+    {thread_metadata_update_params, {with_defs,
+                                     {#{<<"ThreadMetadataGitInfoUpdateParams">> =>
+                                         {struct,
+                                          #{branch =>
+                                             {optional,
+                                              {any_of,[binstr,{exact,null}]}},
+                                            originUrl =>
+                                             {optional,
+                                              {any_of,[binstr,{exact,null}]}},
+                                            sha =>
+                                             {optional,
+                                              {any_of,
+                                               [binstr,{exact,null}]}}}}},
+                                      {struct,
+                                       #{threadId => {required,binstr},
+                                         gitInfo =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,
+                                              <<"ThreadMetadataGitInfoUpdateParams">>},
+                                             {exact,null}]}}}}}}},
+    {thread_metadata_update_response, {with_defs,
+                                       {#{<<"PatchChangeKind">> =>
+                                           {any_of,
+                                            [{struct,
+                                              #{type =>
+                                                 {required,{enum,[add]}}}},
+                                             {struct,
+                                              #{type =>
+                                                 {required,{enum,[delete]}}}},
+                                             {struct,
+                                              #{type =>
+                                                 {required,{enum,[update]}},
+                                                move_path =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}}}}]},
+                                          <<"ReasoningEffort">> => binstr,
+                                          <<"MessagePhase">> =>
+                                           {any_of,
+                                            [{enum,[commentary]},
+                                             {enum,[final_answer]}]},
+                                          <<"McpToolCallAppContext">> =>
+                                           {struct,
+                                            #{connectorId => {required,binstr},
+                                              linkId =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              resourceUri =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}}}},
+                                          <<"TextElement">> =>
+                                           {struct,
+                                            #{byteRange =>
+                                               {required,
+                                                {all_of,
+                                                 [{ref,<<"ByteRange">>}]}},
+                                              placeholder =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}}}},
+                                          <<"McpToolCallError">> =>
+                                           {struct,
+                                            #{message => {required,binstr}}},
+                                          <<"CollabAgentToolCallStatus">> =>
+                                           {enum,
+                                            [inProgress,completed,failed]},
+                                          <<"SubAgentSource">> =>
+                                           {any_of,
+                                            [{enum,
+                                              [review,compact,
+                                               memory_consolidation]},
+                                             {struct,
+                                              #{thread_spawn =>
+                                                 {required,
+                                                  {struct,
+                                                   #{depth =>
+                                                      {required,integer},
+                                                     agent_nickname =>
+                                                      {optional,
+                                                       {default,
+                                                        {null,
+                                                         {any_of,
+                                                          [binstr,
+                                                           {exact,null}]}}}},
+                                                     agent_path =>
+                                                      {optional,
+                                                       {default,
+                                                        {null,
+                                                         {any_of,
+                                                          [{ref,
+                                                            <<"AgentPath">>},
+                                                           {exact,null}]}}}},
+                                                     agent_role =>
+                                                      {optional,
+                                                       {default,
+                                                        {null,
+                                                         {any_of,
+                                                          [binstr,
+                                                           {exact,null}]}}}},
+                                                     parent_thread_id =>
+                                                      {required,
+                                                       {ref,
+                                                        <<"ThreadId">>}}}}}}},
+                                             {struct,
+                                              #{other => {required,binstr}}}]},
+                                          <<"UserInput">> =>
+                                           {any_of,
+                                            [{struct,
+                                              #{type =>
+                                                 {required,{enum,[text]}},
+                                                text => {required,binstr},
+                                                text_elements =>
+                                                 {optional,
+                                                  {default,
+                                                   {[],
+                                                    {list,
+                                                     {ref,
+                                                      <<"TextElement">>}}}}}}},
+                                             {struct,
+                                              #{type =>
+                                                 {required,{enum,[image]}},
+                                                detail =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [{ref,<<"ImageDetail">>},
+                                                      {exact,null}]}}}},
+                                                url => {required,binstr}}},
+                                             {struct,
+                                              #{type =>
+                                                 {required,
+                                                  {enum,[localImage]}},
+                                                path => {required,binstr},
+                                                detail =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [{ref,<<"ImageDetail">>},
+                                                      {exact,null}]}}}}}},
+                                             {struct,
+                                              #{name => {required,binstr},
+                                                type =>
+                                                 {required,{enum,[skill]}},
+                                                path => {required,binstr}}},
+                                             {struct,
+                                              #{name => {required,binstr},
+                                                type =>
+                                                 {required,{enum,[mention]}},
+                                                path => {required,binstr}}}]},
+                                          <<"CommandExecutionStatus">> =>
+                                           {enum,
+                                            [inProgress,completed,failed,
+                                             declined]},
+                                          <<"AbsolutePathBuf">> => binstr,
+                                          <<"CommandAction">> =>
+                                           {any_of,
+                                            [{struct,
+                                              #{command => {required,binstr},
+                                                name => {required,binstr},
+                                                type =>
+                                                 {required,{enum,[read]}},
+                                                path =>
+                                                 {required,
+                                                  {ref,
+                                                   <<"AbsolutePathBuf">>}}}},
+                                             {struct,
+                                              #{command => {required,binstr},
+                                                type =>
+                                                 {required,{enum,[listFiles]}},
+                                                path =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}}}},
+                                             {struct,
+                                              #{command => {required,binstr},
+                                                type =>
+                                                 {required,{enum,[search]}},
+                                                path =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                query =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}}}},
+                                             {struct,
+                                              #{command => {required,binstr},
+                                                type =>
+                                                 {required,
+                                                  {enum,[unknown]}}}}]},
+                                          <<"ThreadId">> => binstr,
+                                          <<"LegacyAppPathString">> => binstr,
+                                          <<"ThreadStatus">> =>
+                                           {any_of,
+                                            [{struct,
+                                              #{type =>
+                                                 {required,
+                                                  {enum,[notLoaded]}}}},
+                                             {struct,
+                                              #{type =>
+                                                 {required,{enum,[idle]}}}},
+                                             {struct,
+                                              #{type =>
+                                                 {required,
+                                                  {enum,[systemError]}}}},
+                                             {struct,
+                                              #{type =>
+                                                 {required,{enum,[active]}},
+                                                activeFlags =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ThreadActiveFlag">>}}}}}]},
+                                          <<"MemoryCitationEntry">> =>
+                                           {struct,
+                                            #{path => {required,binstr},
+                                              lineEnd => {required,integer},
+                                              lineStart => {required,integer},
+                                              note => {required,binstr}}},
+                                          <<"CollabAgentStatus">> =>
+                                           {enum,
+                                            [pendingInit,running,interrupted,
+                                             completed,errored,shutdown,
+                                             notFound]},
+                                          <<"CollabAgentTool">> =>
+                                           {enum,
+                                            [spawnAgent,sendInput,resumeAgent,
+                                             wait,closeAgent]},
+                                          <<"MemoryCitation">> =>
+                                           {struct,
+                                            #{entries =>
+                                               {required,
+                                                {list,
+                                                 {ref,
+                                                  <<"MemoryCitationEntry">>}}},
+                                              threadIds =>
+                                               {required,{list,binstr}}}},
+                                          <<"TurnError">> =>
+                                           {struct,
+                                            #{message => {required,binstr},
+                                              additionalDetails =>
+                                               {optional,
+                                                {default,
+                                                 {null,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}}}},
+                                              codexErrorInfo =>
+                                               {optional,
+                                                {any_of,
+                                                 [{ref,<<"CodexErrorInfo">>},
+                                                  {exact,null}]}}}},
+                                          <<"PatchApplyStatus">> =>
+                                           {enum,
+                                            [inProgress,completed,failed,
+                                             declined]},
+                                          <<"SubAgentActivityKind">> =>
+                                           {enum,
+                                            [started,interacted,interrupted]},
+                                          <<"McpToolCallStatus">> =>
+                                           {enum,
+                                            [inProgress,completed,failed]},
+                                          <<"Turn">> =>
+                                           {struct,
+                                            #{error =>
+                                               {optional,
+                                                {any_of,
+                                                 [{ref,<<"TurnError">>},
+                                                  {exact,null}]}},
+                                              id => {required,binstr},
+                                              status =>
+                                               {required,
+                                                {ref,<<"TurnStatus">>}},
+                                              items =>
+                                               {required,
+                                                {list,{ref,<<"ThreadItem">>}}},
+                                              itemsView =>
+                                               {optional,
+                                                {default,
+                                                 {<<"full">>,
+                                                  {all_of,
+                                                   [{ref,
+                                                     <<"TurnItemsView">>}]}}}},
+                                              durationMs =>
+                                               {optional,
+                                                {any_of,
+                                                 [integer,{exact,null}]}},
+                                              completedAt =>
+                                               {optional,
+                                                {any_of,
+                                                 [integer,{exact,null}]}},
+                                              startedAt =>
+                                               {optional,
+                                                {any_of,
+                                                 [integer,{exact,null}]}}}},
+                                          <<"CommandExecutionSource">> =>
+                                           {enum,
+                                            [agent,userShell,
+                                             unifiedExecStartup,
+                                             unifiedExecInteraction]},
+                                          <<"HookPromptFragment">> =>
+                                           {struct,
+                                            #{text => {required,binstr},
+                                              hookRunId => {required,binstr}}},
+                                          <<"ThreadActiveFlag">> =>
+                                           {enum,
+                                            [waitingOnApproval,
+                                             waitingOnUserInput]},
+                                          <<"TurnStatus">> =>
+                                           {enum,
+                                            [completed,interrupted,failed,
+                                             inProgress]},
+                                          <<"WebSearchAction">> =>
+                                           {any_of,
+                                            [{struct,
+                                              #{type =>
+                                                 {required,{enum,[search]}},
+                                                query =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                queries =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{list,binstr},
+                                                    {exact,null}]}}}},
+                                             {struct,
+                                              #{type =>
+                                                 {required,{enum,[openPage]}},
+                                                url =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}}}},
+                                             {struct,
+                                              #{type =>
+                                                 {required,
+                                                  {enum,[findInPage]}},
+                                                pattern =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                url =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}}}},
+                                             {struct,
+                                              #{type =>
+                                                 {required,{enum,[other]}}}}]},
+                                          <<"CollabAgentState">> =>
+                                           {struct,
+                                            #{message =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              status =>
+                                               {required,
+                                                {ref,
+                                                 <<"CollabAgentStatus">>}}}},
+                                          <<"DynamicToolCallOutputContentItem">> =>
+                                           {any_of,
+                                            [{struct,
+                                              #{type =>
+                                                 {required,{enum,[inputText]}},
+                                                text => {required,binstr}}},
+                                             {struct,
+                                              #{type =>
+                                                 {required,
+                                                  {enum,[inputImage]}},
+                                                imageUrl =>
+                                                 {required,binstr}}}]},
+                                          <<"FileUpdateChange">> =>
+                                           {struct,
+                                            #{path => {required,binstr},
+                                              diff => {required,binstr},
+                                              kind =>
+                                               {required,
+                                                {ref,<<"PatchChangeKind">>}}}},
+                                          <<"TurnItemsView">> =>
+                                           {any_of,
+                                            [{enum,[notLoaded]},
+                                             {enum,[summary]},
+                                             {enum,[full]}]},
+                                          <<"NonSteerableTurnKind">> =>
+                                           {enum,[review,compact]},
+                                          <<"ByteRange">> =>
+                                           {struct,
+                                            #{start => {required,integer},
+                                              'end' => {required,integer}}},
+                                          <<"AgentPath">> => binstr,
+                                          <<"CodexErrorInfo">> =>
+                                           {any_of,
+                                            [{enum,
+                                              [contextWindowExceeded,
+                                               usageLimitExceeded,
+                                               serverOverloaded,cyberPolicy,
+                                               internalServerError,
+                                               unauthorized,badRequest,
+                                               threadRollbackFailed,
+                                               sandboxError,other]},
+                                             {struct,
+                                              #{httpConnectionFailed =>
+                                                 {required,
+                                                  {struct,
+                                                   #{httpStatusCode =>
+                                                      {optional,
+                                                       {any_of,
+                                                        [integer,
+                                                         {exact,null}]}}}}}}},
+                                             {struct,
+                                              #{responseStreamConnectionFailed =>
+                                                 {required,
+                                                  {struct,
+                                                   #{httpStatusCode =>
+                                                      {optional,
+                                                       {any_of,
+                                                        [integer,
+                                                         {exact,null}]}}}}}}},
+                                             {struct,
+                                              #{responseStreamDisconnected =>
+                                                 {required,
+                                                  {struct,
+                                                   #{httpStatusCode =>
+                                                      {optional,
+                                                       {any_of,
+                                                        [integer,
+                                                         {exact,null}]}}}}}}},
+                                             {struct,
+                                              #{responseTooManyFailedAttempts =>
+                                                 {required,
+                                                  {struct,
+                                                   #{httpStatusCode =>
+                                                      {optional,
+                                                       {any_of,
+                                                        [integer,
+                                                         {exact,null}]}}}}}}},
+                                             {struct,
+                                              #{activeTurnNotSteerable =>
+                                                 {required,
+                                                  {struct,
+                                                   #{turnKind =>
+                                                      {required,
+                                                       {ref,
+                                                        <<"NonSteerableTurnKind">>}}}}}}}]},
+                                          <<"ThreadItem">> =>
+                                           {any_of,
+                                            [{struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,
+                                                  {enum,[userMessage]}},
+                                                content =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,<<"UserInput">>}}},
+                                                clientId =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,
+                                                  {enum,[hookPrompt]}},
+                                                fragments =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"HookPromptFragment">>}}}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,
+                                                  {enum,[agentMessage]}},
+                                                text => {required,binstr},
+                                                phase =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [{ref,<<"MessagePhase">>},
+                                                      {exact,null}]}}}},
+                                                memoryCitation =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [{ref,
+                                                       <<"MemoryCitation">>},
+                                                      {exact,null}]}}}}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,{enum,[plan]}},
+                                                text => {required,binstr}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,{enum,[reasoning]}},
+                                                summary =>
+                                                 {optional,
+                                                  {default,
+                                                   {[],{list,binstr}}}},
+                                                content =>
+                                                 {optional,
+                                                  {default,
+                                                   {[],{list,binstr}}}}}},
+                                             {struct,
+                                              #{command => {required,binstr},
+                                                id => {required,binstr},
+                                                status =>
+                                                 {required,
+                                                  {ref,
+                                                   <<"CommandExecutionStatus">>}},
+                                                type =>
+                                                 {required,
+                                                  {enum,[commandExecution]}},
+                                                source =>
+                                                 {optional,
+                                                  {default,
+                                                   {<<"agent">>,
+                                                    {all_of,
+                                                     [{ref,
+                                                       <<"CommandExecutionSource">>}]}}}},
+                                                cwd =>
+                                                 {required,
+                                                  {all_of,
+                                                   [{ref,
+                                                     <<"LegacyAppPathString">>}]}},
+                                                processId =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                commandActions =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,<<"CommandAction">>}}},
+                                                aggregatedOutput =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                durationMs =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [integer,{exact,null}]}},
+                                                exitCode =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [integer,{exact,null}]}}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                status =>
+                                                 {required,
+                                                  {ref,
+                                                   <<"PatchApplyStatus">>}},
+                                                type =>
+                                                 {required,
+                                                  {enum,[fileChange]}},
+                                                changes =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"FileUpdateChange">>}}}}},
+                                             {struct,
+                                              #{error =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"McpToolCallError">>},
+                                                    {exact,null}]}},
+                                                id => {required,binstr},
+                                                status =>
+                                                 {required,
+                                                  {ref,
+                                                   <<"McpToolCallStatus">>}},
+                                                type =>
+                                                 {required,
+                                                  {enum,[mcpToolCall]}},
+                                                arguments => {required,term},
+                                                result =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"McpToolCallResult">>},
+                                                    {exact,null}]}},
+                                                server => {required,binstr},
+                                                tool => {required,binstr},
+                                                pluginId =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                durationMs =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [integer,{exact,null}]}},
+                                                appContext =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"McpToolCallAppContext">>},
+                                                    {exact,null}]}},
+                                                mcpAppResourceUri =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                status =>
+                                                 {required,
+                                                  {ref,
+                                                   <<"DynamicToolCallStatus">>}},
+                                                type =>
+                                                 {required,
+                                                  {enum,[dynamicToolCall]}},
+                                                success =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [boolean,{exact,null}]}},
+                                                arguments => {required,term},
+                                                tool => {required,binstr},
+                                                namespace =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                durationMs =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [integer,{exact,null}]}},
+                                                contentItems =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{list,
+                                                     {ref,
+                                                      <<"DynamicToolCallOutputContentItem">>}},
+                                                    {exact,null}]}}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                status =>
+                                                 {required,
+                                                  {all_of,
+                                                   [{ref,
+                                                     <<"CollabAgentToolCallStatus">>}]}},
+                                                type =>
+                                                 {required,
+                                                  {enum,
+                                                   [collabAgentToolCall]}},
+                                                prompt =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                tool =>
+                                                 {required,
+                                                  {all_of,
+                                                   [{ref,
+                                                     <<"CollabAgentTool">>}]}},
+                                                model =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                agentsStates =>
+                                                 {required,
+                                                  {map,
+                                                   {binstr,
+                                                    {ref,
+                                                     <<"CollabAgentState">>}}}},
+                                                reasoningEffort =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"ReasoningEffort">>},
+                                                    {exact,null}]}},
+                                                receiverThreadIds =>
+                                                 {required,{list,binstr}},
+                                                senderThreadId =>
+                                                 {required,binstr}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,
+                                                  {enum,[subAgentActivity]}},
+                                                kind =>
+                                                 {required,
+                                                  {ref,
+                                                   <<"SubAgentActivityKind">>}},
+                                                agentPath => {required,binstr},
+                                                agentThreadId =>
+                                                 {required,binstr}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,{enum,[webSearch]}},
+                                                query => {required,binstr},
+                                                action =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"WebSearchAction">>},
+                                                    {exact,null}]}}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,{enum,[imageView]}},
+                                                path =>
+                                                 {required,
+                                                  {ref,
+                                                   <<"AbsolutePathBuf">>}}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,{enum,[sleep]}},
+                                                durationMs =>
+                                                 {required,integer}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                status => {required,binstr},
+                                                type =>
+                                                 {required,
+                                                  {enum,[imageGeneration]}},
+                                                result => {required,binstr},
+                                                revisedPrompt =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                savedPath =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"AbsolutePathBuf">>},
+                                                    {exact,null}]}}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,
+                                                  {enum,[enteredReviewMode]}},
+                                                review => {required,binstr}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,
+                                                  {enum,[exitedReviewMode]}},
+                                                review => {required,binstr}}},
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                type =>
+                                                 {required,
+                                                  {enum,
+                                                   [contextCompaction]}}}}]},
+                                          <<"McpToolCallResult">> =>
+                                           {struct,
+                                            #{'_meta' => {optional,term},
+                                              content =>
+                                               {required,{list,term}},
+                                              structuredContent =>
+                                               {optional,term}}},
+                                          <<"SessionSource">> =>
+                                           {any_of,
+                                            [{enum,
+                                              [cli,vscode,exec,appServer,
+                                               unknown]},
+                                             {struct,
+                                              #{custom => {required,binstr}}},
+                                             {struct,
+                                              #{subAgent =>
+                                                 {required,
+                                                  {ref,
+                                                   <<"SubAgentSource">>}}}}]},
+                                          <<"GitInfo">> =>
+                                           {struct,
+                                            #{branch =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              originUrl =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              sha =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}}}},
+                                          <<"DynamicToolCallStatus">> =>
+                                           {enum,
+                                            [inProgress,completed,failed]},
+                                          <<"ThreadSource">> => binstr,
+                                          <<"ImageDetail">> =>
+                                           {enum,[auto,low,high,original]},
+                                          <<"Thread">> =>
+                                           {struct,
+                                            #{id => {required,binstr},
+                                              name =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              status =>
+                                               {required,
+                                                {all_of,
+                                                 [{ref,<<"ThreadStatus">>}]}},
+                                              path =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              source =>
+                                               {required,
+                                                {all_of,
+                                                 [{ref,<<"SessionSource">>}]}},
+                                              cwd =>
+                                               {required,
+                                                {all_of,
+                                                 [{ref,
+                                                   <<"AbsolutePathBuf">>}]}},
+                                              ephemeral => {required,boolean},
+                                              modelProvider =>
+                                               {required,binstr},
+                                              threadSource =>
+                                               {optional,
+                                                {any_of,
+                                                 [{ref,<<"ThreadSource">>},
+                                                  {exact,null}]}},
+                                              gitInfo =>
+                                               {optional,
+                                                {any_of,
+                                                 [{ref,<<"GitInfo">>},
+                                                  {exact,null}]}},
+                                              agentNickname =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              agentRole =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              cliVersion => {required,binstr},
+                                              createdAt => {required,integer},
+                                              forkedFromId =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              parentThreadId =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              preview => {required,binstr},
+                                              recencyAt =>
+                                               {optional,
+                                                {any_of,
+                                                 [integer,{exact,null}]}},
+                                              sessionId => {required,binstr},
+                                              turns =>
+                                               {required,
+                                                {list,{ref,<<"Turn">>}}},
+                                              updatedAt =>
+                                               {required,integer}}}},
+                                        {struct,
+                                         #{thread =>
+                                            {required,{ref,<<"Thread">>}}}}}}},
+    {thread_shell_command_params, {struct,
+                                      #{command => {required,binstr},
+                                        threadId => {required,binstr}}}},
+    {thread_shell_command_response, {map,{binstr,term}}},
+    {thread_approve_guardian_denied_action_params, {struct,
+                                                    #{threadId =>
+                                                       {required,binstr},
+                                                      event =>
+                                                       {required,term}}}},
+    {thread_approve_guardian_denied_action_response, {map,{binstr,term}}},
+    {thread_inject_items_params, {struct,
+                                     #{items => {required,{list,term}},
+                                       threadId => {required,binstr}}}},
+    {thread_inject_items_response, {map,{binstr,term}}},
     {review_start_params, {with_defs,
                            {#{<<"ReviewDelivery">> => {enum,[inline,detached]},
                               <<"ReviewTarget">> =>
@@ -12717,6 +13669,27 @@
     {command_exec_response, {struct,#{stdout => {required,binstr},
                                       stderr => {required,binstr},
                                       exitCode => {required,integer}}}},
+    {command_exec_write_params, {struct,
+                                 #{closeStdin => {optional,boolean},
+                                   deltaBase64 =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   processId => {required,binstr}}}},
+    {command_exec_write_response, {map,{binstr,term}}},
+    {command_exec_terminate_params, {struct,#{processId => {required,binstr}}}},
+    {command_exec_terminate_response, {map,{binstr,term}}},
+    {command_exec_resize_params, {with_defs,
+                                  {#{<<"CommandExecTerminalSize">> =>
+                                      {struct,
+                                       #{rows => {required,integer},
+                                         cols => {required,integer}}}},
+                                   {struct,
+                                    #{size =>
+                                       {required,
+                                        {all_of,
+                                         [{ref,
+                                           <<"CommandExecTerminalSize">>}]}},
+                                      processId => {required,binstr}}}}}},
+    {command_exec_resize_response, {map,{binstr,term}}},
     {model_list_params, {struct,
                             #{limit =>
                                   {optional,{any_of,[integer,{exact,null}]}},
@@ -12796,6 +13769,14 @@
                              #{data => {required,{list,{ref,<<"Model">>}}},
                                nextCursor =>
                                 {optional,{any_of,[binstr,{exact,null}]}}}}}}},
+    {model_provider_capabilities_read_params, {map,{binstr,term}}},
+    {model_provider_capabilities_read_response, {struct,
+                                                 #{webSearch =>
+                                                    {required,boolean},
+                                                   imageGeneration =>
+                                                    {required,boolean},
+                                                   namespaceTools =>
+                                                    {required,boolean}}}},
     {skills_list_params, {struct,#{cwds => {optional,{list,binstr}},
                                    forceReload => {optional,boolean}}}},
     {skills_list_response, {with_defs,
@@ -12893,6 +13874,14 @@
     {skills_config_write_response, {struct,
                                        #{effectiveEnabled =>
                                              {required,boolean}}}},
+    {skills_extra_roots_set_params, {with_defs,
+                                     {#{<<"AbsolutePathBuf">> => binstr},
+                                      {struct,
+                                       #{extraRoots =>
+                                          {required,
+                                           {list,
+                                            {ref,<<"AbsolutePathBuf">>}}}}}}}},
+    {skills_extra_roots_set_response, {map,{binstr,term}}},
     {apps_list_params, {struct,
                            #{limit =>
                                  {optional,{any_of,[integer,{exact,null}]}},
@@ -13144,6 +14133,51 @@
                                             {optional,
                                              {any_of,
                                               [binstr,{exact,null}]}}}}}}},
+    {mcp_server_resource_read_params, {struct,
+                                       #{server => {required,binstr},
+                                         uri => {required,binstr},
+                                         threadId =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}}}}},
+    {mcp_server_resource_read_response, {with_defs,
+                                         {#{<<"ResourceContent">> =>
+                                             {any_of,
+                                              [{struct,
+                                                #{text => {required,binstr},
+                                                  uri => {required,binstr},
+                                                  '_meta' => {optional,term},
+                                                  mimeType =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [binstr,{exact,null}]}}}},
+                                               {struct,
+                                                #{uri => {required,binstr},
+                                                  '_meta' => {optional,term},
+                                                  mimeType =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [binstr,{exact,null}]}},
+                                                  blob =>
+                                                   {required,binstr}}}]}},
+                                          {struct,
+                                           #{contents =>
+                                              {required,
+                                               {list,
+                                                {ref,
+                                                 <<"ResourceContent">>}}}}}}}},
+    {mcp_server_tool_call_params, {struct,
+                                      #{arguments => {optional,term},
+                                        server => {required,binstr},
+                                        threadId => {required,binstr},
+                                        '_meta' => {optional,term},
+                                        tool => {required,binstr}}}},
+    {mcp_server_tool_call_response, {struct,
+                                     #{'_meta' => {optional,term},
+                                       content => {required,{list,term}},
+                                       structuredContent => {optional,term},
+                                       isError =>
+                                        {optional,
+                                         {any_of,[boolean,{exact,null}]}}}}},
     {config_read_params, {struct,
                              #{cwd =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
@@ -14046,5 +15080,1844 @@
                                               {optional,
                                                {any_of,
                                                 [{map,{binstr,term}},
-                                                 {exact,null}]}}}}}}}
+                                                 {exact,null}]}}}}}}},
+    {account_rate_limit_reset_credit_consume_params, {struct,
+                                                      #{idempotencyKey =>
+                                                         {required,binstr}}}},
+    {account_rate_limit_reset_credit_consume_response, {with_defs,
+                                                        {#{<<"ConsumeAccountRateLimitResetCreditOutcome">> =>
+                                                            {any_of,
+                                                             [{enum,[reset]},
+                                                              {enum,
+                                                               [nothingToReset]},
+                                                              {enum,
+                                                               [noCredit]},
+                                                              {enum,
+                                                               [alreadyRedeemed]}]}},
+                                                         {struct,
+                                                          #{outcome =>
+                                                             {required,
+                                                              {ref,
+                                                               <<"ConsumeAccountRateLimitResetCreditOutcome">>}}}}}}},
+    {account_usage_read_response, {with_defs,
+                                   {#{<<"AccountTokenUsageDailyBucket">> =>
+                                       {struct,
+                                        #{tokens => {required,integer},
+                                          startDate => {required,binstr}}},
+                                      <<"AccountTokenUsageSummary">> =>
+                                       {struct,
+                                        #{currentStreakDays =>
+                                           {optional,
+                                            {any_of,[integer,{exact,null}]}},
+                                          lifetimeTokens =>
+                                           {optional,
+                                            {any_of,[integer,{exact,null}]}},
+                                          longestRunningTurnSec =>
+                                           {optional,
+                                            {any_of,[integer,{exact,null}]}},
+                                          longestStreakDays =>
+                                           {optional,
+                                            {any_of,[integer,{exact,null}]}},
+                                          peakDailyTokens =>
+                                           {optional,
+                                            {any_of,
+                                             [integer,{exact,null}]}}}}},
+                                    {struct,
+                                     #{summary =>
+                                        {required,
+                                         {ref,<<"AccountTokenUsageSummary">>}},
+                                       dailyUsageBuckets =>
+                                        {optional,
+                                         {any_of,
+                                          [{list,
+                                            {ref,
+                                             <<"AccountTokenUsageDailyBucket">>}},
+                                           {exact,null}]}}}}}}},
+    {account_workspace_messages_read_response, {with_defs,
+                                                {#{<<"WorkspaceMessage">> =>
+                                                    {struct,
+                                                     #{createdAt =>
+                                                        {optional,
+                                                         {any_of,
+                                                          [integer,
+                                                           {exact,null}]}},
+                                                       archivedAt =>
+                                                        {optional,
+                                                         {any_of,
+                                                          [integer,
+                                                           {exact,null}]}},
+                                                       messageBody =>
+                                                        {required,binstr},
+                                                       messageId =>
+                                                        {required,binstr},
+                                                       messageType =>
+                                                        {required,
+                                                         {ref,
+                                                          <<"WorkspaceMessageType">>}}}},
+                                                   <<"WorkspaceMessageType">> =>
+                                                    {enum,
+                                                     [headline,announcement,
+                                                      unknown]}},
+                                                 {struct,
+                                                  #{messages =>
+                                                     {required,
+                                                      {list,
+                                                       {ref,
+                                                        <<"WorkspaceMessage">>}}},
+                                                    featureEnabled =>
+                                                     {required,boolean}}}}}},
+    {account_send_add_credits_nudge_email_params, {with_defs,
+                                                   {#{<<"AddCreditsNudgeCreditType">> =>
+                                                       {enum,
+                                                        [credits,
+                                                         usage_limit]}},
+                                                    {struct,
+                                                     #{creditType =>
+                                                        {required,
+                                                         {ref,
+                                                          <<"AddCreditsNudgeCreditType">>}}}}}}},
+    {account_send_add_credits_nudge_email_response, {with_defs,
+                                                     {#{<<"AddCreditsNudgeEmailStatus">> =>
+                                                         {enum,
+                                                          [sent,
+                                                           cooldown_active]}},
+                                                      {struct,
+                                                       #{status =>
+                                                          {required,
+                                                           {ref,
+                                                            <<"AddCreditsNudgeEmailStatus">>}}}}}}},
+    {hooks_list_params, {struct,#{cwds => {optional,{list,binstr}}}}},
+    {hooks_list_response, {with_defs,
+                           {#{<<"AbsolutePathBuf">> => binstr,
+                              <<"HookErrorInfo">> =>
+                               {struct,
+                                #{message => {required,binstr},
+                                  path => {required,binstr}}},
+                              <<"HookEventName">> =>
+                               {enum,
+                                [preToolUse,permissionRequest,postToolUse,
+                                 preCompact,postCompact,sessionStart,
+                                 userPromptSubmit,subagentStart,subagentStop,
+                                 stop]},
+                              <<"HookHandlerType">> =>
+                               {enum,[command,prompt,agent]},
+                              <<"HookMetadata">> =>
+                               {struct,
+                                #{command =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  enabled => {required,boolean},
+                                  key => {required,binstr},
+                                  source => {required,{ref,<<"HookSource">>}},
+                                  sourcePath =>
+                                   {required,{ref,<<"AbsolutePathBuf">>}},
+                                  pluginId =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  displayOrder => {required,integer},
+                                  eventName =>
+                                   {required,{ref,<<"HookEventName">>}},
+                                  handlerType =>
+                                   {required,{ref,<<"HookHandlerType">>}},
+                                  statusMessage =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  timeoutSec => {required,integer},
+                                  matcher =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  currentHash => {required,binstr},
+                                  isManaged => {required,boolean},
+                                  trustStatus =>
+                                   {required,{ref,<<"HookTrustStatus">>}}}},
+                              <<"HookSource">> =>
+                               {enum,
+                                [system,user,project,mdm,sessionFlags,plugin,
+                                 cloudRequirements,cloudManagedConfig,
+                                 legacyManagedConfigFile,
+                                 legacyManagedConfigMdm,unknown]},
+                              <<"HookTrustStatus">> =>
+                               {enum,[managed,untrusted,trusted,modified]},
+                              <<"HooksListEntry">> =>
+                               {struct,
+                                #{warnings => {required,{list,binstr}},
+                                  errors =>
+                                   {required,{list,{ref,<<"HookErrorInfo">>}}},
+                                  cwd => {required,binstr},
+                                  hooks =>
+                                   {required,
+                                    {list,{ref,<<"HookMetadata">>}}}}}},
+                            {struct,
+                             #{data =>
+                                {required,
+                                 {list,{ref,<<"HooksListEntry">>}}}}}}}},
+    {marketplace_add_params, {struct,
+                              #{source => {required,binstr},
+                                refName =>
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                sparsePaths =>
+                                 {optional,
+                                  {any_of,[{list,binstr},{exact,null}]}}}}},
+    {marketplace_add_response, {with_defs,
+                                {#{<<"AbsolutePathBuf">> => binstr},
+                                 {struct,
+                                  #{marketplaceName => {required,binstr},
+                                    alreadyAdded => {required,boolean},
+                                    installedRoot =>
+                                     {required,
+                                      {ref,<<"AbsolutePathBuf">>}}}}}}},
+    {marketplace_remove_params, {struct,
+                                    #{marketplaceName => {required,binstr}}}},
+    {marketplace_remove_response, {with_defs,
+                                   {#{<<"AbsolutePathBuf">> => binstr},
+                                    {struct,
+                                     #{marketplaceName => {required,binstr},
+                                       installedRoot =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"AbsolutePathBuf">>},
+                                           {exact,null}]}}}}}}},
+    {marketplace_upgrade_params, {struct,
+                                  #{marketplaceName =>
+                                     {optional,
+                                      {any_of,[binstr,{exact,null}]}}}}},
+    {marketplace_upgrade_response, {with_defs,
+                                    {#{<<"AbsolutePathBuf">> => binstr,
+                                       <<"MarketplaceUpgradeErrorInfo">> =>
+                                        {struct,
+                                         #{message => {required,binstr},
+                                           marketplaceName =>
+                                            {required,binstr}}}},
+                                     {struct,
+                                      #{errors =>
+                                         {required,
+                                          {list,
+                                           {ref,
+                                            <<"MarketplaceUpgradeErrorInfo">>}}},
+                                        selectedMarketplaces =>
+                                         {required,{list,binstr}},
+                                        upgradedRoots =>
+                                         {required,
+                                          {list,
+                                           {ref,<<"AbsolutePathBuf">>}}}}}}}},
+    {plugin_list_params, {with_defs,
+                          {#{<<"AbsolutePathBuf">> => binstr,
+                             <<"PluginListMarketplaceKind">> =>
+                              {enum,
+                               [local,vertical,'workspace-directory',
+                                'shared-with-me','created-by-me-remote']}},
+                           {struct,
+                            #{cwds =>
+                               {optional,
+                                {any_of,
+                                 [{list,{ref,<<"AbsolutePathBuf">>}},
+                                  {exact,null}]}},
+                              marketplaceKinds =>
+                               {optional,
+                                {any_of,
+                                 [{list,{ref,<<"PluginListMarketplaceKind">>}},
+                                  {exact,null}]}}}}}}},
+    {plugin_list_response, {with_defs,
+                            {#{<<"AbsolutePathBuf">> => binstr,
+                               <<"MarketplaceInterface">> =>
+                                {struct,
+                                 #{displayName =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"MarketplaceLoadErrorInfo">> =>
+                                {struct,
+                                 #{message => {required,binstr},
+                                   marketplacePath =>
+                                    {required,{ref,<<"AbsolutePathBuf">>}}}},
+                               <<"PluginAuthPolicy">> =>
+                                {enum,['ON_INSTALL','ON_USE']},
+                               <<"PluginAvailability">> =>
+                                {any_of,
+                                 [{enum,['DISABLED_BY_ADMIN']},
+                                  {enum,['AVAILABLE']}]},
+                               <<"PluginInstallPolicy">> =>
+                                {enum,
+                                 ['NOT_AVAILABLE','AVAILABLE',
+                                  'INSTALLED_BY_DEFAULT']},
+                               <<"PluginInterface">> =>
+                                {struct,
+                                 #{category =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   capabilities => {required,{list,binstr}},
+                                   logoUrl =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   logoUrlDark =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   screenshots =>
+                                    {required,
+                                     {list,{ref,<<"AbsolutePathBuf">>}}},
+                                   displayName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   brandColor =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   defaultPrompt =>
+                                    {optional,
+                                     {any_of,[{list,binstr},{exact,null}]}},
+                                   shortDescription =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   websiteUrl =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   composerIcon =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AbsolutePathBuf">>},
+                                       {exact,null}]}},
+                                   composerIconUrl =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   developerName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   logo =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AbsolutePathBuf">>},
+                                       {exact,null}]}},
+                                   logoDark =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AbsolutePathBuf">>},
+                                       {exact,null}]}},
+                                   longDescription =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   privacyPolicyUrl =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   screenshotUrls => {required,{list,binstr}},
+                                   termsOfServiceUrl =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"PluginMarketplaceEntry">> =>
+                                {struct,
+                                 #{name => {required,binstr},
+                                   path =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AbsolutePathBuf">>},
+                                       {exact,null}]}},
+                                   interface =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"MarketplaceInterface">>},
+                                       {exact,null}]}},
+                                   plugins =>
+                                    {required,
+                                     {list,{ref,<<"PluginSummary">>}}}}},
+                               <<"PluginShareContext">> =>
+                                {struct,
+                                 #{remotePluginId => {required,binstr},
+                                   discoverability =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"PluginShareDiscoverability">>},
+                                       {exact,null}]}},
+                                   creatorAccountUserId =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   creatorName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   remoteVersion =>
+                                    {optional,
+                                     {default,
+                                      {null,{any_of,[binstr,{exact,null}]}}}},
+                                   sharePrincipals =>
+                                    {optional,
+                                     {any_of,
+                                      [{list,{ref,<<"PluginSharePrincipal">>}},
+                                       {exact,null}]}},
+                                   shareUrl =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"PluginShareDiscoverability">> =>
+                                {enum,['LISTED','UNLISTED','PRIVATE']},
+                               <<"PluginSharePrincipal">> =>
+                                {struct,
+                                 #{name => {required,binstr},
+                                   principalId => {required,binstr},
+                                   principalType =>
+                                    {required,
+                                     {ref,<<"PluginSharePrincipalType">>}},
+                                   role =>
+                                    {required,
+                                     {ref,<<"PluginSharePrincipalRole">>}}}},
+                               <<"PluginSharePrincipalRole">> =>
+                                {enum,[reader,editor,owner]},
+                               <<"PluginSharePrincipalType">> =>
+                                {enum,[user,group,workspace]},
+                               <<"PluginSource">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[local]}},
+                                     path =>
+                                      {required,{ref,<<"AbsolutePathBuf">>}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[git]}},
+                                     path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     sha =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     url => {required,binstr},
+                                     refName =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[remote]}}}}]},
+                               <<"PluginSummary">> =>
+                                {struct,
+                                 #{enabled => {required,boolean},
+                                   id => {required,binstr},
+                                   name => {required,binstr},
+                                   interface =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"PluginInterface">>},
+                                       {exact,null}]}},
+                                   keywords =>
+                                    {optional,{default,{[],{list,binstr}}}},
+                                   source =>
+                                    {required,{ref,<<"PluginSource">>}},
+                                   remotePluginId =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   authPolicy =>
+                                    {required,{ref,<<"PluginAuthPolicy">>}},
+                                   availability =>
+                                    {optional,
+                                     {default,
+                                      {<<"AVAILABLE">>,
+                                       {all_of,
+                                        [{ref,<<"PluginAvailability">>}]}}}},
+                                   installPolicy =>
+                                    {required,{ref,<<"PluginInstallPolicy">>}},
+                                   installed => {required,boolean},
+                                   localVersion =>
+                                    {optional,
+                                     {default,
+                                      {null,{any_of,[binstr,{exact,null}]}}}},
+                                   shareContext =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"PluginShareContext">>},
+                                       {exact,null}]}}}}},
+                             {struct,
+                              #{featuredPluginIds =>
+                                 {optional,{default,{[],{list,binstr}}}},
+                                marketplaceLoadErrors =>
+                                 {optional,
+                                  {default,
+                                   {[],
+                                    {list,
+                                     {ref,<<"MarketplaceLoadErrorInfo">>}}}}},
+                                marketplaces =>
+                                 {required,
+                                  {list,
+                                   {ref,<<"PluginMarketplaceEntry">>}}}}}}}},
+    {plugin_installed_params, {with_defs,
+                               {#{<<"AbsolutePathBuf">> => binstr},
+                                {struct,
+                                 #{cwds =>
+                                    {optional,
+                                     {any_of,
+                                      [{list,{ref,<<"AbsolutePathBuf">>}},
+                                       {exact,null}]}},
+                                   installSuggestionPluginNames =>
+                                    {optional,
+                                     {any_of,
+                                      [{list,binstr},{exact,null}]}}}}}}},
+    {plugin_installed_response, {with_defs,
+                                 {#{<<"AbsolutePathBuf">> => binstr,
+                                    <<"MarketplaceInterface">> =>
+                                     {struct,
+                                      #{displayName =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}}}},
+                                    <<"MarketplaceLoadErrorInfo">> =>
+                                     {struct,
+                                      #{message => {required,binstr},
+                                        marketplacePath =>
+                                         {required,
+                                          {ref,<<"AbsolutePathBuf">>}}}},
+                                    <<"PluginAuthPolicy">> =>
+                                     {enum,['ON_INSTALL','ON_USE']},
+                                    <<"PluginAvailability">> =>
+                                     {any_of,
+                                      [{enum,['DISABLED_BY_ADMIN']},
+                                       {enum,['AVAILABLE']}]},
+                                    <<"PluginInstallPolicy">> =>
+                                     {enum,
+                                      ['NOT_AVAILABLE','AVAILABLE',
+                                       'INSTALLED_BY_DEFAULT']},
+                                    <<"PluginInterface">> =>
+                                     {struct,
+                                      #{category =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        capabilities =>
+                                         {required,{list,binstr}},
+                                        logoUrl =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        logoUrlDark =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        screenshots =>
+                                         {required,
+                                          {list,{ref,<<"AbsolutePathBuf">>}}},
+                                        displayName =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        brandColor =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        defaultPrompt =>
+                                         {optional,
+                                          {any_of,
+                                           [{list,binstr},{exact,null}]}},
+                                        shortDescription =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        websiteUrl =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        composerIcon =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"AbsolutePathBuf">>},
+                                            {exact,null}]}},
+                                        composerIconUrl =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        developerName =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        logo =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"AbsolutePathBuf">>},
+                                            {exact,null}]}},
+                                        logoDark =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"AbsolutePathBuf">>},
+                                            {exact,null}]}},
+                                        longDescription =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        privacyPolicyUrl =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        screenshotUrls =>
+                                         {required,{list,binstr}},
+                                        termsOfServiceUrl =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}}}},
+                                    <<"PluginMarketplaceEntry">> =>
+                                     {struct,
+                                      #{name => {required,binstr},
+                                        path =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"AbsolutePathBuf">>},
+                                            {exact,null}]}},
+                                        interface =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"MarketplaceInterface">>},
+                                            {exact,null}]}},
+                                        plugins =>
+                                         {required,
+                                          {list,{ref,<<"PluginSummary">>}}}}},
+                                    <<"PluginShareContext">> =>
+                                     {struct,
+                                      #{remotePluginId => {required,binstr},
+                                        discoverability =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,
+                                             <<"PluginShareDiscoverability">>},
+                                            {exact,null}]}},
+                                        creatorAccountUserId =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        creatorName =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        remoteVersion =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[binstr,{exact,null}]}}}},
+                                        sharePrincipals =>
+                                         {optional,
+                                          {any_of,
+                                           [{list,
+                                             {ref,<<"PluginSharePrincipal">>}},
+                                            {exact,null}]}},
+                                        shareUrl =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}}}},
+                                    <<"PluginShareDiscoverability">> =>
+                                     {enum,['LISTED','UNLISTED','PRIVATE']},
+                                    <<"PluginSharePrincipal">> =>
+                                     {struct,
+                                      #{name => {required,binstr},
+                                        principalId => {required,binstr},
+                                        principalType =>
+                                         {required,
+                                          {ref,
+                                           <<"PluginSharePrincipalType">>}},
+                                        role =>
+                                         {required,
+                                          {ref,
+                                           <<"PluginSharePrincipalRole">>}}}},
+                                    <<"PluginSharePrincipalRole">> =>
+                                     {enum,[reader,editor,owner]},
+                                    <<"PluginSharePrincipalType">> =>
+                                     {enum,[user,group,workspace]},
+                                    <<"PluginSource">> =>
+                                     {any_of,
+                                      [{struct,
+                                        #{type => {required,{enum,[local]}},
+                                          path =>
+                                           {required,
+                                            {ref,<<"AbsolutePathBuf">>}}}},
+                                       {struct,
+                                        #{type => {required,{enum,[git]}},
+                                          path =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}},
+                                          sha =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}},
+                                          url => {required,binstr},
+                                          refName =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}}}},
+                                       {struct,
+                                        #{type =>
+                                           {required,{enum,[remote]}}}}]},
+                                    <<"PluginSummary">> =>
+                                     {struct,
+                                      #{enabled => {required,boolean},
+                                        id => {required,binstr},
+                                        name => {required,binstr},
+                                        interface =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"PluginInterface">>},
+                                            {exact,null}]}},
+                                        keywords =>
+                                         {optional,
+                                          {default,{[],{list,binstr}}}},
+                                        source =>
+                                         {required,{ref,<<"PluginSource">>}},
+                                        remotePluginId =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        authPolicy =>
+                                         {required,
+                                          {ref,<<"PluginAuthPolicy">>}},
+                                        availability =>
+                                         {optional,
+                                          {default,
+                                           {<<"AVAILABLE">>,
+                                            {all_of,
+                                             [{ref,
+                                               <<"PluginAvailability">>}]}}}},
+                                        installPolicy =>
+                                         {required,
+                                          {ref,<<"PluginInstallPolicy">>}},
+                                        installed => {required,boolean},
+                                        localVersion =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[binstr,{exact,null}]}}}},
+                                        shareContext =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"PluginShareContext">>},
+                                            {exact,null}]}}}}},
+                                  {struct,
+                                   #{marketplaceLoadErrors =>
+                                      {optional,
+                                       {default,
+                                        {[],
+                                         {list,
+                                          {ref,
+                                           <<"MarketplaceLoadErrorInfo">>}}}}},
+                                     marketplaces =>
+                                      {required,
+                                       {list,
+                                        {ref,
+                                         <<"PluginMarketplaceEntry">>}}}}}}}},
+    {plugin_read_params, {with_defs,
+                          {#{<<"AbsolutePathBuf">> => binstr},
+                           {struct,
+                            #{remoteMarketplaceName =>
+                               {optional,{any_of,[binstr,{exact,null}]}},
+                              marketplacePath =>
+                               {optional,
+                                {any_of,
+                                 [{ref,<<"AbsolutePathBuf">>},{exact,null}]}},
+                              pluginName => {required,binstr}}}}}},
+    {plugin_read_response, {with_defs,
+                            {#{<<"AbsolutePathBuf">> => binstr,
+                               <<"AppSummary">> =>
+                                {struct,
+                                 #{id => {required,binstr},
+                                   name => {required,binstr},
+                                   description =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   category =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   installUrl =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"AppTemplateSummary">> =>
+                                {struct,
+                                 #{name => {required,binstr},
+                                   reason =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,
+                                        <<"AppTemplateUnavailableReason">>},
+                                       {exact,null}]}},
+                                   description =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   category =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   logoUrl =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   logoUrlDark =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   canonicalConnectorId =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   materializedAppIds =>
+                                    {required,{list,binstr}},
+                                   templateId => {required,binstr}}},
+                               <<"AppTemplateUnavailableReason">> =>
+                                {enum,
+                                 ['NOT_CONFIGURED_FOR_WORKSPACE',
+                                  'NO_ACTIVE_WORKSPACE']},
+                               <<"HookEventName">> =>
+                                {enum,
+                                 [preToolUse,permissionRequest,postToolUse,
+                                  preCompact,postCompact,sessionStart,
+                                  userPromptSubmit,subagentStart,subagentStop,
+                                  stop]},
+                               <<"PluginAuthPolicy">> =>
+                                {enum,['ON_INSTALL','ON_USE']},
+                               <<"PluginAvailability">> =>
+                                {any_of,
+                                 [{enum,['DISABLED_BY_ADMIN']},
+                                  {enum,['AVAILABLE']}]},
+                               <<"PluginDetail">> =>
+                                {struct,
+                                 #{description =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   marketplacePath =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AbsolutePathBuf">>},
+                                       {exact,null}]}},
+                                   summary =>
+                                    {required,{ref,<<"PluginSummary">>}},
+                                   hooks =>
+                                    {required,
+                                     {list,{ref,<<"PluginHookSummary">>}}},
+                                   mcpServers => {required,{list,binstr}},
+                                   marketplaceName => {required,binstr},
+                                   skills =>
+                                    {required,{list,{ref,<<"SkillSummary">>}}},
+                                   shareUrl =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   appTemplates =>
+                                    {required,
+                                     {list,{ref,<<"AppTemplateSummary">>}}},
+                                   apps =>
+                                    {required,{list,{ref,<<"AppSummary">>}}}}},
+                               <<"PluginHookSummary">> =>
+                                {struct,
+                                 #{key => {required,binstr},
+                                   eventName =>
+                                    {required,{ref,<<"HookEventName">>}}}},
+                               <<"PluginInstallPolicy">> =>
+                                {enum,
+                                 ['NOT_AVAILABLE','AVAILABLE',
+                                  'INSTALLED_BY_DEFAULT']},
+                               <<"PluginInterface">> =>
+                                {struct,
+                                 #{category =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   capabilities => {required,{list,binstr}},
+                                   logoUrl =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   logoUrlDark =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   screenshots =>
+                                    {required,
+                                     {list,{ref,<<"AbsolutePathBuf">>}}},
+                                   displayName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   brandColor =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   defaultPrompt =>
+                                    {optional,
+                                     {any_of,[{list,binstr},{exact,null}]}},
+                                   shortDescription =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   websiteUrl =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   composerIcon =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AbsolutePathBuf">>},
+                                       {exact,null}]}},
+                                   composerIconUrl =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   developerName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   logo =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AbsolutePathBuf">>},
+                                       {exact,null}]}},
+                                   logoDark =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AbsolutePathBuf">>},
+                                       {exact,null}]}},
+                                   longDescription =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   privacyPolicyUrl =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   screenshotUrls => {required,{list,binstr}},
+                                   termsOfServiceUrl =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"PluginShareContext">> =>
+                                {struct,
+                                 #{remotePluginId => {required,binstr},
+                                   discoverability =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"PluginShareDiscoverability">>},
+                                       {exact,null}]}},
+                                   creatorAccountUserId =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   creatorName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   remoteVersion =>
+                                    {optional,
+                                     {default,
+                                      {null,{any_of,[binstr,{exact,null}]}}}},
+                                   sharePrincipals =>
+                                    {optional,
+                                     {any_of,
+                                      [{list,{ref,<<"PluginSharePrincipal">>}},
+                                       {exact,null}]}},
+                                   shareUrl =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"PluginShareDiscoverability">> =>
+                                {enum,['LISTED','UNLISTED','PRIVATE']},
+                               <<"PluginSharePrincipal">> =>
+                                {struct,
+                                 #{name => {required,binstr},
+                                   principalId => {required,binstr},
+                                   principalType =>
+                                    {required,
+                                     {ref,<<"PluginSharePrincipalType">>}},
+                                   role =>
+                                    {required,
+                                     {ref,<<"PluginSharePrincipalRole">>}}}},
+                               <<"PluginSharePrincipalRole">> =>
+                                {enum,[reader,editor,owner]},
+                               <<"PluginSharePrincipalType">> =>
+                                {enum,[user,group,workspace]},
+                               <<"PluginSource">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[local]}},
+                                     path =>
+                                      {required,{ref,<<"AbsolutePathBuf">>}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[git]}},
+                                     path =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     sha =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     url => {required,binstr},
+                                     refName =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[remote]}}}}]},
+                               <<"PluginSummary">> =>
+                                {struct,
+                                 #{enabled => {required,boolean},
+                                   id => {required,binstr},
+                                   name => {required,binstr},
+                                   interface =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"PluginInterface">>},
+                                       {exact,null}]}},
+                                   keywords =>
+                                    {optional,{default,{[],{list,binstr}}}},
+                                   source =>
+                                    {required,{ref,<<"PluginSource">>}},
+                                   remotePluginId =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   authPolicy =>
+                                    {required,{ref,<<"PluginAuthPolicy">>}},
+                                   availability =>
+                                    {optional,
+                                     {default,
+                                      {<<"AVAILABLE">>,
+                                       {all_of,
+                                        [{ref,<<"PluginAvailability">>}]}}}},
+                                   installPolicy =>
+                                    {required,{ref,<<"PluginInstallPolicy">>}},
+                                   installed => {required,boolean},
+                                   localVersion =>
+                                    {optional,
+                                     {default,
+                                      {null,{any_of,[binstr,{exact,null}]}}}},
+                                   shareContext =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"PluginShareContext">>},
+                                       {exact,null}]}}}},
+                               <<"SkillInterface">> =>
+                                {struct,
+                                 #{displayName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   brandColor =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   defaultPrompt =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   iconLarge =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AbsolutePathBuf">>},
+                                       {exact,null}]}},
+                                   iconSmall =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AbsolutePathBuf">>},
+                                       {exact,null}]}},
+                                   shortDescription =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}},
+                               <<"SkillSummary">> =>
+                                {struct,
+                                 #{enabled => {required,boolean},
+                                   name => {required,binstr},
+                                   path =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AbsolutePathBuf">>},
+                                       {exact,null}]}},
+                                   interface =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"SkillInterface">>},
+                                       {exact,null}]}},
+                                   description => {required,binstr},
+                                   shortDescription =>
+                                    {optional,
+                                     {any_of,[binstr,{exact,null}]}}}}},
+                             {struct,
+                              #{plugin =>
+                                 {required,{ref,<<"PluginDetail">>}}}}}}},
+    {plugin_skill_read_params, {struct,
+                                   #{remotePluginId => {required,binstr},
+                                     remoteMarketplaceName =>
+                                         {required,binstr},
+                                     skillName => {required,binstr}}}},
+    {plugin_skill_read_response, {struct,
+                                  #{contents =>
+                                     {optional,
+                                      {any_of,[binstr,{exact,null}]}}}}},
+    {plugin_share_save_params, {with_defs,
+                                {#{<<"AbsolutePathBuf">> => binstr,
+                                   <<"PluginShareDiscoverability">> =>
+                                    {enum,['LISTED','UNLISTED','PRIVATE']},
+                                   <<"PluginSharePrincipalType">> =>
+                                    {enum,[user,group,workspace]},
+                                   <<"PluginShareTarget">> =>
+                                    {struct,
+                                     #{principalId => {required,binstr},
+                                       principalType =>
+                                        {required,
+                                         {ref,<<"PluginSharePrincipalType">>}},
+                                       role =>
+                                        {required,
+                                         {ref,<<"PluginShareTargetRole">>}}}},
+                                   <<"PluginShareTargetRole">> =>
+                                    {enum,[reader,editor]}},
+                                 {struct,
+                                  #{remotePluginId =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    discoverability =>
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"PluginShareDiscoverability">>},
+                                        {exact,null}]}},
+                                    pluginPath =>
+                                     {required,{ref,<<"AbsolutePathBuf">>}},
+                                    shareTargets =>
+                                     {optional,
+                                      {any_of,
+                                       [{list,{ref,<<"PluginShareTarget">>}},
+                                        {exact,null}]}}}}}}},
+    {plugin_share_save_response, {struct,
+                                     #{remotePluginId => {required,binstr},
+                                       shareUrl => {required,binstr}}}},
+    {plugin_share_update_targets_params, {with_defs,
+                                          {#{<<"PluginSharePrincipalType">> =>
+                                              {enum,[user,group,workspace]},
+                                             <<"PluginShareTarget">> =>
+                                              {struct,
+                                               #{principalId =>
+                                                  {required,binstr},
+                                                 principalType =>
+                                                  {required,
+                                                   {ref,
+                                                    <<"PluginSharePrincipalType">>}},
+                                                 role =>
+                                                  {required,
+                                                   {ref,
+                                                    <<"PluginShareTargetRole">>}}}},
+                                             <<"PluginShareTargetRole">> =>
+                                              {enum,[reader,editor]},
+                                             <<"PluginShareUpdateDiscoverability">> =>
+                                              {enum,['UNLISTED','PRIVATE']}},
+                                           {struct,
+                                            #{remotePluginId =>
+                                               {required,binstr},
+                                              discoverability =>
+                                               {required,
+                                                {ref,
+                                                 <<"PluginShareUpdateDiscoverability">>}},
+                                              shareTargets =>
+                                               {required,
+                                                {list,
+                                                 {ref,
+                                                  <<"PluginShareTarget">>}}}}}}}},
+    {plugin_share_update_targets_response, {with_defs,
+                                            {#{<<"PluginShareDiscoverability">> =>
+                                                {enum,
+                                                 ['LISTED','UNLISTED',
+                                                  'PRIVATE']},
+                                               <<"PluginSharePrincipal">> =>
+                                                {struct,
+                                                 #{name => {required,binstr},
+                                                   principalId =>
+                                                    {required,binstr},
+                                                   principalType =>
+                                                    {required,
+                                                     {ref,
+                                                      <<"PluginSharePrincipalType">>}},
+                                                   role =>
+                                                    {required,
+                                                     {ref,
+                                                      <<"PluginSharePrincipalRole">>}}}},
+                                               <<"PluginSharePrincipalRole">> =>
+                                                {enum,[reader,editor,owner]},
+                                               <<"PluginSharePrincipalType">> =>
+                                                {enum,[user,group,workspace]}},
+                                             {struct,
+                                              #{discoverability =>
+                                                 {required,
+                                                  {ref,
+                                                   <<"PluginShareDiscoverability">>}},
+                                                principals =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"PluginSharePrincipal">>}}}}}}}},
+    {plugin_share_list_params, {map,{binstr,term}}},
+    {plugin_share_list_response, {with_defs,
+                                  {#{<<"AbsolutePathBuf">> => binstr,
+                                     <<"PluginAuthPolicy">> =>
+                                      {enum,['ON_INSTALL','ON_USE']},
+                                     <<"PluginAvailability">> =>
+                                      {any_of,
+                                       [{enum,['DISABLED_BY_ADMIN']},
+                                        {enum,['AVAILABLE']}]},
+                                     <<"PluginInstallPolicy">> =>
+                                      {enum,
+                                       ['NOT_AVAILABLE','AVAILABLE',
+                                        'INSTALLED_BY_DEFAULT']},
+                                     <<"PluginInterface">> =>
+                                      {struct,
+                                       #{category =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         capabilities =>
+                                          {required,{list,binstr}},
+                                         logoUrl =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         logoUrlDark =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         screenshots =>
+                                          {required,
+                                           {list,{ref,<<"AbsolutePathBuf">>}}},
+                                         displayName =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         brandColor =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         defaultPrompt =>
+                                          {optional,
+                                           {any_of,
+                                            [{list,binstr},{exact,null}]}},
+                                         shortDescription =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         websiteUrl =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         composerIcon =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"AbsolutePathBuf">>},
+                                             {exact,null}]}},
+                                         composerIconUrl =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         developerName =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         logo =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"AbsolutePathBuf">>},
+                                             {exact,null}]}},
+                                         logoDark =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"AbsolutePathBuf">>},
+                                             {exact,null}]}},
+                                         longDescription =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         privacyPolicyUrl =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         screenshotUrls =>
+                                          {required,{list,binstr}},
+                                         termsOfServiceUrl =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}}}},
+                                     <<"PluginShareContext">> =>
+                                      {struct,
+                                       #{remotePluginId => {required,binstr},
+                                         discoverability =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,
+                                              <<"PluginShareDiscoverability">>},
+                                             {exact,null}]}},
+                                         creatorAccountUserId =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         creatorName =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         remoteVersion =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,[binstr,{exact,null}]}}}},
+                                         sharePrincipals =>
+                                          {optional,
+                                           {any_of,
+                                            [{list,
+                                              {ref,
+                                               <<"PluginSharePrincipal">>}},
+                                             {exact,null}]}},
+                                         shareUrl =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}}}},
+                                     <<"PluginShareDiscoverability">> =>
+                                      {enum,['LISTED','UNLISTED','PRIVATE']},
+                                     <<"PluginShareListItem">> =>
+                                      {struct,
+                                       #{plugin =>
+                                          {required,{ref,<<"PluginSummary">>}},
+                                         localPluginPath =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"AbsolutePathBuf">>},
+                                             {exact,null}]}}}},
+                                     <<"PluginSharePrincipal">> =>
+                                      {struct,
+                                       #{name => {required,binstr},
+                                         principalId => {required,binstr},
+                                         principalType =>
+                                          {required,
+                                           {ref,
+                                            <<"PluginSharePrincipalType">>}},
+                                         role =>
+                                          {required,
+                                           {ref,
+                                            <<"PluginSharePrincipalRole">>}}}},
+                                     <<"PluginSharePrincipalRole">> =>
+                                      {enum,[reader,editor,owner]},
+                                     <<"PluginSharePrincipalType">> =>
+                                      {enum,[user,group,workspace]},
+                                     <<"PluginSource">> =>
+                                      {any_of,
+                                       [{struct,
+                                         #{type => {required,{enum,[local]}},
+                                           path =>
+                                            {required,
+                                             {ref,<<"AbsolutePathBuf">>}}}},
+                                        {struct,
+                                         #{type => {required,{enum,[git]}},
+                                           path =>
+                                            {optional,
+                                             {any_of,[binstr,{exact,null}]}},
+                                           sha =>
+                                            {optional,
+                                             {any_of,[binstr,{exact,null}]}},
+                                           url => {required,binstr},
+                                           refName =>
+                                            {optional,
+                                             {any_of,[binstr,{exact,null}]}}}},
+                                        {struct,
+                                         #{type =>
+                                            {required,{enum,[remote]}}}}]},
+                                     <<"PluginSummary">> =>
+                                      {struct,
+                                       #{enabled => {required,boolean},
+                                         id => {required,binstr},
+                                         name => {required,binstr},
+                                         interface =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"PluginInterface">>},
+                                             {exact,null}]}},
+                                         keywords =>
+                                          {optional,
+                                           {default,{[],{list,binstr}}}},
+                                         source =>
+                                          {required,{ref,<<"PluginSource">>}},
+                                         remotePluginId =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         authPolicy =>
+                                          {required,
+                                           {ref,<<"PluginAuthPolicy">>}},
+                                         availability =>
+                                          {optional,
+                                           {default,
+                                            {<<"AVAILABLE">>,
+                                             {all_of,
+                                              [{ref,
+                                                <<"PluginAvailability">>}]}}}},
+                                         installPolicy =>
+                                          {required,
+                                           {ref,<<"PluginInstallPolicy">>}},
+                                         installed => {required,boolean},
+                                         localVersion =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,[binstr,{exact,null}]}}}},
+                                         shareContext =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"PluginShareContext">>},
+                                             {exact,null}]}}}}},
+                                   {struct,
+                                    #{data =>
+                                       {required,
+                                        {list,
+                                         {ref,<<"PluginShareListItem">>}}}}}}}},
+    {plugin_share_checkout_params, {struct,
+                                       #{remotePluginId => {required,binstr}}}},
+    {plugin_share_checkout_response, {with_defs,
+                                      {#{<<"AbsolutePathBuf">> => binstr},
+                                       {struct,
+                                        #{remotePluginId => {required,binstr},
+                                          marketplacePath =>
+                                           {required,
+                                            {ref,<<"AbsolutePathBuf">>}},
+                                          pluginName => {required,binstr},
+                                          pluginPath =>
+                                           {required,
+                                            {ref,<<"AbsolutePathBuf">>}},
+                                          marketplaceName => {required,binstr},
+                                          pluginId => {required,binstr},
+                                          remoteVersion =>
+                                           {optional,
+                                            {any_of,
+                                             [binstr,{exact,null}]}}}}}}},
+    {plugin_share_delete_params, {struct,
+                                     #{remotePluginId => {required,binstr}}}},
+    {plugin_share_delete_response, {map,{binstr,term}}},
+    {plugin_install_params, {with_defs,
+                             {#{<<"AbsolutePathBuf">> => binstr},
+                              {struct,
+                               #{remoteMarketplaceName =>
+                                  {optional,{any_of,[binstr,{exact,null}]}},
+                                 marketplacePath =>
+                                  {optional,
+                                   {any_of,
+                                    [{ref,<<"AbsolutePathBuf">>},
+                                     {exact,null}]}},
+                                 pluginName => {required,binstr}}}}}},
+    {plugin_install_response, {with_defs,
+                               {#{<<"AppSummary">> =>
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      name => {required,binstr},
+                                      description =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
+                                      category =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
+                                      installUrl =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}}}},
+                                  <<"PluginAuthPolicy">> =>
+                                   {enum,['ON_INSTALL','ON_USE']}},
+                                {struct,
+                                 #{authPolicy =>
+                                    {required,{ref,<<"PluginAuthPolicy">>}},
+                                   appsNeedingAuth =>
+                                    {required,
+                                     {list,{ref,<<"AppSummary">>}}}}}}}},
+    {plugin_uninstall_params, {struct,#{pluginId => {required,binstr}}}},
+    {plugin_uninstall_response, {map,{binstr,term}}},
+    {fs_read_file_params, {with_defs,
+                           {#{<<"AbsolutePathBuf">> => binstr},
+                            {struct,
+                             #{path =>
+                                {required,
+                                 {all_of,[{ref,<<"AbsolutePathBuf">>}]}}}}}}},
+    {fs_read_file_response, {struct,#{dataBase64 => {required,binstr}}}},
+    {fs_write_file_params, {with_defs,
+                            {#{<<"AbsolutePathBuf">> => binstr},
+                             {struct,
+                              #{path =>
+                                 {required,
+                                  {all_of,[{ref,<<"AbsolutePathBuf">>}]}},
+                                dataBase64 => {required,binstr}}}}}},
+    {fs_write_file_response, {map,{binstr,term}}},
+    {fs_create_directory_params, {with_defs,
+                                  {#{<<"AbsolutePathBuf">> => binstr},
+                                   {struct,
+                                    #{path =>
+                                       {required,
+                                        {all_of,
+                                         [{ref,<<"AbsolutePathBuf">>}]}},
+                                      recursive =>
+                                       {optional,
+                                        {any_of,[boolean,{exact,null}]}}}}}}},
+    {fs_create_directory_response, {map,{binstr,term}}},
+    {fs_get_metadata_params, {with_defs,
+                              {#{<<"AbsolutePathBuf">> => binstr},
+                               {struct,
+                                #{path =>
+                                   {required,
+                                    {all_of,
+                                     [{ref,<<"AbsolutePathBuf">>}]}}}}}}},
+    {fs_get_metadata_response, {struct,
+                                   #{createdAtMs => {required,integer},
+                                     isDirectory => {required,boolean},
+                                     isFile => {required,boolean},
+                                     isSymlink => {required,boolean},
+                                     modifiedAtMs => {required,integer}}}},
+    {fs_read_directory_params, {with_defs,
+                                {#{<<"AbsolutePathBuf">> => binstr},
+                                 {struct,
+                                  #{path =>
+                                     {required,
+                                      {all_of,
+                                       [{ref,<<"AbsolutePathBuf">>}]}}}}}}},
+    {fs_read_directory_response, {with_defs,
+                                  {#{<<"FsReadDirectoryEntry">> =>
+                                      {struct,
+                                       #{isDirectory => {required,boolean},
+                                         isFile => {required,boolean},
+                                         fileName => {required,binstr}}}},
+                                   {struct,
+                                    #{entries =>
+                                       {required,
+                                        {list,
+                                         {ref,
+                                          <<"FsReadDirectoryEntry">>}}}}}}}},
+    {fs_remove_params, {with_defs,
+                        {#{<<"AbsolutePathBuf">> => binstr},
+                         {struct,
+                          #{force =>
+                             {optional,{any_of,[boolean,{exact,null}]}},
+                            path =>
+                             {required,{all_of,[{ref,<<"AbsolutePathBuf">>}]}},
+                            recursive =>
+                             {optional,{any_of,[boolean,{exact,null}]}}}}}}},
+    {fs_remove_response, {map,{binstr,term}}},
+    {fs_copy_params, {with_defs,
+                      {#{<<"AbsolutePathBuf">> => binstr},
+                       {struct,
+                        #{destinationPath =>
+                           {required,{all_of,[{ref,<<"AbsolutePathBuf">>}]}},
+                          recursive => {optional,boolean},
+                          sourcePath =>
+                           {required,
+                            {all_of,[{ref,<<"AbsolutePathBuf">>}]}}}}}}},
+    {fs_copy_response, {map,{binstr,term}}},
+    {fs_watch_params, {with_defs,
+                       {#{<<"AbsolutePathBuf">> => binstr},
+                        {struct,
+                         #{path =>
+                            {required,{all_of,[{ref,<<"AbsolutePathBuf">>}]}},
+                           watchId => {required,binstr}}}}}},
+    {fs_watch_response, {with_defs,
+                         {#{<<"AbsolutePathBuf">> => binstr},
+                          {struct,
+                           #{path =>
+                              {required,
+                               {all_of,[{ref,<<"AbsolutePathBuf">>}]}}}}}}},
+    {fs_unwatch_params, {struct,#{watchId => {required,binstr}}}},
+    {fs_unwatch_response, {map,{binstr,term}}},
+    {experimental_feature_list_params, {struct,
+                                        #{limit =>
+                                           {optional,
+                                            {any_of,[integer,{exact,null}]}},
+                                          threadId =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}},
+                                          cursor =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}}}}},
+    {experimental_feature_list_response, {with_defs,
+                                          {#{<<"ExperimentalFeature">> =>
+                                              {struct,
+                                               #{enabled => {required,boolean},
+                                                 name => {required,binstr},
+                                                 description =>
+                                                  {optional,
+                                                   {any_of,
+                                                    [binstr,{exact,null}]}},
+                                                 displayName =>
+                                                  {optional,
+                                                   {any_of,
+                                                    [binstr,{exact,null}]}},
+                                                 announcement =>
+                                                  {optional,
+                                                   {any_of,
+                                                    [binstr,{exact,null}]}},
+                                                 defaultEnabled =>
+                                                  {required,boolean},
+                                                 stage =>
+                                                  {required,
+                                                   {all_of,
+                                                    [{ref,
+                                                      <<"ExperimentalFeatureStage">>}]}}}},
+                                             <<"ExperimentalFeatureStage">> =>
+                                              {any_of,
+                                               [{enum,[beta]},
+                                                {enum,[underDevelopment]},
+                                                {enum,[stable]},
+                                                {enum,[deprecated]},
+                                                {enum,[removed]}]}},
+                                           {struct,
+                                            #{data =>
+                                               {required,
+                                                {list,
+                                                 {ref,
+                                                  <<"ExperimentalFeature">>}}},
+                                              nextCursor =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}}}}}}},
+    {experimental_feature_enablement_set_params, {struct,
+                                                  #{enablement =>
+                                                     {required,
+                                                      {map,
+                                                       {binstr,boolean}}}}}},
+    {experimental_feature_enablement_set_response, {struct,
+                                                    #{enablement =>
+                                                       {required,
+                                                        {map,
+                                                         {binstr,boolean}}}}}},
+    {permission_profile_list_params, {struct,
+                                      #{limit =>
+                                         {optional,
+                                          {any_of,[integer,{exact,null}]}},
+                                        cwd =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        cursor =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}}}}},
+    {permission_profile_list_response, {with_defs,
+                                        {#{<<"PermissionProfileSummary">> =>
+                                            {struct,
+                                             #{id => {required,binstr},
+                                               description =>
+                                                {optional,
+                                                 {any_of,
+                                                  [binstr,{exact,null}]}},
+                                               allowed =>
+                                                {required,boolean}}}},
+                                         {struct,
+                                          #{data =>
+                                             {required,
+                                              {list,
+                                               {ref,
+                                                <<"PermissionProfileSummary">>}}},
+                                            nextCursor =>
+                                             {optional,
+                                              {any_of,
+                                               [binstr,{exact,null}]}}}}}}},
+    {windows_sandbox_setup_start_params, {with_defs,
+                                          {#{<<"AbsolutePathBuf">> => binstr,
+                                             <<"WindowsSandboxSetupMode">> =>
+                                              {enum,[elevated,unelevated]}},
+                                           {struct,
+                                            #{mode =>
+                                               {required,
+                                                {ref,
+                                                 <<"WindowsSandboxSetupMode">>}},
+                                              cwd =>
+                                               {optional,
+                                                {any_of,
+                                                 [{ref,<<"AbsolutePathBuf">>},
+                                                  {exact,null}]}}}}}}},
+    {windows_sandbox_setup_start_response, {struct,
+                                            #{started => {required,boolean}}}},
+    {windows_sandbox_readiness_response, {with_defs,
+                                          {#{<<"WindowsSandboxReadiness">> =>
+                                              {enum,
+                                               [ready,notConfigured,
+                                                updateRequired]}},
+                                           {struct,
+                                            #{status =>
+                                               {required,
+                                                {ref,
+                                                 <<"WindowsSandboxReadiness">>}}}}}}},
+    {external_agent_config_detect_params, {struct,
+                                           #{cwds =>
+                                              {optional,
+                                               {any_of,
+                                                [{list,binstr},{exact,null}]}},
+                                             includeHome =>
+                                              {optional,boolean}}}},
+    {external_agent_config_detect_response, {with_defs,
+                                             {#{<<"CommandMigration">> =>
+                                                 {struct,
+                                                  #{name =>
+                                                     {required,binstr}}},
+                                                <<"ExternalAgentConfigMigrationItem">> =>
+                                                 {struct,
+                                                  #{description =>
+                                                     {required,binstr},
+                                                    cwd =>
+                                                     {optional,
+                                                      {any_of,
+                                                       [binstr,{exact,null}]}},
+                                                    details =>
+                                                     {optional,
+                                                      {any_of,
+                                                       [{ref,
+                                                         <<"MigrationDetails">>},
+                                                        {exact,null}]}},
+                                                    itemType =>
+                                                     {required,
+                                                      {ref,
+                                                       <<"ExternalAgentConfigMigrationItemType">>}}}},
+                                                <<"ExternalAgentConfigMigrationItemType">> =>
+                                                 {enum,
+                                                  ['AGENTS_MD','CONFIG',
+                                                   'SKILLS','PLUGINS',
+                                                   'MCP_SERVER_CONFIG',
+                                                   'SUBAGENTS','HOOKS',
+                                                   'COMMANDS','SESSIONS']},
+                                                <<"HookMigration">> =>
+                                                 {struct,
+                                                  #{name =>
+                                                     {required,binstr}}},
+                                                <<"McpServerMigration">> =>
+                                                 {struct,
+                                                  #{name =>
+                                                     {required,binstr}}},
+                                                <<"MigrationDetails">> =>
+                                                 {struct,
+                                                  #{commands =>
+                                                     {optional,
+                                                      {default,
+                                                       {[],
+                                                        {list,
+                                                         {ref,
+                                                          <<"CommandMigration">>}}}}},
+                                                    hooks =>
+                                                     {optional,
+                                                      {default,
+                                                       {[],
+                                                        {list,
+                                                         {ref,
+                                                          <<"HookMigration">>}}}}},
+                                                    mcpServers =>
+                                                     {optional,
+                                                      {default,
+                                                       {[],
+                                                        {list,
+                                                         {ref,
+                                                          <<"McpServerMigration">>}}}}},
+                                                    plugins =>
+                                                     {optional,
+                                                      {default,
+                                                       {[],
+                                                        {list,
+                                                         {ref,
+                                                          <<"PluginsMigration">>}}}}},
+                                                    sessions =>
+                                                     {optional,
+                                                      {default,
+                                                       {[],
+                                                        {list,
+                                                         {ref,
+                                                          <<"SessionMigration">>}}}}},
+                                                    subagents =>
+                                                     {optional,
+                                                      {default,
+                                                       {[],
+                                                        {list,
+                                                         {ref,
+                                                          <<"SubagentMigration">>}}}}}}},
+                                                <<"PluginsMigration">> =>
+                                                 {struct,
+                                                  #{marketplaceName =>
+                                                     {required,binstr},
+                                                    pluginNames =>
+                                                     {required,
+                                                      {list,binstr}}}},
+                                                <<"SessionMigration">> =>
+                                                 {struct,
+                                                  #{path => {required,binstr},
+                                                    title =>
+                                                     {optional,
+                                                      {any_of,
+                                                       [binstr,{exact,null}]}},
+                                                    cwd => {required,binstr}}},
+                                                <<"SubagentMigration">> =>
+                                                 {struct,
+                                                  #{name =>
+                                                     {required,binstr}}}},
+                                              {struct,
+                                               #{items =>
+                                                  {required,
+                                                   {list,
+                                                    {ref,
+                                                     <<"ExternalAgentConfigMigrationItem">>}}}}}}}},
+    {external_agent_config_import_params, {with_defs,
+                                           {#{<<"CommandMigration">> =>
+                                               {struct,
+                                                #{name => {required,binstr}}},
+                                              <<"ExternalAgentConfigMigrationItem">> =>
+                                               {struct,
+                                                #{description =>
+                                                   {required,binstr},
+                                                  cwd =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [binstr,{exact,null}]}},
+                                                  details =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [{ref,
+                                                       <<"MigrationDetails">>},
+                                                      {exact,null}]}},
+                                                  itemType =>
+                                                   {required,
+                                                    {ref,
+                                                     <<"ExternalAgentConfigMigrationItemType">>}}}},
+                                              <<"ExternalAgentConfigMigrationItemType">> =>
+                                               {enum,
+                                                ['AGENTS_MD','CONFIG',
+                                                 'SKILLS','PLUGINS',
+                                                 'MCP_SERVER_CONFIG',
+                                                 'SUBAGENTS','HOOKS',
+                                                 'COMMANDS','SESSIONS']},
+                                              <<"HookMigration">> =>
+                                               {struct,
+                                                #{name => {required,binstr}}},
+                                              <<"McpServerMigration">> =>
+                                               {struct,
+                                                #{name => {required,binstr}}},
+                                              <<"MigrationDetails">> =>
+                                               {struct,
+                                                #{commands =>
+                                                   {optional,
+                                                    {default,
+                                                     {[],
+                                                      {list,
+                                                       {ref,
+                                                        <<"CommandMigration">>}}}}},
+                                                  hooks =>
+                                                   {optional,
+                                                    {default,
+                                                     {[],
+                                                      {list,
+                                                       {ref,
+                                                        <<"HookMigration">>}}}}},
+                                                  mcpServers =>
+                                                   {optional,
+                                                    {default,
+                                                     {[],
+                                                      {list,
+                                                       {ref,
+                                                        <<"McpServerMigration">>}}}}},
+                                                  plugins =>
+                                                   {optional,
+                                                    {default,
+                                                     {[],
+                                                      {list,
+                                                       {ref,
+                                                        <<"PluginsMigration">>}}}}},
+                                                  sessions =>
+                                                   {optional,
+                                                    {default,
+                                                     {[],
+                                                      {list,
+                                                       {ref,
+                                                        <<"SessionMigration">>}}}}},
+                                                  subagents =>
+                                                   {optional,
+                                                    {default,
+                                                     {[],
+                                                      {list,
+                                                       {ref,
+                                                        <<"SubagentMigration">>}}}}}}},
+                                              <<"PluginsMigration">> =>
+                                               {struct,
+                                                #{marketplaceName =>
+                                                   {required,binstr},
+                                                  pluginNames =>
+                                                   {required,{list,binstr}}}},
+                                              <<"SessionMigration">> =>
+                                               {struct,
+                                                #{path => {required,binstr},
+                                                  title =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [binstr,{exact,null}]}},
+                                                  cwd => {required,binstr}}},
+                                              <<"SubagentMigration">> =>
+                                               {struct,
+                                                #{name => {required,binstr}}}},
+                                            {struct,
+                                             #{source =>
+                                                {optional,
+                                                 {any_of,
+                                                  [binstr,{exact,null}]}},
+                                               migrationItems =>
+                                                {required,
+                                                 {list,
+                                                  {ref,
+                                                   <<"ExternalAgentConfigMigrationItem">>}}}}}}}},
+    {external_agent_config_import_response, {struct,
+                                             #{importId => {required,binstr}}}},
+    {external_agent_config_import_read_histories_response, {with_defs,
+                                                            {#{<<"ExternalAgentConfigImportHistory">> =>
+                                                                {struct,
+                                                                 #{importId =>
+                                                                    {required,
+                                                                     binstr},
+                                                                   completedAtMs =>
+                                                                    {required,
+                                                                     integer},
+                                                                   failures =>
+                                                                    {required,
+                                                                     {list,
+                                                                      {ref,
+                                                                       <<"ExternalAgentConfigImportItemTypeFailure">>}}},
+                                                                   successes =>
+                                                                    {required,
+                                                                     {list,
+                                                                      {ref,
+                                                                       <<"ExternalAgentConfigImportItemTypeSuccess">>}}}}},
+                                                               <<"ExternalAgentConfigImportItemTypeFailure">> =>
+                                                                {struct,
+                                                                 #{message =>
+                                                                    {required,
+                                                                     binstr},
+                                                                   source =>
+                                                                    {optional,
+                                                                     {any_of,
+                                                                      [binstr,
+                                                                       {exact,
+                                                                        null}]}},
+                                                                   cwd =>
+                                                                    {optional,
+                                                                     {any_of,
+                                                                      [binstr,
+                                                                       {exact,
+                                                                        null}]}},
+                                                                   itemType =>
+                                                                    {required,
+                                                                     {ref,
+                                                                      <<"ExternalAgentConfigMigrationItemType">>}},
+                                                                   errorType =>
+                                                                    {optional,
+                                                                     {any_of,
+                                                                      [binstr,
+                                                                       {exact,
+                                                                        null}]}},
+                                                                   failureStage =>
+                                                                    {required,
+                                                                     binstr}}},
+                                                               <<"ExternalAgentConfigImportItemTypeSuccess">> =>
+                                                                {struct,
+                                                                 #{source =>
+                                                                    {optional,
+                                                                     {any_of,
+                                                                      [binstr,
+                                                                       {exact,
+                                                                        null}]}},
+                                                                   cwd =>
+                                                                    {optional,
+                                                                     {any_of,
+                                                                      [binstr,
+                                                                       {exact,
+                                                                        null}]}},
+                                                                   target =>
+                                                                    {optional,
+                                                                     {any_of,
+                                                                      [binstr,
+                                                                       {exact,
+                                                                        null}]}},
+                                                                   itemType =>
+                                                                    {required,
+                                                                     {ref,
+                                                                      <<"ExternalAgentConfigMigrationItemType">>}}}},
+                                                               <<"ExternalAgentConfigMigrationItemType">> =>
+                                                                {enum,
+                                                                 ['AGENTS_MD',
+                                                                  'CONFIG',
+                                                                  'SKILLS',
+                                                                  'PLUGINS',
+                                                                  'MCP_SERVER_CONFIG',
+                                                                  'SUBAGENTS',
+                                                                  'HOOKS',
+                                                                  'COMMANDS',
+                                                                  'SESSIONS']}},
+                                                             {struct,
+                                                              #{data =>
+                                                                 {required,
+                                                                  {list,
+                                                                   {ref,
+                                                                    <<"ExternalAgentConfigImportHistory">>}}}}}}}}
 ]).
