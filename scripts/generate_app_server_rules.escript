@@ -99,23 +99,60 @@ schema_files() ->
       , {thread_compact_start_response, from_json, "v2/ThreadCompactStartResponse.json"}
       , {thread_rollback_params, to_json, "v2/ThreadRollbackParams.json"}
       , {thread_rollback_response, from_json, "v2/ThreadRollbackResponse.json"}
+      , {thread_delete_params, to_json, "v2/ThreadDeleteParams.json"}
+      , {thread_delete_response, from_json, "v2/ThreadDeleteResponse.json"}
+      , {thread_unsubscribe_params, to_json, "v2/ThreadUnsubscribeParams.json"}
+      , {thread_unsubscribe_response, from_json, "v2/ThreadUnsubscribeResponse.json"}
+      , {thread_goal_set_params, to_json, "v2/ThreadGoalSetParams.json"}
+      , {thread_goal_set_response, from_json, "v2/ThreadGoalSetResponse.json"}
+      , {thread_goal_get_params, to_json, "v2/ThreadGoalGetParams.json"}
+      , {thread_goal_get_response, from_json, "v2/ThreadGoalGetResponse.json"}
+      , {thread_goal_clear_params, to_json, "v2/ThreadGoalClearParams.json"}
+      , {thread_goal_clear_response, from_json, "v2/ThreadGoalClearResponse.json"}
+      , {thread_metadata_update_params, to_json, "v2/ThreadMetadataUpdateParams.json"}
+      , {thread_metadata_update_response, from_json, "v2/ThreadMetadataUpdateResponse.json"}
+      , {thread_shell_command_params, to_json, "v2/ThreadShellCommandParams.json"}
+      , {thread_shell_command_response, from_json, "v2/ThreadShellCommandResponse.json"}
+      , {thread_approve_guardian_denied_action_params, to_json,
+            "v2/ThreadApproveGuardianDeniedActionParams.json"}
+      , {thread_approve_guardian_denied_action_response, from_json,
+            "v2/ThreadApproveGuardianDeniedActionResponse.json"}
+      , {thread_inject_items_params, to_json, "v2/ThreadInjectItemsParams.json"}
+      , {thread_inject_items_response, from_json, "v2/ThreadInjectItemsResponse.json"}
       , {review_start_params, to_json, "v2/ReviewStartParams.json"}
       , {review_start_response, from_json, "v2/ReviewStartResponse.json"}
       , {command_exec_params, to_json, "v2/CommandExecParams.json"}
       , {command_exec_response, from_json, "v2/CommandExecResponse.json"}
+      , {command_exec_write_params, to_json, "v2/CommandExecWriteParams.json"}
+      , {command_exec_write_response, from_json, "v2/CommandExecWriteResponse.json"}
+      , {command_exec_terminate_params, to_json, "v2/CommandExecTerminateParams.json"}
+      , {command_exec_terminate_response, from_json, "v2/CommandExecTerminateResponse.json"}
+      , {command_exec_resize_params, to_json, "v2/CommandExecResizeParams.json"}
+      , {command_exec_resize_response, from_json, "v2/CommandExecResizeResponse.json"}
       , {model_list_params, to_json, "v2/ModelListParams.json"}
       , {model_list_response, from_json, "v2/ModelListResponse.json"}
+      , {model_provider_capabilities_read_params, to_json,
+            "v2/ModelProviderCapabilitiesReadParams.json"}
+      , {model_provider_capabilities_read_response, from_json,
+            "v2/ModelProviderCapabilitiesReadResponse.json"}
       , {skills_list_params, to_json, "v2/SkillsListParams.json"}
       , {skills_list_response, from_json, "v2/SkillsListResponse.json"}
       , {skills_config_write_params, to_json, "v2/SkillsConfigWriteParams.json"}
       , {skills_config_write_response, from_json,
             "v2/SkillsConfigWriteResponse.json"}
+      , {skills_extra_roots_set_params, to_json, "v2/SkillsExtraRootsSetParams.json"}
+      , {skills_extra_roots_set_response, from_json,
+            "v2/SkillsExtraRootsSetResponse.json"}
       , {apps_list_params, to_json, "v2/AppsListParams.json"}
       , {apps_list_response, from_json, "v2/AppsListResponse.json"}
       , {mcp_server_oauth_login_params, to_json, "v2/McpServerOauthLoginParams.json"}
       , {mcp_server_oauth_login_response, from_json, "v2/McpServerOauthLoginResponse.json"}
       , {mcp_server_status_list_params, to_json, "v2/ListMcpServerStatusParams.json"}
       , {mcp_server_status_list_response, from_json, "v2/ListMcpServerStatusResponse.json"}
+      , {mcp_server_resource_read_params, to_json, "v2/McpResourceReadParams.json"}
+      , {mcp_server_resource_read_response, from_json, "v2/McpResourceReadResponse.json"}
+      , {mcp_server_tool_call_params, to_json, "v2/McpServerToolCallParams.json"}
+      , {mcp_server_tool_call_response, from_json, "v2/McpServerToolCallResponse.json"}
       , {config_read_params, to_json, "v2/ConfigReadParams.json"}
       , {config_read_response, from_json, "v2/ConfigReadResponse.json"}
       , {config_batch_write_params, to_json, "v2/ConfigBatchWriteParams.json"}
@@ -132,6 +169,93 @@ schema_files() ->
       , {account_logout_response, from_json, "v2/LogoutAccountResponse.json"}
       , {account_rate_limits_read_response, from_json,
             "v2/GetAccountRateLimitsResponse.json"}
+      , {account_rate_limit_reset_credit_consume_params, to_json,
+            "v2/ConsumeAccountRateLimitResetCreditParams.json"}
+      , {account_rate_limit_reset_credit_consume_response, from_json,
+            "v2/ConsumeAccountRateLimitResetCreditResponse.json"}
+      , {account_usage_read_response, from_json, "v2/GetAccountTokenUsageResponse.json"}
+      , {account_workspace_messages_read_response, from_json,
+            "v2/GetWorkspaceMessagesResponse.json"}
+      , {account_send_add_credits_nudge_email_params, to_json,
+            "v2/SendAddCreditsNudgeEmailParams.json"}
+      , {account_send_add_credits_nudge_email_response, from_json,
+            "v2/SendAddCreditsNudgeEmailResponse.json"}
+      , {hooks_list_params, to_json, "v2/HooksListParams.json"}
+      , {hooks_list_response, from_json, "v2/HooksListResponse.json"}
+      , {marketplace_add_params, to_json, "v2/MarketplaceAddParams.json"}
+      , {marketplace_add_response, from_json, "v2/MarketplaceAddResponse.json"}
+      , {marketplace_remove_params, to_json, "v2/MarketplaceRemoveParams.json"}
+      , {marketplace_remove_response, from_json, "v2/MarketplaceRemoveResponse.json"}
+      , {marketplace_upgrade_params, to_json, "v2/MarketplaceUpgradeParams.json"}
+      , {marketplace_upgrade_response, from_json, "v2/MarketplaceUpgradeResponse.json"}
+      , {plugin_list_params, to_json, "v2/PluginListParams.json"}
+      , {plugin_list_response, from_json, "v2/PluginListResponse.json"}
+      , {plugin_installed_params, to_json, "v2/PluginInstalledParams.json"}
+      , {plugin_installed_response, from_json, "v2/PluginInstalledResponse.json"}
+      , {plugin_read_params, to_json, "v2/PluginReadParams.json"}
+      , {plugin_read_response, from_json, "v2/PluginReadResponse.json"}
+      , {plugin_skill_read_params, to_json, "v2/PluginSkillReadParams.json"}
+      , {plugin_skill_read_response, from_json, "v2/PluginSkillReadResponse.json"}
+      , {plugin_share_save_params, to_json, "v2/PluginShareSaveParams.json"}
+      , {plugin_share_save_response, from_json, "v2/PluginShareSaveResponse.json"}
+      , {plugin_share_update_targets_params, to_json,
+            "v2/PluginShareUpdateTargetsParams.json"}
+      , {plugin_share_update_targets_response, from_json,
+            "v2/PluginShareUpdateTargetsResponse.json"}
+      , {plugin_share_list_params, to_json, "v2/PluginShareListParams.json"}
+      , {plugin_share_list_response, from_json, "v2/PluginShareListResponse.json"}
+      , {plugin_share_checkout_params, to_json, "v2/PluginShareCheckoutParams.json"}
+      , {plugin_share_checkout_response, from_json, "v2/PluginShareCheckoutResponse.json"}
+      , {plugin_share_delete_params, to_json, "v2/PluginShareDeleteParams.json"}
+      , {plugin_share_delete_response, from_json, "v2/PluginShareDeleteResponse.json"}
+      , {plugin_install_params, to_json, "v2/PluginInstallParams.json"}
+      , {plugin_install_response, from_json, "v2/PluginInstallResponse.json"}
+      , {plugin_uninstall_params, to_json, "v2/PluginUninstallParams.json"}
+      , {plugin_uninstall_response, from_json, "v2/PluginUninstallResponse.json"}
+      , {fs_read_file_params, to_json, "v2/FsReadFileParams.json"}
+      , {fs_read_file_response, from_json, "v2/FsReadFileResponse.json"}
+      , {fs_write_file_params, to_json, "v2/FsWriteFileParams.json"}
+      , {fs_write_file_response, from_json, "v2/FsWriteFileResponse.json"}
+      , {fs_create_directory_params, to_json, "v2/FsCreateDirectoryParams.json"}
+      , {fs_create_directory_response, from_json, "v2/FsCreateDirectoryResponse.json"}
+      , {fs_get_metadata_params, to_json, "v2/FsGetMetadataParams.json"}
+      , {fs_get_metadata_response, from_json, "v2/FsGetMetadataResponse.json"}
+      , {fs_read_directory_params, to_json, "v2/FsReadDirectoryParams.json"}
+      , {fs_read_directory_response, from_json, "v2/FsReadDirectoryResponse.json"}
+      , {fs_remove_params, to_json, "v2/FsRemoveParams.json"}
+      , {fs_remove_response, from_json, "v2/FsRemoveResponse.json"}
+      , {fs_copy_params, to_json, "v2/FsCopyParams.json"}
+      , {fs_copy_response, from_json, "v2/FsCopyResponse.json"}
+      , {fs_watch_params, to_json, "v2/FsWatchParams.json"}
+      , {fs_watch_response, from_json, "v2/FsWatchResponse.json"}
+      , {fs_unwatch_params, to_json, "v2/FsUnwatchParams.json"}
+      , {fs_unwatch_response, from_json, "v2/FsUnwatchResponse.json"}
+      , {experimental_feature_list_params, to_json,
+            "v2/ExperimentalFeatureListParams.json"}
+      , {experimental_feature_list_response, from_json,
+            "v2/ExperimentalFeatureListResponse.json"}
+      , {experimental_feature_enablement_set_params, to_json,
+            "v2/ExperimentalFeatureEnablementSetParams.json"}
+      , {experimental_feature_enablement_set_response, from_json,
+            "v2/ExperimentalFeatureEnablementSetResponse.json"}
+      , {permission_profile_list_params, to_json, "v2/PermissionProfileListParams.json"}
+      , {permission_profile_list_response, from_json, "v2/PermissionProfileListResponse.json"}
+      , {windows_sandbox_setup_start_params, to_json,
+            "v2/WindowsSandboxSetupStartParams.json"}
+      , {windows_sandbox_setup_start_response, from_json,
+            "v2/WindowsSandboxSetupStartResponse.json"}
+      , {windows_sandbox_readiness_response, from_json,
+            "v2/WindowsSandboxReadinessResponse.json"}
+      , {external_agent_config_detect_params, to_json,
+            "v2/ExternalAgentConfigDetectParams.json"}
+      , {external_agent_config_detect_response, from_json,
+            "v2/ExternalAgentConfigDetectResponse.json"}
+      , {external_agent_config_import_params, to_json,
+            "v2/ExternalAgentConfigImportParams.json"}
+      , {external_agent_config_import_response, from_json,
+            "v2/ExternalAgentConfigImportResponse.json"}
+      , {external_agent_config_import_read_histories_response, from_json,
+            "v2/ExternalAgentConfigImportHistoriesReadResponse.json"}
     ].
 
 schema_aliases(SchemaDir, {AliasName, Direction, FileName})
