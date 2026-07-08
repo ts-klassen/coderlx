@@ -40,7 +40,10 @@
                       {#{<<"PluginUninstallParams">> =>
                           {struct,#{pluginId => {required,binstr}}},
                          <<"ConsumeAccountRateLimitResetCreditParams">> =>
-                          {struct,#{idempotencyKey => {required,binstr}}},
+                          {struct,
+                           #{creditId =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
+                             idempotencyKey => {required,binstr}}},
                          <<"ThreadArchiveParams">> =>
                           {struct,#{threadId => {required,binstr}}},
                          <<"ExternalAgentConfigImportParams">> =>
@@ -100,13 +103,15 @@
                          <<"McpServerOauthLoginParams">> =>
                           {struct,
                            #{name => {required,binstr},
+                             threadId =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
                              scopes =>
                               {optional,{any_of,[{list,binstr},{exact,null}]}},
                              timeoutSecs =>
                               {optional,{any_of,[integer,{exact,null}]}}}},
                          <<"AskForApproval">> =>
                           {any_of,
-                           [{enum,[untrusted,'on-failure','on-request',never]},
+                           [{enum,[untrusted,'on-request',never]},
                             {struct,
                              #{granular =>
                                 {required,
@@ -242,6 +247,8 @@
                                status =>
                                 {optional,{any_of,[binstr,{exact,null}]}},
                                type => {required,{enum,[custom_tool_call]}},
+                               namespace =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
                                internal_chat_message_metadata_passthrough =>
                                 {optional,
                                  {any_of,
@@ -391,7 +398,9 @@
                          <<"CommandExecTerminateParams">> =>
                           {struct,#{processId => {required,binstr}}},
                          <<"MultiAgentMode">> =>
-                          {enum,[none,explicitRequestOnly,proactive]},
+                          {any_of,
+                           [{enum,[explicitRequestOnly,proactive]},
+                            {struct,#{custom => {required,binstr}}}]},
                          <<"ThreadListParams">> =>
                           {struct,
                            #{limit =>
@@ -992,6 +1001,10 @@
                               {optional,
                                {default,
                                 {[],{list,{ref,<<"SessionMigration">>}}}}},
+                             skills =>
+                              {optional,
+                               {default,
+                                {[],{list,{ref,<<"SkillMigration">>}}}}},
                              subagents =>
                               {optional,
                                {default,
@@ -1149,6 +1162,8 @@
                               {optional,{any_of,[binstr,{exact,null}]}},
                              developerInstructions =>
                               {optional,{any_of,[binstr,{exact,null}]}},
+                             lastTurnId =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
                              model =>
                               {optional,{any_of,[binstr,{exact,null}]}},
                              modelProvider =>
@@ -1187,6 +1202,8 @@
                           {struct,#{refreshToken => {optional,boolean}}},
                          <<"FsUnwatchParams">> =>
                           {struct,#{watchId => {required,binstr}}},
+                         <<"SkillMigration">> =>
+                          {struct,#{name => {required,binstr}}},
                          <<"LoginAccountParams">> =>
                           {any_of,
                            [{struct,
@@ -1350,7 +1367,8 @@
                          <<"RemoteControlEnableParams">> =>
                           {struct,#{ephemeral => {optional,boolean}}},
                          <<"ThreadUnarchiveParams">> =>
-                          {struct,#{threadId => {required,binstr}}}},
+                          {struct,#{threadId => {required,binstr}}},
+                         <<"ThreadHistoryMode">> => {enum,[legacy,paginated]}},
                        {any_of,
                         [{struct,
                           #{id => {required,{ref,<<"RequestId">>}},
@@ -2503,8 +2521,7 @@
                                  legacyManagedConfigMdm,unknown]},
                               <<"AskForApproval">> =>
                                {any_of,
-                                [{enum,
-                                  [untrusted,'on-failure','on-request',never]},
+                                [{enum,[untrusted,'on-request',never]},
                                  {struct,
                                   #{granular =>
                                      {required,
@@ -2549,9 +2566,15 @@
                               <<"McpToolCallAppContext">> =>
                                {struct,
                                 #{connectorId => {required,binstr},
+                                  actionName =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  appName =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
                                   linkId =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   resourceUri =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  templateId =>
                                    {optional,{any_of,[binstr,{exact,null}]}}}},
                               <<"ThreadGoalStatus">> =>
                                {enum,
@@ -2616,7 +2639,9 @@
                                 #{error =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   name => {required,binstr},
-                                  success => {required,boolean}}},
+                                  success => {required,boolean},
+                                  threadId =>
+                                   {optional,{any_of,[binstr,{exact,null}]}}}},
                               <<"ModelVerificationNotification">> =>
                                {struct,
                                 #{threadId => {required,binstr},
@@ -2682,7 +2707,9 @@
                               <<"TurnPlanStepStatus">> =>
                                {enum,[pending,inProgress,completed]},
                               <<"MultiAgentMode">> =>
-                               {enum,[none,explicitRequestOnly,proactive]},
+                               {any_of,
+                                [{enum,[explicitRequestOnly,proactive]},
+                                 {struct,#{custom => {required,binstr}}}]},
                               <<"SubAgentSource">> =>
                                {any_of,
                                 [{enum,[review,compact,memory_consolidation]},
@@ -2832,6 +2859,7 @@
                                   changedPaths =>
                                    {required,
                                     {list,{ref,<<"AbsolutePathBuf">>}}}}},
+                              <<"ThreadExtra">> => {map,{binstr,term}},
                               <<"HookHandlerType">> =>
                                {enum,[command,prompt,agent]},
                               <<"ThreadId">> => binstr,
@@ -3199,7 +3227,13 @@
                                    {required,
                                     {ref,<<"McpServerStartupState">>}},
                                   threadId =>
-                                   {optional,{any_of,[binstr,{exact,null}]}}}},
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  failureReason =>
+                                   {optional,
+                                    {any_of,
+                                     [{ref,
+                                       <<"McpServerStartupFailureReason">>},
+                                      {exact,null}]}}}},
                               <<"GuardianWarningNotification">> =>
                                {struct,
                                 #{message => {required,binstr},
@@ -3486,6 +3520,14 @@
                                      [{ref,<<"AppBranding">>},{exact,null}]}},
                                   distributionChannel =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                  iconAssets =>
+                                   {optional,
+                                    {any_of,
+                                     [{map,{binstr,term}},{exact,null}]}},
+                                  iconDarkAssets =>
+                                   {optional,
+                                    {any_of,
+                                     [{map,{binstr,term}},{exact,null}]}},
                                   installUrl =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   isAccessible =>
@@ -3543,7 +3585,8 @@
                               <<"CodexErrorInfo">> =>
                                {any_of,
                                 [{enum,
-                                  [contextWindowExceeded,usageLimitExceeded,
+                                  [contextWindowExceeded,
+                                   sessionBudgetExceeded,usageLimitExceeded,
                                    serverOverloaded,cyberPolicy,
                                    internalServerError,unauthorized,
                                    badRequest,threadRollbackFailed,
@@ -3670,6 +3713,8 @@
                                 #{threadId => {required,binstr},
                                   role => {required,binstr},
                                   delta => {required,binstr}}},
+                              <<"McpServerStartupFailureReason">> =>
+                               {enum,[reauthenticationRequired]},
                               <<"ContextCompactedNotification">> =>
                                {struct,
                                 #{threadId => {required,binstr},
@@ -3871,7 +3916,8 @@
                                   #{id => {required,binstr},
                                     type => {required,{enum,[imageView]}},
                                     path =>
-                                     {required,{ref,<<"AbsolutePathBuf">>}}}},
+                                     {required,
+                                      {ref,<<"LegacyAppPathString">>}}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type => {required,{enum,[sleep]}},
@@ -4041,6 +4087,8 @@
                                    {optional,
                                     {any_of,
                                      [{ref,<<"PlanType">>},{exact,null}]}}}},
+                              <<"ThreadHistoryMode">> =>
+                               {enum,[legacy,paginated]},
                               <<"Thread">> =>
                                {struct,
                                 #{id => {required,binstr},
@@ -5727,8 +5775,7 @@
                                {enum,[user,auto_review,guardian_subagent]},
                               <<"AskForApproval">> =>
                                {any_of,
-                                [{enum,
-                                  [untrusted,'on-failure','on-request',never]},
+                                [{enum,[untrusted,'on-request',never]},
                                  {struct,
                                   #{granular =>
                                      {required,
@@ -5776,7 +5823,9 @@
                                         <<"DynamicToolNamespaceTool">>}}}}}]},
                               <<"LegacyAppPathString">> => binstr,
                               <<"MultiAgentMode">> =>
-                               {enum,[none,explicitRequestOnly,proactive]},
+                               {any_of,
+                                [{enum,[explicitRequestOnly,proactive]},
+                                 {struct,#{custom => {required,binstr}}}]},
                               <<"Personality">> =>
                                {enum,[none,friendly,pragmatic]},
                               <<"SandboxMode">> =>
@@ -5790,6 +5839,8 @@
                                    {required,
                                     {all_of,
                                      [{ref,<<"CapabilityRootLocation">>}]}}}},
+                              <<"ThreadHistoryMode">> =>
+                               {enum,[legacy,paginated]},
                               <<"ThreadSource">> => binstr,
                               <<"ThreadStartSource">> =>
                                {enum,[startup,clear]},
@@ -5857,9 +5908,7 @@
                                         {any_of,[binstr,{exact,null}]}}}}]},
                                 <<"AskForApproval">> =>
                                  {any_of,
-                                  [{enum,
-                                    [untrusted,'on-failure','on-request',
-                                     never]},
+                                  [{enum,[untrusted,'on-request',never]},
                                    {struct,
                                     #{granular =>
                                        {required,
@@ -5882,9 +5931,15 @@
                                 <<"McpToolCallAppContext">> =>
                                  {struct,
                                   #{connectorId => {required,binstr},
+                                    actionName =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    appName =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     linkId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     resourceUri =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    templateId =>
                                      {optional,
                                       {any_of,[binstr,{exact,null}]}}}},
                                 <<"SandboxPolicy">> =>
@@ -5933,7 +5988,9 @@
                                 <<"CollabAgentToolCallStatus">> =>
                                  {enum,[inProgress,completed,failed]},
                                 <<"MultiAgentMode">> =>
-                                 {enum,[none,explicitRequestOnly,proactive]},
+                                 {any_of,
+                                  [{enum,[explicitRequestOnly,proactive]},
+                                   {struct,#{custom => {required,binstr}}}]},
                                 <<"SubAgentSource">> =>
                                  {any_of,
                                   [{enum,
@@ -6034,6 +6091,7 @@
                                    {struct,
                                     #{command => {required,binstr},
                                       type => {required,{enum,[unknown]}}}}]},
+                                <<"ThreadExtra">> => {map,{binstr,term}},
                                 <<"ThreadId">> => binstr,
                                 <<"LegacyAppPathString">> => binstr,
                                 <<"ThreadStatus">> =>
@@ -6198,7 +6256,8 @@
                                 <<"CodexErrorInfo">> =>
                                  {any_of,
                                   [{enum,
-                                    [contextWindowExceeded,usageLimitExceeded,
+                                    [contextWindowExceeded,
+                                     sessionBudgetExceeded,usageLimitExceeded,
                                      serverOverloaded,cyberPolicy,
                                      internalServerError,unauthorized,
                                      badRequest,threadRollbackFailed,
@@ -6447,7 +6506,7 @@
                                       type => {required,{enum,[imageView]}},
                                       path =>
                                        {required,
-                                        {ref,<<"AbsolutePathBuf">>}}}},
+                                        {ref,<<"LegacyAppPathString">>}}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type => {required,{enum,[sleep]}},
@@ -6510,6 +6569,8 @@
                                 <<"ThreadSource">> => binstr,
                                 <<"ImageDetail">> =>
                                  {enum,[auto,low,high,original]},
+                                <<"ThreadHistoryMode">> =>
+                                 {enum,[legacy,paginated]},
                                 <<"Thread">> =>
                                  {struct,
                                   #{id => {required,binstr},
@@ -6595,8 +6656,7 @@
                              {enum,[user,auto_review,guardian_subagent]},
                             <<"AskForApproval">> =>
                              {any_of,
-                              [{enum,
-                                [untrusted,'on-failure','on-request',never]},
+                              [{enum,[untrusted,'on-request',never]},
                                {struct,
                                 #{granular =>
                                    {required,
@@ -6622,7 +6682,9 @@
                             <<"LegacyAppPathString">> => binstr,
                             <<"ModeKind">> => {enum,[plan,default]},
                             <<"MultiAgentMode">> =>
-                             {enum,[none,explicitRequestOnly,proactive]},
+                             {any_of,
+                              [{enum,[explicitRequestOnly,proactive]},
+                               {struct,#{custom => {required,binstr}}}]},
                             <<"NetworkAccess">> => {enum,[restricted,enabled]},
                             <<"Personality">> =>
                              {enum,[none,friendly,pragmatic]},
@@ -6772,9 +6834,15 @@
                               <<"McpToolCallAppContext">> =>
                                {struct,
                                 #{connectorId => {required,binstr},
+                                  actionName =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  appName =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
                                   linkId =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   resourceUri =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  templateId =>
                                    {optional,{any_of,[binstr,{exact,null}]}}}},
                               <<"TextElement">> =>
                                {struct,
@@ -6980,7 +7048,8 @@
                               <<"CodexErrorInfo">> =>
                                {any_of,
                                 [{enum,
-                                  [contextWindowExceeded,usageLimitExceeded,
+                                  [contextWindowExceeded,
+                                   sessionBudgetExceeded,usageLimitExceeded,
                                    serverOverloaded,cyberPolicy,
                                    internalServerError,unauthorized,
                                    badRequest,threadRollbackFailed,
@@ -7215,7 +7284,8 @@
                                   #{id => {required,binstr},
                                     type => {required,{enum,[imageView]}},
                                     path =>
-                                     {required,{ref,<<"AbsolutePathBuf">>}}}},
+                                     {required,
+                                      {ref,<<"LegacyAppPathString">>}}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type => {required,{enum,[sleep]}},
@@ -7341,9 +7411,7 @@
                                 {enum,[user,auto_review,guardian_subagent]},
                                <<"AskForApproval">> =>
                                 {any_of,
-                                 [{enum,
-                                   [untrusted,'on-failure','on-request',
-                                    never]},
+                                 [{enum,[untrusted,'on-request',never]},
                                   {struct,
                                    #{granular =>
                                       {required,
@@ -7594,6 +7662,9 @@
                                        {any_of,[binstr,{exact,null}]}},
                                      type =>
                                       {required,{enum,[custom_tool_call]}},
+                                     namespace =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      internal_chat_message_metadata_passthrough =>
                                       {optional,
                                        {any_of,
@@ -7809,9 +7880,7 @@
                                          {any_of,[binstr,{exact,null}]}}}}]},
                                  <<"AskForApproval">> =>
                                   {any_of,
-                                   [{enum,
-                                     [untrusted,'on-failure','on-request',
-                                      never]},
+                                   [{enum,[untrusted,'on-request',never]},
                                     {struct,
                                      #{granular =>
                                         {required,
@@ -7836,10 +7905,19 @@
                                  <<"McpToolCallAppContext">> =>
                                   {struct,
                                    #{connectorId => {required,binstr},
+                                     actionName =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     appName =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      linkId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
                                      resourceUri =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     templateId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}}}},
                                  <<"SandboxPolicy">> =>
@@ -7889,7 +7967,9 @@
                                  <<"CollabAgentToolCallStatus">> =>
                                   {enum,[inProgress,completed,failed]},
                                  <<"MultiAgentMode">> =>
-                                  {enum,[none,explicitRequestOnly,proactive]},
+                                  {any_of,
+                                   [{enum,[explicitRequestOnly,proactive]},
+                                    {struct,#{custom => {required,binstr}}}]},
                                  <<"SubAgentSource">> =>
                                   {any_of,
                                    [{enum,
@@ -7991,6 +8071,7 @@
                                     {struct,
                                      #{command => {required,binstr},
                                        type => {required,{enum,[unknown]}}}}]},
+                                 <<"ThreadExtra">> => {map,{binstr,term}},
                                  <<"ThreadId">> => binstr,
                                  <<"LegacyAppPathString">> => binstr,
                                  <<"ThreadStatus">> =>
@@ -8170,6 +8251,7 @@
                                   {any_of,
                                    [{enum,
                                      [contextWindowExceeded,
+                                      sessionBudgetExceeded,
                                       usageLimitExceeded,serverOverloaded,
                                       cyberPolicy,internalServerError,
                                       unauthorized,badRequest,
@@ -8425,7 +8507,7 @@
                                        type => {required,{enum,[imageView]}},
                                        path =>
                                         {required,
-                                         {ref,<<"AbsolutePathBuf">>}}}},
+                                         {ref,<<"LegacyAppPathString">>}}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type => {required,{enum,[sleep]}},
@@ -8490,6 +8572,8 @@
                                  <<"ThreadSource">> => binstr,
                                  <<"ImageDetail">> =>
                                   {enum,[auto,low,high,original]},
+                                 <<"ThreadHistoryMode">> =>
+                                  {enum,[legacy,paginated]},
                                  <<"Thread">> =>
                                   {struct,
                                    #{id => {required,binstr},
@@ -8574,8 +8658,7 @@
                               {enum,[user,auto_review,guardian_subagent]},
                              <<"AskForApproval">> =>
                               {any_of,
-                               [{enum,
-                                 [untrusted,'on-failure','on-request',never]},
+                               [{enum,[untrusted,'on-request',never]},
                                 {struct,
                                  #{granular =>
                                     {required,
@@ -8613,6 +8696,8 @@
                                {optional,{any_of,[binstr,{exact,null}]}},
                               developerInstructions =>
                                {optional,{any_of,[binstr,{exact,null}]}},
+                              lastTurnId =>
+                               {optional,{any_of,[binstr,{exact,null}]}},
                               model =>
                                {optional,{any_of,[binstr,{exact,null}]}},
                               modelProvider =>
@@ -8640,9 +8725,7 @@
                                        {any_of,[binstr,{exact,null}]}}}}]},
                                <<"AskForApproval">> =>
                                 {any_of,
-                                 [{enum,
-                                   [untrusted,'on-failure','on-request',
-                                    never]},
+                                 [{enum,[untrusted,'on-request',never]},
                                   {struct,
                                    #{granular =>
                                       {required,
@@ -8665,9 +8748,15 @@
                                <<"McpToolCallAppContext">> =>
                                 {struct,
                                  #{connectorId => {required,binstr},
+                                   actionName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   appName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    linkId =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    resourceUri =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   templateId =>
                                     {optional,
                                      {any_of,[binstr,{exact,null}]}}}},
                                <<"SandboxPolicy">> =>
@@ -8716,7 +8805,9 @@
                                <<"CollabAgentToolCallStatus">> =>
                                 {enum,[inProgress,completed,failed]},
                                <<"MultiAgentMode">> =>
-                                {enum,[none,explicitRequestOnly,proactive]},
+                                {any_of,
+                                 [{enum,[explicitRequestOnly,proactive]},
+                                  {struct,#{custom => {required,binstr}}}]},
                                <<"SubAgentSource">> =>
                                 {any_of,
                                  [{enum,[review,compact,memory_consolidation]},
@@ -8815,6 +8906,7 @@
                                   {struct,
                                    #{command => {required,binstr},
                                      type => {required,{enum,[unknown]}}}}]},
+                               <<"ThreadExtra">> => {map,{binstr,term}},
                                <<"ThreadId">> => binstr,
                                <<"LegacyAppPathString">> => binstr,
                                <<"ThreadStatus">> =>
@@ -8972,7 +9064,8 @@
                                <<"CodexErrorInfo">> =>
                                 {any_of,
                                  [{enum,
-                                   [contextWindowExceeded,usageLimitExceeded,
+                                   [contextWindowExceeded,
+                                    sessionBudgetExceeded,usageLimitExceeded,
                                     serverOverloaded,cyberPolicy,
                                     internalServerError,unauthorized,
                                     badRequest,threadRollbackFailed,
@@ -9218,7 +9311,8 @@
                                    #{id => {required,binstr},
                                      type => {required,{enum,[imageView]}},
                                      path =>
-                                      {required,{ref,<<"AbsolutePathBuf">>}}}},
+                                      {required,
+                                       {ref,<<"LegacyAppPathString">>}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[sleep]}},
@@ -9281,6 +9375,8 @@
                                <<"ThreadSource">> => binstr,
                                <<"ImageDetail">> =>
                                 {enum,[auto,low,high,original]},
+                               <<"ThreadHistoryMode">> =>
+                                {enum,[legacy,paginated]},
                                <<"Thread">> =>
                                 {struct,
                                  #{id => {required,binstr},
@@ -9410,9 +9506,15 @@
                                <<"McpToolCallAppContext">> =>
                                 {struct,
                                  #{connectorId => {required,binstr},
+                                   actionName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   appName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    linkId =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    resourceUri =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   templateId =>
                                     {optional,
                                      {any_of,[binstr,{exact,null}]}}}},
                                <<"TextElement">> =>
@@ -9525,6 +9627,7 @@
                                   {struct,
                                    #{command => {required,binstr},
                                      type => {required,{enum,[unknown]}}}}]},
+                               <<"ThreadExtra">> => {map,{binstr,term}},
                                <<"ThreadId">> => binstr,
                                <<"LegacyAppPathString">> => binstr,
                                <<"ThreadStatus">> =>
@@ -9674,7 +9777,8 @@
                                <<"CodexErrorInfo">> =>
                                 {any_of,
                                  [{enum,
-                                   [contextWindowExceeded,usageLimitExceeded,
+                                   [contextWindowExceeded,
+                                    sessionBudgetExceeded,usageLimitExceeded,
                                     serverOverloaded,cyberPolicy,
                                     internalServerError,unauthorized,
                                     badRequest,threadRollbackFailed,
@@ -9918,7 +10022,8 @@
                                    #{id => {required,binstr},
                                      type => {required,{enum,[imageView]}},
                                      path =>
-                                      {required,{ref,<<"AbsolutePathBuf">>}}}},
+                                      {required,
+                                       {ref,<<"LegacyAppPathString">>}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[sleep]}},
@@ -9979,6 +10084,8 @@
                                <<"ThreadSource">> => binstr,
                                <<"ImageDetail">> =>
                                 {enum,[auto,low,high,original]},
+                               <<"ThreadHistoryMode">> =>
+                                {enum,[legacy,paginated]},
                                <<"Thread">> =>
                                 {struct,
                                  #{id => {required,binstr},
@@ -10059,9 +10166,15 @@
                                <<"McpToolCallAppContext">> =>
                                 {struct,
                                  #{connectorId => {required,binstr},
+                                   actionName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   appName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    linkId =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    resourceUri =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   templateId =>
                                     {optional,
                                      {any_of,[binstr,{exact,null}]}}}},
                                <<"TextElement">> =>
@@ -10174,6 +10287,7 @@
                                   {struct,
                                    #{command => {required,binstr},
                                      type => {required,{enum,[unknown]}}}}]},
+                               <<"ThreadExtra">> => {map,{binstr,term}},
                                <<"ThreadId">> => binstr,
                                <<"LegacyAppPathString">> => binstr,
                                <<"ThreadStatus">> =>
@@ -10323,7 +10437,8 @@
                                <<"CodexErrorInfo">> =>
                                 {any_of,
                                  [{enum,
-                                   [contextWindowExceeded,usageLimitExceeded,
+                                   [contextWindowExceeded,
+                                    sessionBudgetExceeded,usageLimitExceeded,
                                     serverOverloaded,cyberPolicy,
                                     internalServerError,unauthorized,
                                     badRequest,threadRollbackFailed,
@@ -10567,7 +10682,8 @@
                                    #{id => {required,binstr},
                                      type => {required,{enum,[imageView]}},
                                      path =>
-                                      {required,{ref,<<"AbsolutePathBuf">>}}}},
+                                      {required,
+                                       {ref,<<"LegacyAppPathString">>}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[sleep]}},
@@ -10628,6 +10744,8 @@
                                <<"ThreadSource">> => binstr,
                                <<"ImageDetail">> =>
                                 {enum,[auto,low,high,original]},
+                               <<"ThreadHistoryMode">> =>
+                                {enum,[legacy,paginated]},
                                <<"Thread">> =>
                                 {struct,
                                  #{id => {required,binstr},
@@ -10700,10 +10818,19 @@
                                     <<"McpToolCallAppContext">> =>
                                      {struct,
                                       #{connectorId => {required,binstr},
+                                        actionName =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        appName =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
                                         linkId =>
                                          {optional,
                                           {any_of,[binstr,{exact,null}]}},
                                         resourceUri =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        templateId =>
                                          {optional,
                                           {any_of,[binstr,{exact,null}]}}}},
                                     <<"TextElement">> =>
@@ -10824,6 +10951,7 @@
                                         #{command => {required,binstr},
                                           type =>
                                            {required,{enum,[unknown]}}}}]},
+                                    <<"ThreadExtra">> => {map,{binstr,term}},
                                     <<"ThreadId">> => binstr,
                                     <<"LegacyAppPathString">> => binstr,
                                     <<"ThreadStatus">> =>
@@ -10997,6 +11125,7 @@
                                      {any_of,
                                       [{enum,
                                         [contextWindowExceeded,
+                                         sessionBudgetExceeded,
                                          usageLimitExceeded,serverOverloaded,
                                          cyberPolicy,internalServerError,
                                          unauthorized,badRequest,
@@ -11268,7 +11397,7 @@
                                            {required,{enum,[imageView]}},
                                           path =>
                                            {required,
-                                            {ref,<<"AbsolutePathBuf">>}}}},
+                                            {ref,<<"LegacyAppPathString">>}}}},
                                        {struct,
                                         #{id => {required,binstr},
                                           type => {required,{enum,[sleep]}},
@@ -11334,6 +11463,8 @@
                                     <<"ThreadSource">> => binstr,
                                     <<"ImageDetail">> =>
                                      {enum,[auto,low,high,original]},
+                                    <<"ThreadHistoryMode">> =>
+                                     {enum,[legacy,paginated]},
                                     <<"Thread">> =>
                                      {struct,
                                       #{id => {required,binstr},
@@ -11415,10 +11546,19 @@
                                    <<"McpToolCallAppContext">> =>
                                     {struct,
                                      #{connectorId => {required,binstr},
+                                       actionName =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       appName =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
                                        linkId =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
                                        resourceUri =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       templateId =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}}}},
                                    <<"TextElement">> =>
@@ -11537,6 +11677,7 @@
                                        #{command => {required,binstr},
                                          type =>
                                           {required,{enum,[unknown]}}}}]},
+                                   <<"ThreadExtra">> => {map,{binstr,term}},
                                    <<"ThreadId">> => binstr,
                                    <<"LegacyAppPathString">> => binstr,
                                    <<"ThreadStatus">> =>
@@ -11706,6 +11847,7 @@
                                     {any_of,
                                      [{enum,
                                        [contextWindowExceeded,
+                                        sessionBudgetExceeded,
                                         usageLimitExceeded,serverOverloaded,
                                         cyberPolicy,internalServerError,
                                         unauthorized,badRequest,
@@ -11964,7 +12106,7 @@
                                          type => {required,{enum,[imageView]}},
                                          path =>
                                           {required,
-                                           {ref,<<"AbsolutePathBuf">>}}}},
+                                           {ref,<<"LegacyAppPathString">>}}}},
                                       {struct,
                                        #{id => {required,binstr},
                                          type => {required,{enum,[sleep]}},
@@ -12029,6 +12171,8 @@
                                    <<"ThreadSource">> => binstr,
                                    <<"ImageDetail">> =>
                                     {enum,[auto,low,high,original]},
+                                   <<"ThreadHistoryMode">> =>
+                                    {enum,[legacy,paginated]},
                                    <<"Thread">> =>
                                     {struct,
                                      #{id => {required,binstr},
@@ -12210,11 +12354,23 @@
                                           <<"McpToolCallAppContext">> =>
                                            {struct,
                                             #{connectorId => {required,binstr},
+                                              actionName =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              appName =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
                                               linkId =>
                                                {optional,
                                                 {any_of,
                                                  [binstr,{exact,null}]}},
                                               resourceUri =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              templateId =>
                                                {optional,
                                                 {any_of,
                                                  [binstr,{exact,null}]}}}},
@@ -12360,6 +12516,8 @@
                                                 type =>
                                                  {required,
                                                   {enum,[unknown]}}}}]},
+                                          <<"ThreadExtra">> =>
+                                           {map,{binstr,term}},
                                           <<"ThreadId">> => binstr,
                                           <<"LegacyAppPathString">> => binstr,
                                           <<"ThreadStatus">> =>
@@ -12562,6 +12720,7 @@
                                            {any_of,
                                             [{enum,
                                               [contextWindowExceeded,
+                                               sessionBudgetExceeded,
                                                usageLimitExceeded,
                                                serverOverloaded,cyberPolicy,
                                                internalServerError,
@@ -12873,7 +13032,7 @@
                                                 path =>
                                                  {required,
                                                   {ref,
-                                                   <<"AbsolutePathBuf">>}}}},
+                                                   <<"LegacyAppPathString">>}}}},
                                              {struct,
                                               #{id => {required,binstr},
                                                 type =>
@@ -12954,6 +13113,8 @@
                                           <<"ThreadSource">> => binstr,
                                           <<"ImageDetail">> =>
                                            {enum,[auto,low,high,original]},
+                                          <<"ThreadHistoryMode">> =>
+                                           {enum,[legacy,paginated]},
                                           <<"Thread">> =>
                                            {struct,
                                             #{id => {required,binstr},
@@ -13084,9 +13245,15 @@
                                 <<"McpToolCallAppContext">> =>
                                  {struct,
                                   #{connectorId => {required,binstr},
+                                    actionName =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    appName =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     linkId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     resourceUri =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    templateId =>
                                      {optional,
                                       {any_of,[binstr,{exact,null}]}}}},
                                 <<"TextElement">> =>
@@ -13306,7 +13473,8 @@
                                 <<"CodexErrorInfo">> =>
                                  {any_of,
                                   [{enum,
-                                    [contextWindowExceeded,usageLimitExceeded,
+                                    [contextWindowExceeded,
+                                     sessionBudgetExceeded,usageLimitExceeded,
                                      serverOverloaded,cyberPolicy,
                                      internalServerError,unauthorized,
                                      badRequest,threadRollbackFailed,
@@ -13553,7 +13721,7 @@
                                       type => {required,{enum,[imageView]}},
                                       path =>
                                        {required,
-                                        {ref,<<"AbsolutePathBuf">>}}}},
+                                        {ref,<<"LegacyAppPathString">>}}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type => {required,{enum,[sleep]}},
@@ -13924,6 +14092,14 @@
                                     [{ref,<<"AppBranding">>},{exact,null}]}},
                                  distributionChannel =>
                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                 iconAssets =>
+                                  {optional,
+                                   {any_of,
+                                    [{map,{binstr,term}},{exact,null}]}},
+                                 iconDarkAssets =>
+                                  {optional,
+                                   {any_of,
+                                    [{map,{binstr,term}},{exact,null}]}},
                                  installUrl =>
                                   {optional,{any_of,[binstr,{exact,null}]}},
                                  isAccessible =>
@@ -13984,6 +14160,9 @@
                                {optional,{any_of,[binstr,{exact,null}]}}}}}}},
     {mcp_server_oauth_login_params, {struct,
                                      #{name => {required,binstr},
+                                       threadId =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
                                        scopes =>
                                         {optional,
                                          {any_of,
@@ -14258,9 +14437,7 @@
                                     {optional,{default,{true,boolean}}}}},
                                <<"AskForApproval">> =>
                                 {any_of,
-                                 [{enum,
-                                   [untrusted,'on-failure','on-request',
-                                    never]},
+                                 [{enum,[untrusted,'on-request',never]},
                                   {struct,
                                    #{granular =>
                                       {required,
@@ -14612,8 +14789,8 @@
                                             <<"AskForApproval">> =>
                                              {any_of,
                                               [{enum,
-                                                [untrusted,'on-failure',
-                                                 'on-request',never]},
+                                                [untrusted,'on-request',
+                                                 never]},
                                                {struct,
                                                 #{granular =>
                                                    {required,
@@ -14705,6 +14882,12 @@
                                                  {optional,
                                                   {any_of,
                                                    [{map,{binstr,term}},
+                                                    {exact,null}]}},
+                                                models =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"ModelsRequirements">>},
                                                     {exact,null}]}}}},
                                             <<"ConfiguredHookHandler">> =>
                                              {any_of,
@@ -14805,6 +14988,14 @@
                                                  {optional,
                                                   {any_of,
                                                    [binstr,{exact,null}]}}}},
+                                            <<"ModelsRequirements">> =>
+                                             {struct,
+                                              #{newThread =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"NewThreadModelDefaults">>},
+                                                    {exact,null}]}}}},
                                             <<"NetworkDomainPermission">> =>
                                              {enum,[allow,deny]},
                                             <<"NetworkRequirements">> =>
@@ -14868,6 +15059,23 @@
                                                     {exact,null}]}}}},
                                             <<"NetworkUnixSocketPermission">> =>
                                              {enum,[allow,deny]},
+                                            <<"NewThreadModelDefaults">> =>
+                                             {struct,
+                                              #{model =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                serviceTier =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                modelReasoningEffort =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"ReasoningEffort">>},
+                                                    {exact,null}]}}}},
+                                            <<"ReasoningEffort">> => binstr,
                                             <<"ResidencyRequirement">> =>
                                              {enum,[us]},
                                             <<"SandboxMode">> =>
@@ -14995,10 +15203,48 @@
                                                workspace_member_credits_depleted,
                                                workspace_owner_usage_limit_reached,
                                                workspace_member_usage_limit_reached]},
+                                            <<"RateLimitResetCredit">> =>
+                                             {struct,
+                                              #{id => {required,binstr},
+                                                status =>
+                                                 {required,
+                                                  {ref,
+                                                   <<"RateLimitResetCreditStatus">>}},
+                                                description =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                title =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                expiresAt =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [integer,{exact,null}]}},
+                                                grantedAt =>
+                                                 {required,integer},
+                                                resetType =>
+                                                 {required,
+                                                  {ref,
+                                                   <<"RateLimitResetType">>}}}},
+                                            <<"RateLimitResetCreditStatus">> =>
+                                             {enum,
+                                              [available,redeeming,redeemed,
+                                               unknown]},
                                             <<"RateLimitResetCreditsSummary">> =>
                                              {struct,
-                                              #{availableCount =>
+                                              #{credits =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{list,
+                                                     {ref,
+                                                      <<"RateLimitResetCredit">>}},
+                                                    {exact,null}]}},
+                                                availableCount =>
                                                  {required,integer}}},
+                                            <<"RateLimitResetType">> =>
+                                             {enum,[codexRateLimits,unknown]},
                                             <<"RateLimitSnapshot">> =>
                                              {struct,
                                               #{primary =>
@@ -15082,7 +15328,12 @@
                                                 [{map,{binstr,term}},
                                                  {exact,null}]}}}}}}},
     {account_rate_limit_reset_credit_consume_params, {struct,
-                                                      #{idempotencyKey =>
+                                                      #{creditId =>
+                                                         {optional,
+                                                          {any_of,
+                                                           [binstr,
+                                                            {exact,null}]}},
+                                                        idempotencyKey =>
                                                          {required,binstr}}}},
     {account_rate_limit_reset_credit_consume_response, {with_defs,
                                                         {#{<<"ConsumeAccountRateLimitResetCreditOutcome">> =>
@@ -15335,6 +15586,10 @@
                                 {enum,
                                  ['NOT_AVAILABLE','AVAILABLE',
                                   'INSTALLED_BY_DEFAULT']},
+                               <<"PluginInstallPolicySource">> =>
+                                {enum,
+                                 ['WORKSPACE_SETTING',
+                                  'IMPLICIT_CANONICAL_APP']},
                                <<"PluginInterface">> =>
                                 {struct,
                                  #{category =>
@@ -15460,12 +15715,25 @@
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}}}},
                                   {struct,
+                                   #{type => {required,{enum,[npm]}},
+                                     version =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     registry =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     package => {required,binstr}}},
+                                  {struct,
                                    #{type => {required,{enum,[remote]}}}}]},
                                <<"PluginSummary">> =>
                                 {struct,
                                  #{enabled => {required,boolean},
                                    id => {required,binstr},
                                    name => {required,binstr},
+                                   version =>
+                                    {optional,
+                                     {default,
+                                      {null,{any_of,[binstr,{exact,null}]}}}},
                                    interface =>
                                     {optional,
                                      {any_of,
@@ -15487,6 +15755,11 @@
                                         [{ref,<<"PluginAvailability">>}]}}}},
                                    installPolicy =>
                                     {required,{ref,<<"PluginInstallPolicy">>}},
+                                   installPolicySource =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"PluginInstallPolicySource">>},
+                                       {exact,null}]}},
                                    installed => {required,boolean},
                                    localVersion =>
                                     {optional,
@@ -15545,6 +15818,10 @@
                                      {enum,
                                       ['NOT_AVAILABLE','AVAILABLE',
                                        'INSTALLED_BY_DEFAULT']},
+                                    <<"PluginInstallPolicySource">> =>
+                                     {enum,
+                                      ['WORKSPACE_SETTING',
+                                       'IMPLICIT_CANONICAL_APP']},
                                     <<"PluginInterface">> =>
                                      {struct,
                                       #{category =>
@@ -15692,6 +15969,15 @@
                                            {optional,
                                             {any_of,[binstr,{exact,null}]}}}},
                                        {struct,
+                                        #{type => {required,{enum,[npm]}},
+                                          version =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}},
+                                          registry =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}},
+                                          package => {required,binstr}}},
+                                       {struct,
                                         #{type =>
                                            {required,{enum,[remote]}}}}]},
                                     <<"PluginSummary">> =>
@@ -15699,6 +15985,11 @@
                                       #{enabled => {required,boolean},
                                         id => {required,binstr},
                                         name => {required,binstr},
+                                        version =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[binstr,{exact,null}]}}}},
                                         interface =>
                                          {optional,
                                           {any_of,
@@ -15725,6 +16016,12 @@
                                         installPolicy =>
                                          {required,
                                           {ref,<<"PluginInstallPolicy">>}},
+                                        installPolicySource =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,
+                                             <<"PluginInstallPolicySource">>},
+                                            {exact,null}]}},
                                         installed => {required,boolean},
                                         localVersion =>
                                          {optional,
@@ -15789,11 +16086,11 @@
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    logoUrlDark =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                   templateId => {required,binstr},
                                    canonicalConnectorId =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    materializedAppIds =>
-                                    {required,{list,binstr}},
-                                   templateId => {required,binstr}}},
+                                    {required,{list,binstr}}}},
                                <<"AppTemplateUnavailableReason">> =>
                                 {enum,
                                  ['NOT_CONFIGURED_FOR_WORKSPACE',
@@ -15825,9 +16122,9 @@
                                     {required,
                                      {list,{ref,<<"PluginHookSummary">>}}},
                                    mcpServers => {required,{list,binstr}},
-                                   marketplaceName => {required,binstr},
                                    skills =>
                                     {required,{list,{ref,<<"SkillSummary">>}}},
+                                   marketplaceName => {required,binstr},
                                    shareUrl =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    appTemplates =>
@@ -15844,6 +16141,10 @@
                                 {enum,
                                  ['NOT_AVAILABLE','AVAILABLE',
                                   'INSTALLED_BY_DEFAULT']},
+                               <<"PluginInstallPolicySource">> =>
+                                {enum,
+                                 ['WORKSPACE_SETTING',
+                                  'IMPLICIT_CANONICAL_APP']},
                                <<"PluginInterface">> =>
                                 {struct,
                                  #{category =>
@@ -15953,12 +16254,25 @@
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}}}},
                                   {struct,
+                                   #{type => {required,{enum,[npm]}},
+                                     version =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     registry =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     package => {required,binstr}}},
+                                  {struct,
                                    #{type => {required,{enum,[remote]}}}}]},
                                <<"PluginSummary">> =>
                                 {struct,
                                  #{enabled => {required,boolean},
                                    id => {required,binstr},
                                    name => {required,binstr},
+                                   version =>
+                                    {optional,
+                                     {default,
+                                      {null,{any_of,[binstr,{exact,null}]}}}},
                                    interface =>
                                     {optional,
                                      {any_of,
@@ -15980,6 +16294,11 @@
                                         [{ref,<<"PluginAvailability">>}]}}}},
                                    installPolicy =>
                                     {required,{ref,<<"PluginInstallPolicy">>}},
+                                   installPolicySource =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"PluginInstallPolicySource">>},
+                                       {exact,null}]}},
                                    installed => {required,boolean},
                                    localVersion =>
                                     {optional,
@@ -16152,6 +16471,10 @@
                                       {enum,
                                        ['NOT_AVAILABLE','AVAILABLE',
                                         'INSTALLED_BY_DEFAULT']},
+                                     <<"PluginInstallPolicySource">> =>
+                                      {enum,
+                                       ['WORKSPACE_SETTING',
+                                        'IMPLICIT_CANONICAL_APP']},
                                      <<"PluginInterface">> =>
                                       {struct,
                                        #{category =>
@@ -16293,6 +16616,15 @@
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}}}},
                                         {struct,
+                                         #{type => {required,{enum,[npm]}},
+                                           version =>
+                                            {optional,
+                                             {any_of,[binstr,{exact,null}]}},
+                                           registry =>
+                                            {optional,
+                                             {any_of,[binstr,{exact,null}]}},
+                                           package => {required,binstr}}},
+                                        {struct,
                                          #{type =>
                                             {required,{enum,[remote]}}}}]},
                                      <<"PluginSummary">> =>
@@ -16300,6 +16632,11 @@
                                        #{enabled => {required,boolean},
                                          id => {required,binstr},
                                          name => {required,binstr},
+                                         version =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,[binstr,{exact,null}]}}}},
                                          interface =>
                                           {optional,
                                            {any_of,
@@ -16326,6 +16663,12 @@
                                          installPolicy =>
                                           {required,
                                            {ref,<<"PluginInstallPolicy">>}},
+                                         installPolicySource =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,
+                                              <<"PluginInstallPolicySource">>},
+                                             {exact,null}]}},
                                          installed => {required,boolean},
                                          localVersion =>
                                           {optional,
@@ -16690,6 +17033,13 @@
                                                         {list,
                                                          {ref,
                                                           <<"SessionMigration">>}}}}},
+                                                    skills =>
+                                                     {optional,
+                                                      {default,
+                                                       {[],
+                                                        {list,
+                                                         {ref,
+                                                          <<"SkillMigration">>}}}}},
                                                     subagents =>
                                                      {optional,
                                                       {default,
@@ -16712,6 +17062,10 @@
                                                       {any_of,
                                                        [binstr,{exact,null}]}},
                                                     cwd => {required,binstr}}},
+                                                <<"SkillMigration">> =>
+                                                 {struct,
+                                                  #{name =>
+                                                     {required,binstr}}},
                                                 <<"SubagentMigration">> =>
                                                  {struct,
                                                   #{name =>
@@ -16794,6 +17148,13 @@
                                                       {list,
                                                        {ref,
                                                         <<"SessionMigration">>}}}}},
+                                                  skills =>
+                                                   {optional,
+                                                    {default,
+                                                     {[],
+                                                      {list,
+                                                       {ref,
+                                                        <<"SkillMigration">>}}}}},
                                                   subagents =>
                                                    {optional,
                                                     {default,
@@ -16815,6 +17176,9 @@
                                                     {any_of,
                                                      [binstr,{exact,null}]}},
                                                   cwd => {required,binstr}}},
+                                              <<"SkillMigration">> =>
+                                               {struct,
+                                                #{name => {required,binstr}}},
                                               <<"SubagentMigration">> =>
                                                {struct,
                                                 #{name => {required,binstr}}}},
