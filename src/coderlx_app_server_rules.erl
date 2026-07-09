@@ -1211,7 +1211,16 @@
                                apiKey => {required,binstr}}},
                             {struct,
                              #{type => {required,{enum,[chatgpt]}},
-                               codexStreamlinedLogin => {optional,boolean}}},
+                               appBrand =>
+                                {optional,
+                                 {default,
+                                  {null,
+                                   {any_of,
+                                    [{ref,<<"LoginAppBrand">>},
+                                     {exact,null}]}}}},
+                               codexStreamlinedLogin => {optional,boolean},
+                               useHostedLoginSuccessPage =>
+                                {optional,boolean}}},
                             {struct,
                              #{type => {required,{enum,[chatgptDeviceCode]}}}},
                             {struct,
@@ -1247,6 +1256,7 @@
                              threadId => {required,binstr},
                              '_meta' => {optional,term},
                              tool => {required,binstr}}},
+                         <<"LoginAppBrand">> => {enum,[codex,chatgpt]},
                          <<"MergeStrategy">> => {enum,[replace,upsert]},
                          <<"ThreadShellCommandParams">> =>
                           {struct,
@@ -3203,6 +3213,7 @@
                                 [{enum,[apikey]},
                                  {enum,[chatgpt]},
                                  {enum,[chatgptAuthTokens]},
+                                 {enum,[headers]},
                                  {enum,[agentIdentity]},
                                  {enum,[personalAccessToken]},
                                  {enum,[bedrockApiKey]}]},
@@ -14395,7 +14406,7 @@
                                     {optional,
                                      {any_of,[boolean,{exact,null}]}}}},
                                <<"AppToolApproval">> =>
-                                {enum,[auto,prompt,approve]},
+                                {enum,[auto,prompt,writes,approve]},
                                <<"AppToolConfig">> =>
                                 {struct,
                                  #{enabled =>
@@ -15132,25 +15143,39 @@
                                    {any_of,
                                     [{ref,<<"Account">>},{exact,null}]}},
                                  requiresOpenaiAuth => {required,boolean}}}}}},
-    {account_login_start_params, {any_of,
-                                  [{struct,
-                                    #{type => {required,{enum,[apiKey]}},
-                                      apiKey => {required,binstr}}},
-                                   {struct,
-                                    #{type => {required,{enum,[chatgpt]}},
-                                      codexStreamlinedLogin =>
-                                       {optional,boolean}}},
-                                   {struct,
-                                    #{type =>
-                                       {required,{enum,[chatgptDeviceCode]}}}},
-                                   {struct,
-                                    #{type =>
-                                       {required,{enum,[chatgptAuthTokens]}},
-                                      accessToken => {required,binstr},
-                                      chatgptAccountId => {required,binstr},
-                                      chatgptPlanType =>
-                                       {optional,
-                                        {any_of,[binstr,{exact,null}]}}}}]}},
+    {account_login_start_params, {with_defs,
+                                  {#{<<"LoginAppBrand">> =>
+                                      {enum,[codex,chatgpt]}},
+                                   {any_of,
+                                    [{struct,
+                                      #{type => {required,{enum,[apiKey]}},
+                                        apiKey => {required,binstr}}},
+                                     {struct,
+                                      #{type => {required,{enum,[chatgpt]}},
+                                        appBrand =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [{ref,<<"LoginAppBrand">>},
+                                              {exact,null}]}}}},
+                                        codexStreamlinedLogin =>
+                                         {optional,boolean},
+                                        useHostedLoginSuccessPage =>
+                                         {optional,boolean}}},
+                                     {struct,
+                                      #{type =>
+                                         {required,
+                                          {enum,[chatgptDeviceCode]}}}},
+                                     {struct,
+                                      #{type =>
+                                         {required,{enum,[chatgptAuthTokens]}},
+                                        accessToken => {required,binstr},
+                                        chatgptAccountId => {required,binstr},
+                                        chatgptPlanType =>
+                                         {optional,
+                                          {any_of,
+                                           [binstr,{exact,null}]}}}}]}}}},
     {account_login_start_response, {any_of,
                                     [{struct,
                                       #{type => {required,{enum,[apiKey]}}}},
