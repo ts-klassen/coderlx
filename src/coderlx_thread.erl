@@ -10,17 +10,21 @@
       , list/2
       , loaded_list/2
       , read/2
+      , turns_list/2
+      , items_list/2
       , archive/2
       , name_set/2
       , unarchive/2
       , compact_start/2
       , rollback/2
+      , revert/2
       , delete/2
       , unsubscribe/2
       , goal_set/2
       , goal_get/2
       , goal_clear/2
       , metadata_update/2
+      , section_move/2
       , shell_command/2
       , approve_guardian_denied_action/2
       , inject_items/2
@@ -100,6 +104,28 @@ read(Params, Coderlx) ->
     coderlx:request('thread/read', Params, Coderlx).
 
 -klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_turns_list_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_turns_list_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+turns_list(Params, Coderlx) ->
+    coderlx:request('thread/turns/list', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_items_list_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_items_list_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+items_list(Params, Coderlx) ->
+    coderlx:request('thread/items/list', Params, Coderlx).
+
+-klsn_input_rule([
         {alias, {coderlx_app_server_rules, thread_archive_params}}
       , {alias, {coderlx, coderlx}}
     ]).
@@ -153,6 +179,17 @@ compact_start(Params, Coderlx) ->
     ]}).
 rollback(Params, Coderlx) ->
     coderlx:request('thread/rollback', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_revert_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_revert_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+revert(Params, Coderlx) ->
+    coderlx:request('thread/revert', Params, Coderlx).
 
 -klsn_input_rule([
         {alias, {coderlx_app_server_rules, thread_delete_params}}
@@ -219,6 +256,17 @@ goal_clear(Params, Coderlx) ->
     ]}).
 metadata_update(Params, Coderlx) ->
     coderlx:request('thread/metadata/update', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_section_move_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_section_move_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+section_move(Params, Coderlx) ->
+    coderlx:request('thread/section/move', Params, Coderlx).
 
 -klsn_input_rule([
         {alias, {coderlx_app_server_rules, thread_shell_command_params}}

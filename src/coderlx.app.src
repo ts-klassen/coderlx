@@ -24,6 +24,7 @@
       , coderlx_review
       , coderlx_skills
       , coderlx_thread
+      , coderlx_thread_section
       , coderlx_turn
       , coderlx_windows_sandbox
     ]}

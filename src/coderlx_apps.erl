@@ -7,6 +7,8 @@
 %% Public functions
 -export([
         list/2
+      , read/2
+      , installed/2
     ]).
 
 -klsn_input_rule([
@@ -19,3 +21,25 @@
     ]}).
 list(Params, Coderlx) ->
     coderlx:request('app/list', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, apps_read_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(apps_read_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+read(Params, Coderlx) ->
+    coderlx:request('app/read', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, apps_installed_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(apps_installed_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+installed(Params, Coderlx) ->
+    coderlx:request('app/installed', Params, Coderlx).

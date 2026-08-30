@@ -6,6 +6,7 @@
 -export([
         detect/2
       , import/2
+      , import_record_history/2
       , import_read_histories/2
     ]).
 
@@ -30,6 +31,17 @@ detect(Params, Coderlx) ->
     ]}).
 import(Params, Coderlx) ->
     coderlx:request('externalAgentConfig/import', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, external_agent_config_import_history_record_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(external_agent_config_import_history_record_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+import_record_history(Params, Coderlx) ->
+    coderlx:request('externalAgentConfig/import/recordHistory', Params, Coderlx).
 
 -klsn_input_rule([
         {exact, null}
