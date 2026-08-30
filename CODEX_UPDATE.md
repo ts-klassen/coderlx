@@ -2,12 +2,12 @@
 
 この手順は、ユーザーが Codex バージョン更新を明示的に依頼した場合だけ使う。通常の調査、実装、レビュー、テスト、またはリポジトリを開いただけの状態では、Codex バージョン更新を開始しない。
 
-このリポジトリでは Codex app-server のバイナリと、その Codex バージョンから生成した JSON Schema 由来の Erlang ルールを固定している。Codex バージョンを更新する場合は、バイナリだけでなく schema 生成物も必ず更新する。
+このリポジトリでは Codex app-server と code-mode host のバイナリ、およびその Codex バージョンから生成した JSON Schema 由来の Erlang ルールを固定している。Codex バージョンを更新する場合は、バイナリだけでなく schema 生成物も必ず更新する。
 
 ## 重要な制約
 
 - `_build` は rebar3 の作業ディレクトリなので、修正・コミットしない。
-- `priv/codex` は取得された Codex バイナリで `.gitignore` 対象なので、通常コミットしない。
+- `priv/codex` と `priv/codex-code-mode-host` は取得された Codex バイナリで `.gitignore` 対象なので、通常コミットしない。
 - `klsn` ライブラリ自体の修正が必要になった場合は、このリポジトリ内で無理に完遂しない。失敗内容、該当 schema、必要そうな `klsn` 側変更を人間に報告して中断する。
 - このリポジトリ内の修正だけで済む場合のみ、更新、検証、差分整理まで完遂する。
 - ユーザーの未コミット変更がある場合は上書きしない。
@@ -19,6 +19,8 @@
 - `CODEX_VERSION`
 - `CODEX_TARBALL_SHA256`
 - `CODEX_BINARY_SHA256`
+- `CODEX_CODE_MODE_HOST_TARBALL_SHA256`
+- `CODEX_CODE_MODE_HOST_BINARY_SHA256`
 - `src/coderlx_app_server_rules.erl`
 - `LICENSE-CODEX`
 - `NOTICE-CODEX`
@@ -43,9 +45,9 @@
    ```
 
    このスクリプトは次を行う。
-   - Codex tarball を取得する。
-   - tarball と binary の SHA256 を更新する。
-   - `priv/codex` を更新する。
+   - Codex app-server と code-mode host の tarball を取得する。
+   - 両方の tarball と binary の SHA256 を更新する。
+   - `priv/codex` と `priv/codex-code-mode-host` を更新する。
    - `codex app-server generate-json-schema --out ...` を実行する。
    - `scripts/generate_app_server_rules.escript` で `src/coderlx_app_server_rules.erl` を再生成する。
    - `LICENSE-CODEX` と `NOTICE-CODEX` を更新する。
@@ -75,7 +77,7 @@
    git diff
    ```
 
-   `_build` と `priv/codex` は差分対象にしない。
+   `_build`, `priv/codex`, `priv/codex-code-mode-host` は差分対象にしない。
 
 ## 新しい client request method が追加された場合
 

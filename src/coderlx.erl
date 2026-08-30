@@ -10,6 +10,7 @@
       , consume/3
       , consume/4
       , default_codex_path/0
+      , default_code_mode_host_path/0
     ]).
 
 %% Low level api
@@ -505,6 +506,13 @@ default_codex_path() ->
     klsn_binstr:from_any(filename:join([
         code:priv_dir(coderlx)
       , "codex"
+    ])).
+
+-spec default_code_mode_host_path() -> klsn:binstr().
+default_code_mode_host_path() ->
+    klsn_binstr:from_any(filename:join([
+        code:priv_dir(coderlx)
+      , "codex-code-mode-host"
     ])).
 
 

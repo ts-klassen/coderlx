@@ -76,6 +76,8 @@ sandbox(Args) ->
           , {ro_bind, <<"/sys">>, <<"/sys">>}
           , {dir, <<"/cbin">>}
           , {ro_bind, coderlx:default_codex_path(), <<"/cbin/codex">>}
+          , {ro_bind, coderlx:default_code_mode_host_path(),
+                <<"/cbin/codex-code-mode-host">>}
           , {dir, <<"/home">>}
           , SandboxHome
           , {bind, CodexHome, <<"/home/", User/binary, "/.codex">>}

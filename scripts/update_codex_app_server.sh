@@ -4,9 +4,12 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 CODEX_TARGET="x86_64-unknown-linux-musl"
+CODE_MODE_HOST_NAME="codex-code-mode-host"
 CODEX_VERSION_FILE="${ROOT_DIR}/CODEX_VERSION"
 CODEX_TARBALL_SHA256_FILE="${ROOT_DIR}/CODEX_TARBALL_SHA256"
 CODEX_BINARY_SHA256_FILE="${ROOT_DIR}/CODEX_BINARY_SHA256"
+CODE_MODE_HOST_TARBALL_SHA256_FILE="${ROOT_DIR}/CODEX_CODE_MODE_HOST_TARBALL_SHA256"
+CODE_MODE_HOST_BINARY_SHA256_FILE="${ROOT_DIR}/CODEX_CODE_MODE_HOST_BINARY_SHA256"
 
 if [ "${#}" -ne 1 ]; then
     echo "usage: $(basename "$0") <codex_version>" >&2
@@ -17,12 +20,18 @@ CODEX_VERSION="$1"
 
 PRIV_DIR="${ROOT_DIR}/priv"
 PRIV_BIN_PATH="${PRIV_DIR}/codex"
+PRIV_CODE_MODE_HOST_PATH="${PRIV_DIR}/${CODE_MODE_HOST_NAME}"
 
 TARBALL_URL="https://github.com/openai/codex/releases/download/rust-v${CODEX_VERSION}/codex-${CODEX_TARGET}.tar.gz"
+CODE_MODE_HOST_TARBALL_URL="https://github.com/openai/codex/releases/download/rust-v${CODEX_VERSION}/${CODE_MODE_HOST_NAME}-${CODEX_TARGET}.tar.gz"
 
 mkdir -p "${PRIV_DIR}"
 if [ -d "${PRIV_BIN_PATH}" ]; then
     echo "expected ${PRIV_BIN_PATH} to be a file, but it is a directory; remove ${PRIV_BIN_PATH} to continue" >&2
+    exit 1
+fi
+if [ -d "${PRIV_CODE_MODE_HOST_PATH}" ]; then
+    echo "expected ${PRIV_CODE_MODE_HOST_PATH} to be a file, but it is a directory; remove ${PRIV_CODE_MODE_HOST_PATH} to continue" >&2
     exit 1
 fi
 
@@ -61,27 +70,41 @@ trap 'rm -rf "${TMP_DIR}"' EXIT
 
 SCHEMA_DIR="${TMP_DIR}/schema"
 TARBALL_PATH="${TMP_DIR}/codex-${CODEX_TARGET}-${CODEX_VERSION}.tar.gz"
+CODE_MODE_HOST_TARBALL_PATH="${TMP_DIR}/${CODE_MODE_HOST_NAME}-${CODEX_TARGET}-${CODEX_VERSION}.tar.gz"
 mkdir -p "${SCHEMA_DIR}"
 fetch_url "${TARBALL_URL}" "${TARBALL_PATH}"
+fetch_url "${CODE_MODE_HOST_TARBALL_URL}" "${CODE_MODE_HOST_TARBALL_PATH}"
 
 CODEX_TARBALL_SHA256="$(sha256_file "${TARBALL_PATH}" | tr '[:upper:]' '[:lower:]')"
+CODE_MODE_HOST_TARBALL_SHA256="$(sha256_file "${CODE_MODE_HOST_TARBALL_PATH}" | tr '[:upper:]' '[:lower:]')"
 
 tar -xzf "${TARBALL_PATH}" -C "${TMP_DIR}"
+tar -xzf "${CODE_MODE_HOST_TARBALL_PATH}" -C "${TMP_DIR}"
 
 if [ ! -f "${TMP_DIR}/codex-${CODEX_TARGET}" ]; then
     echo "codex binary not found after extraction: codex-${CODEX_TARGET}" >&2
     exit 1
 fi
+if [ ! -f "${TMP_DIR}/${CODE_MODE_HOST_NAME}-${CODEX_TARGET}" ]; then
+    echo "codex code-mode host binary not found after extraction: ${CODE_MODE_HOST_NAME}-${CODEX_TARGET}" >&2
+    exit 1
+fi
 
 CODEX_BINARY_SHA256="$(sha256_file "${TMP_DIR}/codex-${CODEX_TARGET}" | tr '[:upper:]' '[:lower:]')"
+CODE_MODE_HOST_BINARY_SHA256="$(sha256_file "${TMP_DIR}/${CODE_MODE_HOST_NAME}-${CODEX_TARGET}" | tr '[:upper:]' '[:lower:]')"
 
 printf '%s\n' "${CODEX_VERSION}" > "${CODEX_VERSION_FILE}"
 printf '%s\n' "${CODEX_TARBALL_SHA256}" > "${CODEX_TARBALL_SHA256_FILE}"
 printf '%s\n' "${CODEX_BINARY_SHA256}" > "${CODEX_BINARY_SHA256_FILE}"
+printf '%s\n' "${CODE_MODE_HOST_TARBALL_SHA256}" > "${CODE_MODE_HOST_TARBALL_SHA256_FILE}"
+printf '%s\n' "${CODE_MODE_HOST_BINARY_SHA256}" > "${CODE_MODE_HOST_BINARY_SHA256_FILE}"
 
 chmod +x "${TMP_DIR}/codex-${CODEX_TARGET}"
 cp -f "${TMP_DIR}/codex-${CODEX_TARGET}" "${PRIV_BIN_PATH}"
 chmod +x "${PRIV_BIN_PATH}"
+chmod +x "${TMP_DIR}/${CODE_MODE_HOST_NAME}-${CODEX_TARGET}"
+cp -f "${TMP_DIR}/${CODE_MODE_HOST_NAME}-${CODEX_TARGET}" "${PRIV_CODE_MODE_HOST_PATH}"
+chmod +x "${PRIV_CODE_MODE_HOST_PATH}"
 
 "${PRIV_BIN_PATH}" app-server generate-json-schema --out "${SCHEMA_DIR}"
 
