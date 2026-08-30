@@ -89,6 +89,10 @@ schema_files() ->
       , {thread_loaded_list_response, from_json, "v2/ThreadLoadedListResponse.json"}
       , {thread_read_params, to_json, "v2/ThreadReadParams.json"}
       , {thread_read_response, from_json, "v2/ThreadReadResponse.json"}
+      , {thread_turns_list_params, to_json, "v2/ThreadTurnsListParams.json"}
+      , {thread_turns_list_response, from_json, "v2/ThreadTurnsListResponse.json"}
+      , {thread_items_list_params, to_json, "v2/ThreadItemsListParams.json"}
+      , {thread_items_list_response, from_json, "v2/ThreadItemsListResponse.json"}
       , {thread_archive_params, to_json, "v2/ThreadArchiveParams.json"}
       , {thread_archive_response, from_json, "v2/ThreadArchiveResponse.json"}
       , {thread_set_name_params, to_json, "v2/ThreadSetNameParams.json"}
@@ -99,6 +103,8 @@ schema_files() ->
       , {thread_compact_start_response, from_json, "v2/ThreadCompactStartResponse.json"}
       , {thread_rollback_params, to_json, "v2/ThreadRollbackParams.json"}
       , {thread_rollback_response, from_json, "v2/ThreadRollbackResponse.json"}
+      , {thread_revert_params, to_json, "v2/ThreadRevertParams.json"}
+      , {thread_revert_response, from_json, "v2/ThreadRevertResponse.json"}
       , {thread_delete_params, to_json, "v2/ThreadDeleteParams.json"}
       , {thread_delete_response, from_json, "v2/ThreadDeleteResponse.json"}
       , {thread_unsubscribe_params, to_json, "v2/ThreadUnsubscribeParams.json"}
@@ -111,6 +117,8 @@ schema_files() ->
       , {thread_goal_clear_response, from_json, "v2/ThreadGoalClearResponse.json"}
       , {thread_metadata_update_params, to_json, "v2/ThreadMetadataUpdateParams.json"}
       , {thread_metadata_update_response, from_json, "v2/ThreadMetadataUpdateResponse.json"}
+      , {thread_section_move_params, to_json, "v2/ThreadSectionMoveParams.json"}
+      , {thread_section_move_response, from_json, "v2/ThreadSectionMoveResponse.json"}
       , {thread_shell_command_params, to_json, "v2/ThreadShellCommandParams.json"}
       , {thread_shell_command_response, from_json, "v2/ThreadShellCommandResponse.json"}
       , {thread_approve_guardian_denied_action_params, to_json,
@@ -119,6 +127,14 @@ schema_files() ->
             "v2/ThreadApproveGuardianDeniedActionResponse.json"}
       , {thread_inject_items_params, to_json, "v2/ThreadInjectItemsParams.json"}
       , {thread_inject_items_response, from_json, "v2/ThreadInjectItemsResponse.json"}
+      , {thread_section_list_params, to_json, "v2/ThreadSectionListParams.json"}
+      , {thread_section_list_response, from_json, "v2/ThreadSectionListResponse.json"}
+      , {thread_section_create_params, to_json, "v2/ThreadSectionCreateParams.json"}
+      , {thread_section_create_response, from_json, "v2/ThreadSectionCreateResponse.json"}
+      , {thread_section_update_params, to_json, "v2/ThreadSectionUpdateParams.json"}
+      , {thread_section_update_response, from_json, "v2/ThreadSectionUpdateResponse.json"}
+      , {thread_section_delete_params, to_json, "v2/ThreadSectionDeleteParams.json"}
+      , {thread_section_delete_response, from_json, "v2/ThreadSectionDeleteResponse.json"}
       , {review_start_params, to_json, "v2/ReviewStartParams.json"}
       , {review_start_response, from_json, "v2/ReviewStartResponse.json"}
       , {command_exec_params, to_json, "v2/CommandExecParams.json"}
@@ -145,6 +161,10 @@ schema_files() ->
             "v2/SkillsExtraRootsSetResponse.json"}
       , {apps_list_params, to_json, "v2/AppsListParams.json"}
       , {apps_list_response, from_json, "v2/AppsListResponse.json"}
+      , {apps_read_params, to_json, "v2/AppsReadParams.json"}
+      , {apps_read_response, from_json, "v2/AppsReadResponse.json"}
+      , {apps_installed_params, to_json, "v2/AppsInstalledParams.json"}
+      , {apps_installed_response, from_json, "v2/AppsInstalledResponse.json"}
       , {mcp_server_oauth_login_params, to_json, "v2/McpServerOauthLoginParams.json"}
       , {mcp_server_oauth_login_response, from_json, "v2/McpServerOauthLoginResponse.json"}
       , {mcp_server_status_list_params, to_json, "v2/ListMcpServerStatusParams.json"}
@@ -254,6 +274,10 @@ schema_files() ->
             "v2/ExternalAgentConfigImportParams.json"}
       , {external_agent_config_import_response, from_json,
             "v2/ExternalAgentConfigImportResponse.json"}
+      , {external_agent_config_import_history_record_params, to_json,
+            "v2/ExternalAgentConfigImportHistoryRecordParams.json"}
+      , {external_agent_config_import_history_record_response, from_json,
+            "v2/ExternalAgentConfigImportHistoryRecordResponse.json"}
       , {external_agent_config_import_read_histories_response, from_json,
             "v2/ExternalAgentConfigImportHistoriesReadResponse.json"}
     ].
