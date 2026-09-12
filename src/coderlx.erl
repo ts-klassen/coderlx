@@ -48,6 +48,7 @@
           , stderr => {required, term}
           , pending => {required, {list, term}}
           , next_id => {required, {range, {0, '<', integer}}}
+          , send_timeout => {required, timeout}
           , request_timeout => {required, timeout}
           , consume_timeout => {required, timeout}
           , raise_consume_permanent_error => {required, boolean}
@@ -56,6 +57,7 @@
       , {opts, {struct, #{
             bwrap => {required, term}
           , codex_path => {optional, binstr}
+          , send_timeout => {optional, timeout}
         }}}
       , {message, {any_of, [
             {alias, {coderlx_app_server_rules, server_request}}
@@ -124,6 +126,7 @@ start(#{bwrap := Bwrap}=Opts) ->
       , stderr => <<>>
       , pending => []
       , next_id => 1
+      , send_timeout => maps:get(send_timeout, Opts, 60000)
       , request_timeout => 60000
       , consume_timeout => 60000
       , raise_consume_permanent_error => true
@@ -132,7 +135,12 @@ start(#{bwrap := Bwrap}=Opts) ->
 
 -spec stop(coderlx()) -> ok.
 stop(#{stream := Stream}) ->
-    klsn_bwrap:stop(Stream).
+    try klsn_bwrap:stop(Stream)
+    catch
+        %% send/3 already cancels the stream on timeout. Cleanup must not
+        %% replace the original exception when the transport has exited.
+        error:{badmatch, {error, no_process}} -> ok
+    end.
 
 -klsn_input_rule([
         {alias, {coderlx_app_server_rules, initialize_params}}
@@ -212,7 +220,7 @@ consume(Consumer, Acc0, Filter, Coderlx0) ->
 -spec respond_error(
         klsn:binstr(), respond_error_reason(), term(), coderlx()
     ) -> ok.
-respond_error(Id, ReasonEnum, ReasonTerm, #{stream:=Stream}) ->
+respond_error(Id, ReasonEnum, ReasonTerm, #{stream := Stream, send_timeout := Timeout}) ->
     {Code, Msg} = case ReasonEnum of
         unsupported ->
             {-32601, <<"unsupported: Method is not supported by github.com/ts-klassen/coderlx.">>};
@@ -232,18 +240,18 @@ respond_error(Id, ReasonEnum, ReasonTerm, #{stream:=Stream}) ->
         }
     },
     JSON = klsn_binstr:from_any(jsone:encode(Response)),
-    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>),
+    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>, Timeout),
     ok.
 
 
 -spec respond_ok(klsn:binstr(), server_request_response(), coderlx()) -> ok.
-respond_ok(Id, Result, #{stream:=Stream}) ->
+respond_ok(Id, Result, #{stream := Stream, send_timeout := Timeout}) ->
     Response = #{
         id => Id
       , result => Result
     },
     JSON = klsn_binstr:from_any(jsone:encode(Response)),
-    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>),
+    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>, Timeout),
     ok.
 
 
@@ -261,7 +269,7 @@ request(Method, Params, Coderlx0) ->
       , {alias, {coderlx_app_server_rules, client_request}}
     ),
     JSON = klsn_binstr:from_any(jsone:encode(Normalized)),
-    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>),
+    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>, maps:get(send_timeout, Coderlx0)),
     {Response, Coderlx} = pop_response(Id, Coderlx0),
     {Response, Coderlx#{
         next_id := Id + 1
@@ -355,7 +363,7 @@ receive_stream(Timeout, Coderlx = #{stream := #{os_pid := OsPid}, buffer := StdO
                 buffer := StdOut
               , stderr := <<StdErr/binary, Data/binary>>
             }};
-        %% DOWN from erlexec. (Not monitor.)
+        %% Stream completion uses the OS PID, not a monitor reference.
         {'DOWN', OsPid, process, _Pid, Reason} ->
             erlang:error({codex_exit, Reason})
     after Timeout ->
