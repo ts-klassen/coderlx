@@ -352,6 +352,12 @@
                                    {exact,null}]}}}},
                             {struct,
                              #{type =>
+                                {required,{enum,[configuration_update]}},
+                               reasoning =>
+                                {required,
+                                 {ref,<<"ConfigurationReasoning">>}}}},
+                            {struct,
+                             #{type =>
                                 {required,{enum,[compaction_trigger]}}}},
                             {struct,
                              #{id => {optional,{any_of,[binstr,{exact,null}]}},
@@ -424,6 +430,10 @@
                              numTurns => {required,integer}}},
                          <<"CommandExecTerminateParams">> =>
                           {struct,#{processId => {required,binstr}}},
+                         <<"ConfigurationReasoning">> =>
+                          {struct,
+                           #{effort =>
+                              {required,{ref,<<"ReasoningEffort">>}}}},
                          <<"MultiAgentMode">> =>
                           {any_of,
                            [{enum,[explicitRequestOnly,proactive]},
@@ -456,6 +466,8 @@
                              archived =>
                               {optional,{any_of,[boolean,{exact,null}]}},
                              modelProviders =>
+                              {optional,{any_of,[{list,binstr},{exact,null}]}},
+                             originators =>
                               {optional,{any_of,[{list,binstr},{exact,null}]}},
                              searchTerm =>
                               {optional,{any_of,[binstr,{exact,null}]}},
@@ -607,6 +619,7 @@
                               {required,
                                {all_of,[{ref,<<"CommandExecTerminalSize">>}]}},
                              processId => {required,binstr}}},
+                         <<"ProjectSortKey">> => {enum,[position,recencyAt]},
                          <<"CommandMigration">> =>
                           {struct,#{name => {required,binstr}}},
                          <<"ThreadDeleteParams">> =>
@@ -1055,6 +1068,10 @@
                                {any_of,
                                 [{list,{ref,<<"LegacyAppPathString">>}},
                                  {exact,null}]}}}},
+                         <<"PluginReconcileParams">> =>
+                          {struct,
+                           #{reason =>
+                              {optional,{any_of,[binstr,{exact,null}]}}}},
                          <<"ThreadSectionDeleteParams">> =>
                           {struct,#{sectionId => {required,binstr}}},
                          <<"PluginsMigration">> =>
@@ -1321,6 +1338,10 @@
                                 [{ref,<<"InitializeCapabilities">>},
                                  {exact,null}]}},
                              clientInfo => {required,{ref,<<"ClientInfo">>}}}},
+                         <<"GetAccountRateLimitsParams">> =>
+                          {struct,
+                           #{excludeResetCreditDetails => {optional,boolean},
+                             supportsLunaReserve => {optional,boolean}}},
                          <<"FsWriteFileParams">> =>
                           {struct,
                            #{path =>
@@ -1503,7 +1524,9 @@
                          <<"ThreadShellCommandParams">> =>
                           {struct,
                            #{command => {required,binstr},
-                             threadId => {required,binstr}}},
+                             threadId => {required,binstr},
+                             timeoutMs =>
+                              {optional,{any_of,[integer,{exact,null}]}}}},
                          <<"SessionMigration">> =>
                           {struct,
                            #{path => {required,binstr},
@@ -1831,6 +1854,11 @@
                             method => {required,{enum,['plugin/installed']}}}},
                          {struct,
                           #{id => {required,{ref,<<"RequestId">>}},
+                            params =>
+                             {required,{ref,<<"PluginReconcileParams">>}},
+                            method => {required,{enum,['plugin/reconcile']}}}},
+                         {struct,
+                          #{id => {required,{ref,<<"RequestId">>}},
                             params => {required,{ref,<<"PluginReadParams">>}},
                             method => {required,{enum,['plugin/read']}}}},
                          {struct,
@@ -2051,7 +2079,11 @@
                             method => {required,{enum,['account/logout']}}}},
                          {struct,
                           #{id => {required,{ref,<<"RequestId">>}},
-                            params => {optional,{exact,null}},
+                            params =>
+                             {optional,
+                              {any_of,
+                               [{ref,<<"GetAccountRateLimitsParams">>},
+                                {exact,null}]}},
                             method =>
                              {required,{enum,['account/rateLimits/read']}}}},
                          {struct,
@@ -2238,7 +2270,6 @@
                              <<"McpElicitationTitledMultiSelectEnumSchema">>}]},
                          <<"AttestationGenerateParams">> =>
                           {map,{binstr,term}},
-                         <<"AbsolutePathBuf">> => binstr,
                          <<"CommandAction">> =>
                           {any_of,
                            [{struct,
@@ -2378,7 +2409,7 @@
                               {optional,{any_of,[binstr,{exact,null}]}},
                              permissions =>
                               {required,{ref,<<"RequestPermissionProfile">>}},
-                             cwd => {required,{ref,<<"AbsolutePathBuf">>}},
+                             cwd => {required,{ref,<<"LegacyAppPathString">>}},
                              threadId => {required,binstr},
                              turnId => {required,binstr},
                              environmentId =>
@@ -2440,6 +2471,15 @@
                             {struct,
                              #{message => {required,binstr},
                                mode => {required,{enum,['openai/form']}},
+                               threadId => {required,binstr},
+                               turnId =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
+                               '_meta' => {optional,term},
+                               requestedSchema => {required,term},
+                               serverName => {required,binstr}}},
+                            {struct,
+                             #{message => {required,binstr},
+                               mode => {required,{enum,[openaiForm]}},
                                threadId => {required,binstr},
                                turnId =>
                                 {optional,{any_of,[binstr,{exact,null}]}},
@@ -3337,6 +3377,8 @@
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   limitName =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                  normalModelSlug =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
                                   rateLimitReachedType =>
                                    {optional,
                                     {any_of,
@@ -3503,7 +3545,8 @@
                                      {required,
                                       {ref,<<"GuardianCommandSource">>}},
                                     cwd =>
-                                     {required,{ref,<<"AbsolutePathBuf">>}}}},
+                                     {required,
+                                      {ref,<<"LegacyAppPathString">>}}}},
                                  {struct,
                                   #{type => {required,{enum,[execve]}},
                                     source =>
@@ -3524,10 +3567,12 @@
                                  {struct,
                                   #{type => {required,{enum,[applyPatch]}},
                                     cwd =>
-                                     {required,{ref,<<"AbsolutePathBuf">>}},
+                                     {required,
+                                      {ref,<<"LegacyAppPathString">>}},
                                     files =>
                                      {required,
-                                      {list,{ref,<<"AbsolutePathBuf">>}}}}},
+                                      {list,
+                                       {ref,<<"LegacyAppPathString">>}}}}},
                                  {struct,
                                   #{port => {required,integer},
                                     type => {required,{enum,[networkAccess]}},
@@ -3590,6 +3635,12 @@
                                       {any_of,
                                        [{ref,<<"MisalignmentErrorDetails">>},
                                         {exact,null}]}}}}}},
+                              <<"AuthRecoveryNotification">> =>
+                               {struct,
+                                #{message => {required,binstr},
+                                  threadId => {required,binstr},
+                                  turnId => {required,binstr},
+                                  provider => {required,binstr}}},
                               <<"AdditionalFileSystemPermissions">> =>
                                {struct,
                                 #{read =>
@@ -3618,6 +3669,12 @@
                                  workspace_member_credits_depleted,
                                  workspace_owner_usage_limit_reached,
                                  workspace_member_usage_limit_reached]},
+                              <<"AsyncUserInputQuestion">> =>
+                               {struct,
+                                #{options =>
+                                   {optional,
+                                    {any_of,[{list,binstr},{exact,null}]}},
+                                  title => {required,binstr}}},
                               <<"RealtimeConversationVersion">> =>
                                {enum,[v1,v2,v3]},
                               <<"ErrorNotification">> =>
@@ -4115,6 +4172,14 @@
                                       {any_of,
                                        [{ref,<<"LegacyAppPathString">>},
                                         {exact,null}]}}}}]},
+                              <<"ThreadEnvironment">> =>
+                               {struct,
+                                #{cwd =>
+                                   {required,{ref,<<"LegacyAppPathString">>}},
+                                  environmentId => {required,binstr},
+                                  runtimeWorkspaceRoots =>
+                                   {required,
+                                    {list,{ref,<<"LegacyAppPathString">>}}}}},
                               <<"CodexErrorInfo">> =>
                                {any_of,
                                 [{enum,
@@ -4305,6 +4370,14 @@
                                         {any_of,
                                          [{ref,<<"AgentMessageDelivery">>},
                                           {exact,null}]}}}},
+                                    questions =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,
+                                         [{list,
+                                           {ref,<<"AsyncUserInputQuestion">>}},
+                                          {exact,null}]}}}},
                                     memoryCitation =>
                                      {optional,
                                       {default,
@@ -4456,15 +4529,15 @@
                                       {all_of,[{ref,<<"CollabAgentTool">>}]}},
                                     model =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
-                                    agentsStates =>
-                                     {required,
-                                      {map,
-                                       {binstr,{ref,<<"CollabAgentState">>}}}},
                                     reasoningEffort =>
                                      {optional,
                                       {any_of,
                                        [{ref,<<"ReasoningEffort">>},
                                         {exact,null}]}},
+                                    agentsStates =>
+                                     {required,
+                                      {map,
+                                       {binstr,{ref,<<"CollabAgentState">>}}}},
                                     receiverThreadIds =>
                                      {required,{list,binstr}},
                                     senderThreadId => {required,binstr}}},
@@ -4712,6 +4785,8 @@
                                    {required,
                                     {all_of,[{ref,<<"AbsolutePathBuf">>}]}},
                                   ephemeral => {required,boolean},
+                                  model =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
                                   modelProvider => {required,binstr},
                                   threadSource =>
                                    {optional,
@@ -4721,6 +4796,8 @@
                                    {optional,
                                     {any_of,
                                      [{ref,<<"GitInfo">>},{exact,null}]}},
+                                  recencyAt =>
+                                   {optional,{any_of,[integer,{exact,null}]}},
                                   agentNickname =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   agentRole =>
@@ -4735,13 +4812,18 @@
                                      {<<"legacy">>,
                                       {all_of,
                                        [{ref,<<"ThreadHistoryMode">>}]}}}},
+                                  originator =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
                                   parentThreadId =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   preview => {required,binstr},
                                   projectId =>
                                    {required,{any_of,[binstr,{exact,null}]}},
-                                  recencyAt =>
-                                   {optional,{any_of,[integer,{exact,null}]}},
+                                  reasoningEffort =>
+                                   {optional,
+                                    {any_of,
+                                     [{ref,<<"ReasoningEffort">>},
+                                      {exact,null}]}},
                                   section =>
                                    {optional,
                                     {default,
@@ -5159,6 +5241,22 @@
                                    {ref,<<"ModelVerificationNotification">>}},
                                  method =>
                                   {required,{enum,['model/verification']}}}},
+                              {struct,
+                               #{params =>
+                                  {required,
+                                   {ref,<<"AuthRecoveryNotification">>}},
+                                 method =>
+                                  {required,
+                                   {enum,
+                                    ['modelProvider/authRecoveryStarted']}}}},
+                              {struct,
+                               #{params =>
+                                  {required,
+                                   {ref,<<"AuthRecoveryNotification">>}},
+                                 method =>
+                                  {required,
+                                   {enum,
+                                    ['modelProvider/authRecoveryCompleted']}}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -6090,6 +6188,23 @@
                                                  #{message =>
                                                     {required,binstr},
                                                    mode =>
+                                                    {required,
+                                                     {enum,[openaiForm]}},
+                                                   threadId =>
+                                                    {required,binstr},
+                                                   turnId =>
+                                                    {optional,
+                                                     {any_of,
+                                                      [binstr,{exact,null}]}},
+                                                   '_meta' => {optional,term},
+                                                   requestedSchema =>
+                                                    {required,term},
+                                                   serverName =>
+                                                    {required,binstr}}},
+                                                {struct,
+                                                 #{message =>
+                                                    {required,binstr},
+                                                   mode =>
                                                     {required,{enum,[url]}},
                                                    threadId =>
                                                     {required,binstr},
@@ -6115,8 +6230,7 @@
                                                      {ref,
                                                       <<"McpServerElicitationAction">>}}}}}}},
     {permissions_request_approval_params, {with_defs,
-                                           {#{<<"AbsolutePathBuf">> => binstr,
-                                              <<"AdditionalFileSystemPermissions">> =>
+                                           {#{<<"AdditionalFileSystemPermissions">> =>
                                                {struct,
                                                 #{read =>
                                                    {optional,
@@ -6252,7 +6366,8 @@
                                                   <<"RequestPermissionProfile">>}},
                                                cwd =>
                                                 {required,
-                                                 {ref,<<"AbsolutePathBuf">>}},
+                                                 {ref,
+                                                  <<"LegacyAppPathString">>}},
                                                threadId => {required,binstr},
                                                turnId => {required,binstr},
                                                environmentId =>
@@ -6959,6 +7074,12 @@
                                         {any_of,
                                          [{ref,<<"MisalignmentErrorDetails">>},
                                           {exact,null}]}}}}}},
+                                <<"AsyncUserInputQuestion">> =>
+                                 {struct,
+                                  #{options =>
+                                     {optional,
+                                      {any_of,[{list,binstr},{exact,null}]}},
+                                    title => {required,binstr}}},
                                 <<"PatchApplyStatus">> =>
                                  {enum,[inProgress,completed,failed,declined]},
                                 <<"SubAgentActivityKind">> =>
@@ -7075,6 +7196,16 @@
                                   #{start => {required,integer},
                                     'end' => {required,integer}}},
                                 <<"AgentPath">> => binstr,
+                                <<"ThreadEnvironment">> =>
+                                 {struct,
+                                  #{cwd =>
+                                     {required,
+                                      {ref,<<"LegacyAppPathString">>}},
+                                    environmentId => {required,binstr},
+                                    runtimeWorkspaceRoots =>
+                                     {required,
+                                      {list,
+                                       {ref,<<"LegacyAppPathString">>}}}}},
                                 <<"CodexErrorInfo">> =>
                                  {any_of,
                                   [{enum,
@@ -7161,6 +7292,15 @@
                                          {null,
                                           {any_of,
                                            [{ref,<<"AgentMessageDelivery">>},
+                                            {exact,null}]}}}},
+                                      questions =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [{list,
+                                             {ref,
+                                              <<"AsyncUserInputQuestion">>}},
                                             {exact,null}]}}}},
                                       memoryCitation =>
                                        {optional,
@@ -7324,16 +7464,16 @@
                                       model =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
-                                      agentsStates =>
-                                       {required,
-                                        {map,
-                                         {binstr,
-                                          {ref,<<"CollabAgentState">>}}}},
                                       reasoningEffort =>
                                        {optional,
                                         {any_of,
                                          [{ref,<<"ReasoningEffort">>},
                                           {exact,null}]}},
+                                      agentsStates =>
+                                       {required,
+                                        {map,
+                                         {binstr,
+                                          {ref,<<"CollabAgentState">>}}}},
                                       receiverThreadIds =>
                                        {required,{list,binstr}},
                                       senderThreadId => {required,binstr}}},
@@ -7462,6 +7602,8 @@
                                      {required,
                                       {all_of,[{ref,<<"AbsolutePathBuf">>}]}},
                                     ephemeral => {required,boolean},
+                                    model =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     modelProvider => {required,binstr},
                                     threadSource =>
                                      {optional,
@@ -7472,6 +7614,9 @@
                                      {optional,
                                       {any_of,
                                        [{ref,<<"GitInfo">>},{exact,null}]}},
+                                    recencyAt =>
+                                     {optional,
+                                      {any_of,[integer,{exact,null}]}},
                                     agentNickname =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     agentRole =>
@@ -7486,14 +7631,18 @@
                                        {<<"legacy">>,
                                         {all_of,
                                          [{ref,<<"ThreadHistoryMode">>}]}}}},
+                                    originator =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     parentThreadId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     preview => {required,binstr},
                                     projectId =>
                                      {required,{any_of,[binstr,{exact,null}]}},
-                                    recencyAt =>
+                                    reasoningEffort =>
                                      {optional,
-                                      {any_of,[integer,{exact,null}]}},
+                                      {any_of,
+                                       [{ref,<<"ReasoningEffort">>},
+                                        {exact,null}]}},
                                     section =>
                                      {optional,
                                       {default,
@@ -7958,6 +8107,12 @@
                                       {any_of,
                                        [{ref,<<"MisalignmentErrorDetails">>},
                                         {exact,null}]}}}}}},
+                              <<"AsyncUserInputQuestion">> =>
+                               {struct,
+                                #{options =>
+                                   {optional,
+                                    {any_of,[{list,binstr},{exact,null}]}},
+                                  title => {required,binstr}}},
                               <<"PatchApplyStatus">> =>
                                {enum,[inProgress,completed,failed,declined]},
                               <<"SubAgentActivityKind">> =>
@@ -8139,6 +8294,14 @@
                                         {any_of,
                                          [{ref,<<"AgentMessageDelivery">>},
                                           {exact,null}]}}}},
+                                    questions =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,
+                                         [{list,
+                                           {ref,<<"AsyncUserInputQuestion">>}},
+                                          {exact,null}]}}}},
                                     memoryCitation =>
                                      {optional,
                                       {default,
@@ -8290,15 +8453,15 @@
                                       {all_of,[{ref,<<"CollabAgentTool">>}]}},
                                     model =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
-                                    agentsStates =>
-                                     {required,
-                                      {map,
-                                       {binstr,{ref,<<"CollabAgentState">>}}}},
                                     reasoningEffort =>
                                      {optional,
                                       {any_of,
                                        [{ref,<<"ReasoningEffort">>},
                                         {exact,null}]}},
+                                    agentsStates =>
+                                     {required,
+                                      {map,
+                                       {binstr,{ref,<<"CollabAgentState">>}}}},
                                     receiverThreadIds =>
                                      {required,{list,binstr}},
                                     senderThreadId => {required,binstr}}},
@@ -8493,6 +8656,10 @@
                                           skill_approval =>
                                            {optional,
                                             {default,{false,boolean}}}}}}}}]},
+                               <<"ConfigurationReasoning">> =>
+                                {struct,
+                                 #{effort =>
+                                    {required,{ref,<<"ReasoningEffort">>}}}},
                                <<"ContentItem">> =>
                                 {any_of,
                                  [{struct,
@@ -8571,6 +8738,7 @@
                                  [{enum,[commentary]},{enum,[final_answer]}]},
                                <<"Personality">> =>
                                 {enum,[none,friendly,pragmatic]},
+                               <<"ReasoningEffort">> => binstr,
                                <<"ReasoningItemContent">> =>
                                 {any_of,
                                  [{struct,
@@ -8845,6 +9013,12 @@
                                         [{ref,
                                           <<"InternalChatMessageMetadataPassthrough">>},
                                          {exact,null}]}}}},
+                                  {struct,
+                                   #{type =>
+                                      {required,{enum,[configuration_update]}},
+                                     reasoning =>
+                                      {required,
+                                       {ref,<<"ConfigurationReasoning">>}}}},
                                   {struct,
                                    #{type =>
                                       {required,{enum,[compaction_trigger]}}}},
@@ -9289,6 +9463,12 @@
                                           [{ref,
                                             <<"MisalignmentErrorDetails">>},
                                            {exact,null}]}}}}}},
+                                 <<"AsyncUserInputQuestion">> =>
+                                  {struct,
+                                   #{options =>
+                                      {optional,
+                                       {any_of,[{list,binstr},{exact,null}]}},
+                                     title => {required,binstr}}},
                                  <<"PatchApplyStatus">> =>
                                   {enum,
                                    [inProgress,completed,failed,declined]},
@@ -9418,6 +9598,16 @@
                                    #{start => {required,integer},
                                      'end' => {required,integer}}},
                                  <<"AgentPath">> => binstr,
+                                 <<"ThreadEnvironment">> =>
+                                  {struct,
+                                   #{cwd =>
+                                      {required,
+                                       {ref,<<"LegacyAppPathString">>}},
+                                     environmentId => {required,binstr},
+                                     runtimeWorkspaceRoots =>
+                                      {required,
+                                       {list,
+                                        {ref,<<"LegacyAppPathString">>}}}}},
                                  <<"CodexErrorInfo">> =>
                                   {any_of,
                                    [{enum,
@@ -9507,6 +9697,15 @@
                                           {null,
                                            {any_of,
                                             [{ref,<<"AgentMessageDelivery">>},
+                                             {exact,null}]}}}},
+                                       questions =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{list,
+                                              {ref,
+                                               <<"AsyncUserInputQuestion">>}},
                                              {exact,null}]}}}},
                                        memoryCitation =>
                                         {optional,
@@ -9674,16 +9873,16 @@
                                        model =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
-                                       agentsStates =>
-                                        {required,
-                                         {map,
-                                          {binstr,
-                                           {ref,<<"CollabAgentState">>}}}},
                                        reasoningEffort =>
                                         {optional,
                                          {any_of,
                                           [{ref,<<"ReasoningEffort">>},
                                            {exact,null}]}},
+                                       agentsStates =>
+                                        {required,
+                                         {map,
+                                          {binstr,
+                                           {ref,<<"CollabAgentState">>}}}},
                                        receiverThreadIds =>
                                         {required,{list,binstr}},
                                        senderThreadId => {required,binstr}}},
@@ -9818,6 +10017,9 @@
                                       {required,
                                        {all_of,[{ref,<<"AbsolutePathBuf">>}]}},
                                      ephemeral => {required,boolean},
+                                     model =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      modelProvider => {required,binstr},
                                      threadSource =>
                                       {optional,
@@ -9828,6 +10030,9 @@
                                       {optional,
                                        {any_of,
                                         [{ref,<<"GitInfo">>},{exact,null}]}},
+                                     recencyAt =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}},
                                      agentNickname =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
@@ -9845,6 +10050,9 @@
                                         {<<"legacy">>,
                                          {all_of,
                                           [{ref,<<"ThreadHistoryMode">>}]}}}},
+                                     originator =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      parentThreadId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
@@ -9852,9 +10060,11 @@
                                      projectId =>
                                       {required,
                                        {any_of,[binstr,{exact,null}]}},
-                                     recencyAt =>
+                                     reasoningEffort =>
                                       {optional,
-                                       {any_of,[integer,{exact,null}]}},
+                                       {any_of,
+                                        [{ref,<<"ReasoningEffort">>},
+                                         {exact,null}]}},
                                      section =>
                                       {optional,
                                        {default,
@@ -10290,6 +10500,12 @@
                                        {any_of,
                                         [{ref,<<"MisalignmentErrorDetails">>},
                                          {exact,null}]}}}}}},
+                               <<"AsyncUserInputQuestion">> =>
+                                {struct,
+                                 #{options =>
+                                    {optional,
+                                     {any_of,[{list,binstr},{exact,null}]}},
+                                   title => {required,binstr}}},
                                <<"PatchApplyStatus">> =>
                                 {enum,[inProgress,completed,failed,declined]},
                                <<"SubAgentActivityKind">> =>
@@ -10401,6 +10617,14 @@
                                  #{start => {required,integer},
                                    'end' => {required,integer}}},
                                <<"AgentPath">> => binstr,
+                               <<"ThreadEnvironment">> =>
+                                {struct,
+                                 #{cwd =>
+                                    {required,{ref,<<"LegacyAppPathString">>}},
+                                   environmentId => {required,binstr},
+                                   runtimeWorkspaceRoots =>
+                                    {required,
+                                     {list,{ref,<<"LegacyAppPathString">>}}}}},
                                <<"CodexErrorInfo">> =>
                                 {any_of,
                                  [{enum,
@@ -10487,6 +10711,15 @@
                                         {null,
                                          {any_of,
                                           [{ref,<<"AgentMessageDelivery">>},
+                                           {exact,null}]}}}},
+                                     questions =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,
+                                          [{list,
+                                            {ref,
+                                             <<"AsyncUserInputQuestion">>}},
                                            {exact,null}]}}}},
                                      memoryCitation =>
                                       {optional,
@@ -10648,16 +10881,16 @@
                                      model =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
-                                     agentsStates =>
-                                      {required,
-                                       {map,
-                                        {binstr,
-                                         {ref,<<"CollabAgentState">>}}}},
                                      reasoningEffort =>
                                       {optional,
                                        {any_of,
                                         [{ref,<<"ReasoningEffort">>},
                                          {exact,null}]}},
+                                     agentsStates =>
+                                      {required,
+                                       {map,
+                                        {binstr,
+                                         {ref,<<"CollabAgentState">>}}}},
                                      receiverThreadIds =>
                                       {required,{list,binstr}},
                                      senderThreadId => {required,binstr}}},
@@ -10786,6 +11019,8 @@
                                     {required,
                                      {all_of,[{ref,<<"AbsolutePathBuf">>}]}},
                                    ephemeral => {required,boolean},
+                                   model =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    modelProvider => {required,binstr},
                                    threadSource =>
                                     {optional,
@@ -10796,6 +11031,8 @@
                                     {optional,
                                      {any_of,
                                       [{ref,<<"GitInfo">>},{exact,null}]}},
+                                   recencyAt =>
+                                    {optional,{any_of,[integer,{exact,null}]}},
                                    agentNickname =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    agentRole =>
@@ -10810,13 +11047,18 @@
                                       {<<"legacy">>,
                                        {all_of,
                                         [{ref,<<"ThreadHistoryMode">>}]}}}},
+                                   originator =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    parentThreadId =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    preview => {required,binstr},
                                    projectId =>
                                     {required,{any_of,[binstr,{exact,null}]}},
-                                   recencyAt =>
-                                    {optional,{any_of,[integer,{exact,null}]}},
+                                   reasoningEffort =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ReasoningEffort">>},
+                                       {exact,null}]}},
                                    section =>
                                     {optional,
                                      {default,
@@ -10889,6 +11131,9 @@
                               archived =>
                                {optional,{any_of,[boolean,{exact,null}]}},
                               modelProviders =>
+                               {optional,
+                                {any_of,[{list,binstr},{exact,null}]}},
+                              originators =>
                                {optional,
                                 {any_of,[{list,binstr},{exact,null}]}},
                               searchTerm =>
@@ -11170,6 +11415,12 @@
                                        {any_of,
                                         [{ref,<<"MisalignmentErrorDetails">>},
                                          {exact,null}]}}}}}},
+                               <<"AsyncUserInputQuestion">> =>
+                                {struct,
+                                 #{options =>
+                                    {optional,
+                                     {any_of,[{list,binstr},{exact,null}]}},
+                                   title => {required,binstr}}},
                                <<"PatchApplyStatus">> =>
                                 {enum,[inProgress,completed,failed,declined]},
                                <<"SubAgentActivityKind">> =>
@@ -11273,6 +11524,14 @@
                                  #{start => {required,integer},
                                    'end' => {required,integer}}},
                                <<"AgentPath">> => binstr,
+                               <<"ThreadEnvironment">> =>
+                                {struct,
+                                 #{cwd =>
+                                    {required,{ref,<<"LegacyAppPathString">>}},
+                                   environmentId => {required,binstr},
+                                   runtimeWorkspaceRoots =>
+                                    {required,
+                                     {list,{ref,<<"LegacyAppPathString">>}}}}},
                                <<"CodexErrorInfo">> =>
                                 {any_of,
                                  [{enum,
@@ -11357,6 +11616,15 @@
                                         {null,
                                          {any_of,
                                           [{ref,<<"AgentMessageDelivery">>},
+                                           {exact,null}]}}}},
+                                     questions =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,
+                                          [{list,
+                                            {ref,
+                                             <<"AsyncUserInputQuestion">>}},
                                            {exact,null}]}}}},
                                      memoryCitation =>
                                       {optional,
@@ -11518,16 +11786,16 @@
                                      model =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
-                                     agentsStates =>
-                                      {required,
-                                       {map,
-                                        {binstr,
-                                         {ref,<<"CollabAgentState">>}}}},
                                      reasoningEffort =>
                                       {optional,
                                        {any_of,
                                         [{ref,<<"ReasoningEffort">>},
                                          {exact,null}]}},
+                                     agentsStates =>
+                                      {required,
+                                       {map,
+                                        {binstr,
+                                         {ref,<<"CollabAgentState">>}}}},
                                      receiverThreadIds =>
                                       {required,{list,binstr}},
                                      senderThreadId => {required,binstr}}},
@@ -11654,6 +11922,8 @@
                                     {required,
                                      {all_of,[{ref,<<"AbsolutePathBuf">>}]}},
                                    ephemeral => {required,boolean},
+                                   model =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    modelProvider => {required,binstr},
                                    threadSource =>
                                     {optional,
@@ -11664,6 +11934,8 @@
                                     {optional,
                                      {any_of,
                                       [{ref,<<"GitInfo">>},{exact,null}]}},
+                                   recencyAt =>
+                                    {optional,{any_of,[integer,{exact,null}]}},
                                    agentNickname =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    agentRole =>
@@ -11678,13 +11950,18 @@
                                       {<<"legacy">>,
                                        {all_of,
                                         [{ref,<<"ThreadHistoryMode">>}]}}}},
+                                   originator =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    parentThreadId =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    preview => {required,binstr},
                                    projectId =>
                                     {required,{any_of,[binstr,{exact,null}]}},
-                                   recencyAt =>
-                                    {optional,{any_of,[integer,{exact,null}]}},
+                                   reasoningEffort =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ReasoningEffort">>},
+                                       {exact,null}]}},
                                    section =>
                                     {optional,
                                      {default,
@@ -11985,6 +12262,12 @@
                                        {any_of,
                                         [{ref,<<"MisalignmentErrorDetails">>},
                                          {exact,null}]}}}}}},
+                               <<"AsyncUserInputQuestion">> =>
+                                {struct,
+                                 #{options =>
+                                    {optional,
+                                     {any_of,[{list,binstr},{exact,null}]}},
+                                   title => {required,binstr}}},
                                <<"PatchApplyStatus">> =>
                                 {enum,[inProgress,completed,failed,declined]},
                                <<"SubAgentActivityKind">> =>
@@ -12088,6 +12371,14 @@
                                  #{start => {required,integer},
                                    'end' => {required,integer}}},
                                <<"AgentPath">> => binstr,
+                               <<"ThreadEnvironment">> =>
+                                {struct,
+                                 #{cwd =>
+                                    {required,{ref,<<"LegacyAppPathString">>}},
+                                   environmentId => {required,binstr},
+                                   runtimeWorkspaceRoots =>
+                                    {required,
+                                     {list,{ref,<<"LegacyAppPathString">>}}}}},
                                <<"CodexErrorInfo">> =>
                                 {any_of,
                                  [{enum,
@@ -12172,6 +12463,15 @@
                                         {null,
                                          {any_of,
                                           [{ref,<<"AgentMessageDelivery">>},
+                                           {exact,null}]}}}},
+                                     questions =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,
+                                          [{list,
+                                            {ref,
+                                             <<"AsyncUserInputQuestion">>}},
                                            {exact,null}]}}}},
                                      memoryCitation =>
                                       {optional,
@@ -12333,16 +12633,16 @@
                                      model =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
-                                     agentsStates =>
-                                      {required,
-                                       {map,
-                                        {binstr,
-                                         {ref,<<"CollabAgentState">>}}}},
                                      reasoningEffort =>
                                       {optional,
                                        {any_of,
                                         [{ref,<<"ReasoningEffort">>},
                                          {exact,null}]}},
+                                     agentsStates =>
+                                      {required,
+                                       {map,
+                                        {binstr,
+                                         {ref,<<"CollabAgentState">>}}}},
                                      receiverThreadIds =>
                                       {required,{list,binstr}},
                                      senderThreadId => {required,binstr}}},
@@ -12469,6 +12769,8 @@
                                     {required,
                                      {all_of,[{ref,<<"AbsolutePathBuf">>}]}},
                                    ephemeral => {required,boolean},
+                                   model =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    modelProvider => {required,binstr},
                                    threadSource =>
                                     {optional,
@@ -12479,6 +12781,8 @@
                                     {optional,
                                      {any_of,
                                       [{ref,<<"GitInfo">>},{exact,null}]}},
+                                   recencyAt =>
+                                    {optional,{any_of,[integer,{exact,null}]}},
                                    agentNickname =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    agentRole =>
@@ -12493,13 +12797,18 @@
                                       {<<"legacy">>,
                                        {all_of,
                                         [{ref,<<"ThreadHistoryMode">>}]}}}},
+                                   originator =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    parentThreadId =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    preview => {required,binstr},
                                    projectId =>
                                     {required,{any_of,[binstr,{exact,null}]}},
-                                   recencyAt =>
-                                    {optional,{any_of,[integer,{exact,null}]}},
+                                   reasoningEffort =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ReasoningEffort">>},
+                                       {exact,null}]}},
                                    section =>
                                     {optional,
                                      {default,
@@ -12770,6 +13079,13 @@
                                               [{ref,
                                                 <<"MisalignmentErrorDetails">>},
                                                {exact,null}]}}}}}},
+                                     <<"AsyncUserInputQuestion">> =>
+                                      {struct,
+                                       #{options =>
+                                          {optional,
+                                           {any_of,
+                                            [{list,binstr},{exact,null}]}},
+                                         title => {required,binstr}}},
                                      <<"PatchApplyStatus">> =>
                                       {enum,
                                        [inProgress,completed,failed,declined]},
@@ -12985,6 +13301,15 @@
                                                 [{ref,
                                                   <<"AgentMessageDelivery">>},
                                                  {exact,null}]}}}},
+                                           questions =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [{list,
+                                                  {ref,
+                                                   <<"AsyncUserInputQuestion">>}},
+                                                 {exact,null}]}}}},
                                            memoryCitation =>
                                             {optional,
                                              {default,
@@ -13165,16 +13490,16 @@
                                            model =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
-                                           agentsStates =>
-                                            {required,
-                                             {map,
-                                              {binstr,
-                                               {ref,<<"CollabAgentState">>}}}},
                                            reasoningEffort =>
                                             {optional,
                                              {any_of,
                                               [{ref,<<"ReasoningEffort">>},
                                                {exact,null}]}},
+                                           agentsStates =>
+                                            {required,
+                                             {map,
+                                              {binstr,
+                                               {ref,<<"CollabAgentState">>}}}},
                                            receiverThreadIds =>
                                             {required,{list,binstr}},
                                            senderThreadId =>
@@ -13503,6 +13828,13 @@
                                             {ref,<<"MemoryCitationEntry">>}}},
                                          threadIds =>
                                           {required,{list,binstr}}}},
+                                     <<"AsyncUserInputQuestion">> =>
+                                      {struct,
+                                       #{options =>
+                                          {optional,
+                                           {any_of,
+                                            [{list,binstr},{exact,null}]}},
+                                         title => {required,binstr}}},
                                      <<"PatchApplyStatus">> =>
                                       {enum,
                                        [inProgress,completed,failed,declined]},
@@ -13622,6 +13954,15 @@
                                                {any_of,
                                                 [{ref,
                                                   <<"AgentMessageDelivery">>},
+                                                 {exact,null}]}}}},
+                                           questions =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [{list,
+                                                  {ref,
+                                                   <<"AsyncUserInputQuestion">>}},
                                                  {exact,null}]}}}},
                                            memoryCitation =>
                                             {optional,
@@ -13803,16 +14144,16 @@
                                            model =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
-                                           agentsStates =>
-                                            {required,
-                                             {map,
-                                              {binstr,
-                                               {ref,<<"CollabAgentState">>}}}},
                                            reasoningEffort =>
                                             {optional,
                                              {any_of,
                                               [{ref,<<"ReasoningEffort">>},
                                                {exact,null}]}},
+                                           agentsStates =>
+                                            {required,
+                                             {map,
+                                              {binstr,
+                                               {ref,<<"CollabAgentState">>}}}},
                                            receiverThreadIds =>
                                             {required,{list,binstr}},
                                            senderThreadId =>
@@ -14229,6 +14570,13 @@
                                              [{ref,
                                                <<"MisalignmentErrorDetails">>},
                                               {exact,null}]}}}}}},
+                                    <<"AsyncUserInputQuestion">> =>
+                                     {struct,
+                                      #{options =>
+                                         {optional,
+                                          {any_of,
+                                           [{list,binstr},{exact,null}]}},
+                                        title => {required,binstr}}},
                                     <<"PatchApplyStatus">> =>
                                      {enum,
                                       [inProgress,completed,failed,declined]},
@@ -14350,6 +14698,16 @@
                                       #{start => {required,integer},
                                         'end' => {required,integer}}},
                                     <<"AgentPath">> => binstr,
+                                    <<"ThreadEnvironment">> =>
+                                     {struct,
+                                      #{cwd =>
+                                         {required,
+                                          {ref,<<"LegacyAppPathString">>}},
+                                        environmentId => {required,binstr},
+                                        runtimeWorkspaceRoots =>
+                                         {required,
+                                          {list,
+                                           {ref,<<"LegacyAppPathString">>}}}}},
                                     <<"CodexErrorInfo">> =>
                                      {any_of,
                                       [{enum,
@@ -14445,6 +14803,15 @@
                                               {any_of,
                                                [{ref,
                                                  <<"AgentMessageDelivery">>},
+                                                {exact,null}]}}}},
+                                          questions =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [{list,
+                                                 {ref,
+                                                  <<"AsyncUserInputQuestion">>}},
                                                 {exact,null}]}}}},
                                           memoryCitation =>
                                            {optional,
@@ -14623,16 +14990,16 @@
                                           model =>
                                            {optional,
                                             {any_of,[binstr,{exact,null}]}},
-                                          agentsStates =>
-                                           {required,
-                                            {map,
-                                             {binstr,
-                                              {ref,<<"CollabAgentState">>}}}},
                                           reasoningEffort =>
                                            {optional,
                                             {any_of,
                                              [{ref,<<"ReasoningEffort">>},
                                               {exact,null}]}},
+                                          agentsStates =>
+                                           {required,
+                                            {map,
+                                             {binstr,
+                                              {ref,<<"CollabAgentState">>}}}},
                                           receiverThreadIds =>
                                            {required,{list,binstr}},
                                           senderThreadId =>
@@ -14775,6 +15142,9 @@
                                           {all_of,
                                            [{ref,<<"AbsolutePathBuf">>}]}},
                                         ephemeral => {required,boolean},
+                                        model =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
                                         modelProvider => {required,binstr},
                                         threadSource =>
                                          {optional,
@@ -14786,6 +15156,9 @@
                                           {any_of,
                                            [{ref,<<"GitInfo">>},
                                             {exact,null}]}},
+                                        recencyAt =>
+                                         {optional,
+                                          {any_of,[integer,{exact,null}]}},
                                         agentNickname =>
                                          {optional,
                                           {any_of,[binstr,{exact,null}]}},
@@ -14804,6 +15177,9 @@
                                             {all_of,
                                              [{ref,
                                                <<"ThreadHistoryMode">>}]}}}},
+                                        originator =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
                                         parentThreadId =>
                                          {optional,
                                           {any_of,[binstr,{exact,null}]}},
@@ -14811,9 +15187,11 @@
                                         projectId =>
                                          {required,
                                           {any_of,[binstr,{exact,null}]}},
-                                        recencyAt =>
+                                        reasoningEffort =>
                                          {optional,
-                                          {any_of,[integer,{exact,null}]}},
+                                          {any_of,
+                                           [{ref,<<"ReasoningEffort">>},
+                                            {exact,null}]}},
                                         section =>
                                          {optional,
                                           {default,
@@ -15132,6 +15510,13 @@
                                             [{ref,
                                               <<"MisalignmentErrorDetails">>},
                                              {exact,null}]}}}}}},
+                                   <<"AsyncUserInputQuestion">> =>
+                                    {struct,
+                                     #{options =>
+                                        {optional,
+                                         {any_of,
+                                          [{list,binstr},{exact,null}]}},
+                                       title => {required,binstr}}},
                                    <<"PatchApplyStatus">> =>
                                     {enum,
                                      [inProgress,completed,failed,declined]},
@@ -15251,6 +15636,16 @@
                                      #{start => {required,integer},
                                        'end' => {required,integer}}},
                                    <<"AgentPath">> => binstr,
+                                   <<"ThreadEnvironment">> =>
+                                    {struct,
+                                     #{cwd =>
+                                        {required,
+                                         {ref,<<"LegacyAppPathString">>}},
+                                       environmentId => {required,binstr},
+                                       runtimeWorkspaceRoots =>
+                                        {required,
+                                         {list,
+                                          {ref,<<"LegacyAppPathString">>}}}}},
                                    <<"CodexErrorInfo">> =>
                                     {any_of,
                                      [{enum,
@@ -15341,6 +15736,15 @@
                                              {any_of,
                                               [{ref,
                                                 <<"AgentMessageDelivery">>},
+                                               {exact,null}]}}}},
+                                         questions =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [{list,
+                                                {ref,
+                                                 <<"AsyncUserInputQuestion">>}},
                                                {exact,null}]}}}},
                                          memoryCitation =>
                                           {optional,
@@ -15513,16 +15917,16 @@
                                          model =>
                                           {optional,
                                            {any_of,[binstr,{exact,null}]}},
-                                         agentsStates =>
-                                          {required,
-                                           {map,
-                                            {binstr,
-                                             {ref,<<"CollabAgentState">>}}}},
                                          reasoningEffort =>
                                           {optional,
                                            {any_of,
                                             [{ref,<<"ReasoningEffort">>},
                                              {exact,null}]}},
+                                         agentsStates =>
+                                          {required,
+                                           {map,
+                                            {binstr,
+                                             {ref,<<"CollabAgentState">>}}}},
                                          receiverThreadIds =>
                                           {required,{list,binstr}},
                                          senderThreadId => {required,binstr}}},
@@ -15658,6 +16062,9 @@
                                          {all_of,
                                           [{ref,<<"AbsolutePathBuf">>}]}},
                                        ephemeral => {required,boolean},
+                                       model =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
                                        modelProvider => {required,binstr},
                                        threadSource =>
                                         {optional,
@@ -15668,6 +16075,9 @@
                                         {optional,
                                          {any_of,
                                           [{ref,<<"GitInfo">>},{exact,null}]}},
+                                       recencyAt =>
+                                        {optional,
+                                         {any_of,[integer,{exact,null}]}},
                                        agentNickname =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
@@ -15686,6 +16096,9 @@
                                            {all_of,
                                             [{ref,
                                               <<"ThreadHistoryMode">>}]}}}},
+                                       originator =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
                                        parentThreadId =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
@@ -15693,9 +16106,11 @@
                                        projectId =>
                                         {required,
                                          {any_of,[binstr,{exact,null}]}},
-                                       recencyAt =>
+                                       reasoningEffort =>
                                         {optional,
-                                         {any_of,[integer,{exact,null}]}},
+                                         {any_of,
+                                          [{ref,<<"ReasoningEffort">>},
+                                           {exact,null}]}},
                                        section =>
                                         {optional,
                                          {default,
@@ -15999,6 +16414,12 @@
                                           [{ref,
                                             <<"MisalignmentErrorDetails">>},
                                            {exact,null}]}}}}}},
+                                 <<"AsyncUserInputQuestion">> =>
+                                  {struct,
+                                   #{options =>
+                                      {optional,
+                                       {any_of,[{list,binstr},{exact,null}]}},
+                                     title => {required,binstr}}},
                                  <<"PatchApplyStatus">> =>
                                   {enum,
                                    [inProgress,completed,failed,declined]},
@@ -16110,6 +16531,16 @@
                                    #{start => {required,integer},
                                      'end' => {required,integer}}},
                                  <<"AgentPath">> => binstr,
+                                 <<"ThreadEnvironment">> =>
+                                  {struct,
+                                   #{cwd =>
+                                      {required,
+                                       {ref,<<"LegacyAppPathString">>}},
+                                     environmentId => {required,binstr},
+                                     runtimeWorkspaceRoots =>
+                                      {required,
+                                       {list,
+                                        {ref,<<"LegacyAppPathString">>}}}}},
                                  <<"CodexErrorInfo">> =>
                                   {any_of,
                                    [{enum,
@@ -16197,6 +16628,15 @@
                                           {null,
                                            {any_of,
                                             [{ref,<<"AgentMessageDelivery">>},
+                                             {exact,null}]}}}},
+                                       questions =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{list,
+                                              {ref,
+                                               <<"AsyncUserInputQuestion">>}},
                                              {exact,null}]}}}},
                                        memoryCitation =>
                                         {optional,
@@ -16364,16 +16804,16 @@
                                        model =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
-                                       agentsStates =>
-                                        {required,
-                                         {map,
-                                          {binstr,
-                                           {ref,<<"CollabAgentState">>}}}},
                                        reasoningEffort =>
                                         {optional,
                                          {any_of,
                                           [{ref,<<"ReasoningEffort">>},
                                            {exact,null}]}},
+                                       agentsStates =>
+                                        {required,
+                                         {map,
+                                          {binstr,
+                                           {ref,<<"CollabAgentState">>}}}},
                                        receiverThreadIds =>
                                         {required,{list,binstr}},
                                        senderThreadId => {required,binstr}}},
@@ -16506,6 +16946,9 @@
                                       {required,
                                        {all_of,[{ref,<<"AbsolutePathBuf">>}]}},
                                      ephemeral => {required,boolean},
+                                     model =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      modelProvider => {required,binstr},
                                      threadSource =>
                                       {optional,
@@ -16516,6 +16959,9 @@
                                       {optional,
                                        {any_of,
                                         [{ref,<<"GitInfo">>},{exact,null}]}},
+                                     recencyAt =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}},
                                      agentNickname =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
@@ -16533,6 +16979,9 @@
                                         {<<"legacy">>,
                                          {all_of,
                                           [{ref,<<"ThreadHistoryMode">>}]}}}},
+                                     originator =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      parentThreadId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
@@ -16540,9 +16989,11 @@
                                      projectId =>
                                       {required,
                                        {any_of,[binstr,{exact,null}]}},
-                                     recencyAt =>
+                                     reasoningEffort =>
                                       {optional,
-                                       {any_of,[integer,{exact,null}]}},
+                                       {any_of,
+                                        [{ref,<<"ReasoningEffort">>},
+                                         {exact,null}]}},
                                      section =>
                                       {optional,
                                        {default,
@@ -17021,6 +17472,14 @@
                                                    [{ref,
                                                      <<"MisalignmentErrorDetails">>},
                                                     {exact,null}]}}}}}},
+                                          <<"AsyncUserInputQuestion">> =>
+                                           {struct,
+                                            #{options =>
+                                               {optional,
+                                                {any_of,
+                                                 [{list,binstr},
+                                                  {exact,null}]}},
+                                              title => {required,binstr}}},
                                           <<"PatchApplyStatus">> =>
                                            {enum,
                                             [inProgress,completed,failed,
@@ -17165,6 +17624,19 @@
                                             #{start => {required,integer},
                                               'end' => {required,integer}}},
                                           <<"AgentPath">> => binstr,
+                                          <<"ThreadEnvironment">> =>
+                                           {struct,
+                                            #{cwd =>
+                                               {required,
+                                                {ref,
+                                                 <<"LegacyAppPathString">>}},
+                                              environmentId =>
+                                               {required,binstr},
+                                              runtimeWorkspaceRoots =>
+                                               {required,
+                                                {list,
+                                                 {ref,
+                                                  <<"LegacyAppPathString">>}}}}},
                                           <<"CodexErrorInfo">> =>
                                            {any_of,
                                             [{enum,
@@ -17267,6 +17739,15 @@
                                                     {any_of,
                                                      [{ref,
                                                        <<"AgentMessageDelivery">>},
+                                                      {exact,null}]}}}},
+                                                questions =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [{list,
+                                                       {ref,
+                                                        <<"AsyncUserInputQuestion">>}},
                                                       {exact,null}]}}}},
                                                 memoryCitation =>
                                                  {optional,
@@ -17476,18 +17957,18 @@
                                                  {optional,
                                                   {any_of,
                                                    [binstr,{exact,null}]}},
-                                                agentsStates =>
-                                                 {required,
-                                                  {map,
-                                                   {binstr,
-                                                    {ref,
-                                                     <<"CollabAgentState">>}}}},
                                                 reasoningEffort =>
                                                  {optional,
                                                   {any_of,
                                                    [{ref,
                                                      <<"ReasoningEffort">>},
                                                     {exact,null}]}},
+                                                agentsStates =>
+                                                 {required,
+                                                  {map,
+                                                   {binstr,
+                                                    {ref,
+                                                     <<"CollabAgentState">>}}}},
                                                 receiverThreadIds =>
                                                  {required,{list,binstr}},
                                                 senderThreadId =>
@@ -17655,6 +18136,10 @@
                                                  [{ref,
                                                    <<"AbsolutePathBuf">>}]}},
                                               ephemeral => {required,boolean},
+                                              model =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
                                               modelProvider =>
                                                {required,binstr},
                                               threadSource =>
@@ -17667,6 +18152,10 @@
                                                 {any_of,
                                                  [{ref,<<"GitInfo">>},
                                                   {exact,null}]}},
+                                              recencyAt =>
+                                               {optional,
+                                                {any_of,
+                                                 [integer,{exact,null}]}},
                                               agentNickname =>
                                                {optional,
                                                 {any_of,
@@ -17688,6 +18177,10 @@
                                                   {all_of,
                                                    [{ref,
                                                      <<"ThreadHistoryMode">>}]}}}},
+                                              originator =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
                                               parentThreadId =>
                                                {optional,
                                                 {any_of,
@@ -17697,10 +18190,11 @@
                                                {required,
                                                 {any_of,
                                                  [binstr,{exact,null}]}},
-                                              recencyAt =>
+                                              reasoningEffort =>
                                                {optional,
                                                 {any_of,
-                                                 [integer,{exact,null}]}},
+                                                 [{ref,<<"ReasoningEffort">>},
+                                                  {exact,null}]}},
                                               section =>
                                                {optional,
                                                 {default,
@@ -17732,8 +18226,11 @@
                                       {any_of,[binstr,{exact,null}]}}}}},
     {thread_section_move_response, {map,{binstr,term}}},
     {thread_shell_command_params, {struct,
-                                      #{command => {required,binstr},
-                                        threadId => {required,binstr}}}},
+                                   #{command => {required,binstr},
+                                     threadId => {required,binstr},
+                                     timeoutMs =>
+                                      {optional,
+                                       {any_of,[integer,{exact,null}]}}}}},
     {thread_shell_command_response, {map,{binstr,term}}},
     {thread_approve_guardian_denied_action_params, {struct,
                                                     #{threadId =>
@@ -18106,6 +18603,12 @@
                                         {any_of,
                                          [{ref,<<"MisalignmentErrorDetails">>},
                                           {exact,null}]}}}}}},
+                                <<"AsyncUserInputQuestion">> =>
+                                 {struct,
+                                  #{options =>
+                                     {optional,
+                                      {any_of,[{list,binstr},{exact,null}]}},
+                                    title => {required,binstr}}},
                                 <<"PatchApplyStatus">> =>
                                  {enum,[inProgress,completed,failed,declined]},
                                 <<"SubAgentActivityKind">> =>
@@ -18296,6 +18799,15 @@
                                           {any_of,
                                            [{ref,<<"AgentMessageDelivery">>},
                                             {exact,null}]}}}},
+                                      questions =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [{list,
+                                             {ref,
+                                              <<"AsyncUserInputQuestion">>}},
+                                            {exact,null}]}}}},
                                       memoryCitation =>
                                        {optional,
                                         {default,
@@ -18458,16 +18970,16 @@
                                       model =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
-                                      agentsStates =>
-                                       {required,
-                                        {map,
-                                         {binstr,
-                                          {ref,<<"CollabAgentState">>}}}},
                                       reasoningEffort =>
                                        {optional,
                                         {any_of,
                                          [{ref,<<"ReasoningEffort">>},
                                           {exact,null}]}},
+                                      agentsStates =>
+                                       {required,
+                                        {map,
+                                         {binstr,
+                                          {ref,<<"CollabAgentState">>}}}},
                                       receiverThreadIds =>
                                        {required,{list,binstr}},
                                       senderThreadId => {required,binstr}}},
@@ -19133,7 +19645,11 @@
                                                {optional,
                                                 {any_of,
                                                  [{ref,<<"McpServerInfo">>},
-                                                  {exact,null}]}}}},
+                                                  {exact,null}]}},
+                                              toolsError =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}}}},
                                           <<"Resource">> =>
                                            {struct,
                                             #{name => {required,binstr},
@@ -19334,6 +19850,11 @@
                                 {struct,
                                  #{enabled =>
                                     {optional,{default,{true,boolean}}},
+                                   links =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AppLinksConfig">>},
+                                       {exact,null}]}},
                                    tools =>
                                     {optional,
                                      {any_of,
@@ -19391,6 +19912,7 @@
                                         {ref,
                                          <<"ComputerUseWindowsExeConfig">>}},
                                        {exact,null}]}}}},
+                               <<"AppLinksConfig">> => {map,{binstr,term}},
                                <<"AutoCompactTokenLimitScope">> =>
                                 {any_of,
                                  [{enum,[total]},{enum,[body_after_prefix]}]},
@@ -19447,6 +19969,18 @@
                                       {required,
                                        {enum,
                                         [legacyManagedConfigTomlFromMdm]}}}}]},
+                               <<"AppLinkConfig">> =>
+                                {struct,
+                                 #{approvals_reviewer =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ApprovalsReviewer">>},
+                                       {exact,null}]}},
+                                   default_tools_approval_mode =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"AppToolApproval">>},
+                                       {exact,null}]}}}},
                                <<"BrowserUseOriginPolicyConfig">> =>
                                 {struct,
                                  #{access =>
@@ -19795,6 +20329,23 @@
     {config_requirements_read_response, {with_defs,
                                          {#{<<"AllowDenyRequirement">> =>
                                              {enum,[allow,deny]},
+                                            <<"ApplicationNetworkRequirements">> =>
+                                             {struct,
+                                              #{enabled => {required,boolean},
+                                                domains =>
+                                                 {required,
+                                                  {map,
+                                                   {binstr,
+                                                    {ref,
+                                                     <<"NetworkDomainPermission">>}}}}}},
+                                            <<"ApplicationRequirements">> =>
+                                             {struct,
+                                              #{network =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"ApplicationNetworkRequirements">>},
+                                                    {exact,null}]}}}},
                                             <<"ApprovalsReviewer">> =>
                                              {enum,
                                               [user,auto_review,
@@ -19891,6 +20442,10 @@
                                                   {any_of,
                                                    [boolean,{exact,null}]}},
                                                 allowHistoryAccess =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [boolean,{exact,null}]}},
+                                                allowWebmcp =>
                                                  {optional,
                                                   {any_of,
                                                    [boolean,{exact,null}]}},
@@ -20272,6 +20827,11 @@
                                                  {optional,
                                                   {any_of,
                                                    [boolean,{exact,null}]}},
+                                                domains =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{map,{binstr,term}},
+                                                    {exact,null}]}},
                                                 allowLocalBinding =>
                                                  {optional,
                                                   {any_of,
@@ -20302,11 +20862,6 @@
                                                  {optional,
                                                   {any_of,
                                                    [{list,binstr},
-                                                    {exact,null}]}},
-                                                domains =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{map,{binstr,term}},
                                                     {exact,null}]}},
                                                 httpPort =>
                                                  {optional,
@@ -20577,6 +21132,10 @@
                                                  {optional,
                                                   {any_of,
                                                    [binstr,{exact,null}]}},
+                                                normalModelSlug =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
                                                 rateLimitReachedType =>
                                                  {optional,
                                                   {any_of,
@@ -20619,12 +21178,21 @@
                                                {all_of,
                                                 [{ref,
                                                   <<"RateLimitSnapshot">>}]}},
+                                             accountId =>
+                                              {optional,
+                                               {any_of,[binstr,{exact,null}]}},
+                                             ordinaryUsageAllowed =>
+                                              {optional,
+                                               {any_of,
+                                                [boolean,{exact,null}]}},
                                              rateLimitResetCredits =>
                                               {optional,
                                                {any_of,
                                                 [{ref,
                                                   <<"RateLimitResetCreditsSummary">>},
                                                  {exact,null}]}},
+                                             rateLimitUpsell =>
+                                              {optional,term},
                                              rateLimitsByLimitId =>
                                               {optional,
                                                {any_of,
@@ -22266,6 +22834,27 @@
                                      {list,{ref,<<"AppSummary">>}}}}}}}},
     {plugin_uninstall_params, {struct,#{pluginId => {required,binstr}}}},
     {plugin_uninstall_response, {map,{binstr,term}}},
+    {plugin_reconcile_params, {struct,
+                               #{reason =>
+                                  {optional,{any_of,[binstr,{exact,null}]}}}}},
+    {plugin_reconcile_response, {with_defs,
+                                 {#{<<"PluginReconcileChangedPlugin">> =>
+                                     {struct,
+                                      #{id => {required,binstr},
+                                        hasApps => {required,boolean},
+                                        hasHooks => {required,boolean},
+                                        hasMcps => {required,boolean},
+                                        hasSkills => {required,boolean}}}},
+                                  {struct,
+                                   #{changedPlugins =>
+                                      {required,
+                                       {list,
+                                        {ref,
+                                         <<"PluginReconcileChangedPlugin">>}}},
+                                     failedMaterializationRemotePluginIds =>
+                                      {required,{list,binstr}},
+                                     failedRemotePluginIds =>
+                                      {required,{list,binstr}}}}}}},
     {fs_read_file_params, {with_defs,
                            {#{<<"AbsolutePathBuf">> => binstr},
                             {struct,
