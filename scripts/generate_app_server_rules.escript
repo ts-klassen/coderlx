@@ -232,6 +232,8 @@ schema_files() ->
       , {plugin_install_response, from_json, "v2/PluginInstallResponse.json"}
       , {plugin_uninstall_params, to_json, "v2/PluginUninstallParams.json"}
       , {plugin_uninstall_response, from_json, "v2/PluginUninstallResponse.json"}
+      , {plugin_reconcile_params, to_json, "v2/PluginReconcileParams.json"}
+      , {plugin_reconcile_response, from_json, "v2/PluginReconcileResponse.json"}
       , {fs_read_file_params, to_json, "v2/FsReadFileParams.json"}
       , {fs_read_file_response, from_json, "v2/FsReadFileResponse.json"}
       , {fs_write_file_params, to_json, "v2/FsWriteFileParams.json"}
