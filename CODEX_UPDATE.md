@@ -4,6 +4,10 @@
 
 このリポジトリでは Codex app-server と code-mode host のバイナリ、およびその Codex バージョンから生成した JSON Schema 由来の Erlang ルールを固定している。Codex バージョンを更新する場合は、バイナリだけでなく schema 生成物も必ず更新する。
 
+具体的なバージョンを与えられていない場合は、最新安定版を選ぶ。
+
+codex について言及されていたとしても、それはこのリポジトリが使っている codex の話である場合は openai-docs スキルを使うべきではない。むやみにスキルを使わないこと。
+
 ## 重要な制約
 
 - `_build` は rebar3 の作業ディレクトリなので、修正・コミットしない。
@@ -81,22 +85,27 @@
 
 ## 新しい client request method が追加された場合
 
-`b533012`, `03fa3d8`, `7ebbff0` と同じように、次の 3 つに分ける。
+`fca1f4a`, `29d9487`, `4e47bbd`, `17766f7` と同じように、次の 4 つに分けてコミットする。
 
-1. `b533012`: `scripts/generate_app_server_rules.escript` だけを変更する。
+1. `fca1f4a`: バージョン固定とライセンス情報の更新をコミットする。
+   - `CODEX_VERSION` と 4 つの SHA256 ファイルを更新する。
+   - `LICENSE-CODEX` と `NOTICE-CODEX` に差分があれば、このコミットに含める。
+
+2. `29d9487`: `scripts/generate_app_server_rules.escript` だけを変更する。
    - `schema_files()` に新しい method の schema alias を追加する。
    - params は `to_json`、response は `from_json`。
    - params schema が無い method は response だけ追加する。
 
-2. `03fa3d8`: `src/coderlx_app_server_rules.erl` だけを再生成する。
+3. `4e47bbd`: `src/coderlx_app_server_rules.erl` だけを再生成する。
 
-3. `7ebbff0`: client request wrapper だけを追加する。
+4. `17766f7`: client request wrapper だけを追加する。
    - 既存 namespace は既存 module に関数を追加する。
    - 新規 namespace は `src/coderlx_<namespace>.erl` を作り、`src/coderlx.app.src` に追加する。
    - params schema が無い method の `-klsn_input_rule` は `{exact, null}`。
 
 ## 完了条件
 
+- git commit が 1 件以上、指定された粒度で存在する
 - `rebar3 compile` が成功している。
 - `src/coderlx_app_server_rules.erl` が新 Codex の JSON Schema から再生成されている。
 - 必要な手書き wrapper 修正が完了している。
