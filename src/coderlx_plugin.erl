@@ -15,6 +15,7 @@
       , share_delete/2
       , install/2
       , uninstall/2
+      , reconcile/2
     ]).
 
 -klsn_input_rule([
@@ -137,3 +138,14 @@ install(Params, Coderlx) ->
     ]}).
 uninstall(Params, Coderlx) ->
     coderlx:request('plugin/uninstall', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, plugin_reconcile_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(plugin_reconcile_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+reconcile(Params, Coderlx) ->
+    coderlx:request('plugin/reconcile', Params, Coderlx).
