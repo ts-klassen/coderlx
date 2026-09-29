@@ -8,6 +8,9 @@
       , login_start/2
       , login_cancel/2
       , logout/2
+      , gateway_oauth_read/2
+      , gateway_oauth_login/2
+      , gateway_oauth_cancel/2
       , rate_limits_read/2
       , rate_limit_reset_credit_consume/2
       , usage_read/2
@@ -113,3 +116,36 @@ workspace_messages_read(Params, Coderlx) ->
     ]}).
 send_add_credits_nudge_email(Params, Coderlx) ->
     coderlx:request('account/sendAddCreditsNudgeEmail', Params, Coderlx).
+
+-klsn_input_rule([
+        {exact, null}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(account_gateway_oauth_read_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+gateway_oauth_read(Params, Coderlx) ->
+    coderlx:request('account/gatewayOAuth/read', Params, Coderlx).
+
+-klsn_input_rule([
+        {exact, null}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(account_gateway_oauth_login_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+gateway_oauth_login(Params, Coderlx) ->
+    coderlx:request('account/gatewayOAuth/login', Params, Coderlx).
+
+-klsn_input_rule([
+        {exact, null}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(account_gateway_oauth_cancel_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+gateway_oauth_cancel(Params, Coderlx) ->
+    coderlx:request('account/gatewayOAuth/cancel', Params, Coderlx).

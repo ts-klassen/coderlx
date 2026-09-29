@@ -16,7 +16,6 @@
       , name_set/2
       , unarchive/2
       , compact_start/2
-      , rollback/2
       , revert/2
       , delete/2
       , unsubscribe/2
@@ -24,6 +23,9 @@
       , goal_get/2
       , goal_clear/2
       , metadata_update/2
+      , attachment_add/2
+      , attachment_list/2
+      , attachment_remove/2
       , section_move/2
       , shell_command/2
       , approve_guardian_denied_action/2
@@ -170,17 +172,6 @@ compact_start(Params, Coderlx) ->
     coderlx:request('thread/compact/start', Params, Coderlx).
 
 -klsn_input_rule([
-        {alias, {coderlx_app_server_rules, thread_rollback_params}}
-      , {alias, {coderlx, coderlx}}
-    ]).
--klsn_output_rule({tuple, [
-        ?JSONRPC_ERROR_OR(thread_rollback_response)
-      , {alias, {coderlx, coderlx}}
-    ]}).
-rollback(Params, Coderlx) ->
-    coderlx:request('thread/rollback', Params, Coderlx).
-
--klsn_input_rule([
         {alias, {coderlx_app_server_rules, thread_revert_params}}
       , {alias, {coderlx, coderlx}}
     ]).
@@ -300,3 +291,36 @@ approve_guardian_denied_action(Params, Coderlx) ->
     ]}).
 inject_items(Params, Coderlx) ->
     coderlx:request('thread/inject_items', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_attachment_add_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_attachment_add_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+attachment_add(Params, Coderlx) ->
+    coderlx:request('thread/attachment/add', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_attachment_list_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_attachment_list_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+attachment_list(Params, Coderlx) ->
+    coderlx:request('thread/attachment/list', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_attachment_remove_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_attachment_remove_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+attachment_remove(Params, Coderlx) ->
+    coderlx:request('thread/attachment/remove', Params, Coderlx).
