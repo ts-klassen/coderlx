@@ -3,10 +3,23 @@
 -mode(compile).
 -include_lib("kernel/include/file.hrl").
 
+-spec main([string()]) -> ok | no_return().
 main(Args) ->
     Root = filename:dirname(filename:dirname(escript:script_name())),
-    [code:add_pathz(P) || P <- filelib:wildcard(filename:join(
-        [Root, "_build", "default", "lib", "*", "ebin"]))],
+    lists:foreach(fun(Kind) ->
+        BuiltPaths = filelib:wildcard(filename:join(
+            [Root, "_build", "default", Kind, "*", "ebin"])),
+        Paths = case Kind of
+            "checkouts" ->
+                %% Rebar leaves compiled checkout directories after removal.
+                lists:filter(fun(Path) ->
+                    Name = filename:basename(filename:dirname(Path)),
+                    filelib:is_dir(filename:join([Root, "_checkouts", Name]))
+                end, BuiltPaths);
+            "lib" -> BuiltPaths
+        end,
+        lists:foreach(fun code:add_pathz/1, Paths)
+    end, ["checkouts", "lib"]),
     code:add_pathz(filename:join([filename:dirname(Root), "jsone", "ebin"])),
     try run(Args)
     catch Class:Reason ->
