@@ -60,10 +60,10 @@ codex について言及されていたとしても、それはこのリポジ�
    - `klsn_rule_generator:from_json_schema/1` が新しい JSON Schema 形式を扱えない場合は、`klsn` 側修正が必要な可能性が高い。この場合は作業を止め、人間に報告する。
    - 報告には、失敗した schema ファイル名、エラー全文、該当する JSON Schema の構造、必要そうな `klsn` 側対応を含める。
 
-5. 手書き wrapper の追従を確認する。
-   - `src/coderlx.erl` の `server_request_method()`, `server_request_param()`, `server_request_response()`, `server_request_rule_/1` を確認する。
+5. schema の追加・削除・変更に合わせ、関連する手書き型・`-spec`・rule alias・wrapper・dispatch を更新する。
+   - `src/coderlx.erl` の `client_request_method()`, `server_request_method()`, `server_request_param()`, `server_request_response()`, `server_request_rule_/1` を確認する。
    - 新しい server request method が追加されていれば、このリポジトリ内で対応する。
-   - `src/coderlx_thread.erl`, `src/coderlx_turn.erl`, `src/coderlx_config.erl`, `src/coderlx_account.erl`, `src/coderlx_model.erl`, `src/coderlx_skills.erl`, `src/coderlx_mcp.erl`, `src/coderlx_apps.erl` の client request method と生成 alias が一致するか確認する。
+   - すべての client request wrapper について、method と生成 alias が一致するか確認する。
    - Codex 側で method 名が変わっている場合は wrapper も修正する。
 
 6. 検証する。
@@ -98,7 +98,7 @@ codex について言及されていたとしても、それはこのリポジ�
 
 3. `4e47bbd`: `src/coderlx_app_server_rules.erl` だけを再生成する。
 
-4. `17766f7`: client request wrapper だけを追加する。
+4. `17766f7`: client request wrapper と関連する手書き型・`-spec`・rule alias を更新する。
    - 既存 namespace は既存 module に関数を追加する。
    - 新規 namespace は `src/coderlx_<namespace>.erl` を作り、`src/coderlx.app.src` に追加する。
    - params schema が無い method の `-klsn_input_rule` は `{exact, null}`。
@@ -108,6 +108,6 @@ codex について言及されていたとしても、それはこのリポジ�
 - git commit が 1 件以上、指定された粒度で存在する
 - `rebar3 compile` が成功している。
 - `src/coderlx_app_server_rules.erl` が新 Codex の JSON Schema から再生成されている。
-- 必要な手書き wrapper 修正が完了している。
+- schema に対応する手書き定義の更新が完了している。
 - `klsn` 側修正が不要である。
 - 実行できる範囲のテスト結果を人間に報告できる。

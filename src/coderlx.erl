@@ -34,10 +34,12 @@
       , message_filter/0
       , consumer_entry/0
       , consumer/1
+      , client_request_method/0
       , server_request_method/0
       , server_request_param/0
       , server_request_response/0
       , respond_error_reason/0
+      , server_request_handler/0
     ]).
 
 -klsn_rule_alias([
@@ -47,6 +49,7 @@
           , buffer => {required, binstr}
           , stderr => {required, term}
           , stream_exit => {optional, term}
+          , server_request_handler => {optional, term}
           , pending => {required, {list, term}}
           , next_id => {required, {range, {0, '<', integer}}}
           , send_timeout => {required, timeout}
@@ -59,6 +62,7 @@
             bwrap => {required, term}
           , app_server_path => {optional, binstr}
           , send_timeout => {optional, timeout}
+          , server_request_handler => {optional, term}
         }}}
       , {message, {any_of, [
             {alias, {coderlx_app_server_rules, server_request}}
@@ -84,6 +88,111 @@
                                %% notification and timeout return
                              | {noreply, {continue|break, Acc}}
                        ).
+-type client_request_method() :: initialize
+                               | 'thread/start'
+                               | 'thread/resume'
+                               | 'thread/fork'
+                               | 'thread/archive'
+                               | 'thread/delete'
+                               | 'thread/unsubscribe'
+                               | 'thread/name/set'
+                               | 'thread/goal/set'
+                               | 'thread/goal/get'
+                               | 'thread/goal/clear'
+                               | 'thread/metadata/update'
+                               | 'thread/attachment/add'
+                               | 'thread/attachment/list'
+                               | 'thread/attachment/remove'
+                               | 'thread/section/move'
+                               | 'thread/unarchive'
+                               | 'thread/compact/start'
+                               | 'thread/shellCommand'
+                               | 'thread/approveGuardianDeniedAction'
+                               | 'thread/revert'
+                               | 'thread/list'
+                               | 'threadSection/list'
+                               | 'threadSection/create'
+                               | 'threadSection/update'
+                               | 'threadSection/delete'
+                               | 'thread/loaded/list'
+                               | 'thread/read'
+                               | 'thread/turns/list'
+                               | 'thread/items/list'
+                               | 'thread/inject_items'
+                               | 'skills/list'
+                               | 'skills/extraRoots/set'
+                               | 'hooks/list'
+                               | 'marketplace/add'
+                               | 'marketplace/remove'
+                               | 'marketplace/upgrade'
+                               | 'plugin/list'
+                               | 'plugin/installed'
+                               | 'plugin/reconcile'
+                               | 'plugin/read'
+                               | 'plugin/skill/read'
+                               | 'plugin/share/save'
+                               | 'plugin/share/updateTargets'
+                               | 'plugin/share/list'
+                               | 'plugin/share/checkout'
+                               | 'plugin/share/delete'
+                               | 'app/read'
+                               | 'app/list'
+                               | 'app/installed'
+                               | 'fs/readFile'
+                               | 'fs/writeFile'
+                               | 'fs/createDirectory'
+                               | 'fs/getMetadata'
+                               | 'fs/readDirectory'
+                               | 'fs/remove'
+                               | 'fs/copy'
+                               | 'fs/watch'
+                               | 'fs/unwatch'
+                               | 'skills/config/write'
+                               | 'plugin/install'
+                               | 'plugin/uninstall'
+                               | 'turn/start'
+                               | 'turn/steer'
+                               | 'turn/interrupt'
+                               | 'review/start'
+                               | 'model/list'
+                               | 'account/gatewayOAuth/read'
+                               | 'account/gatewayOAuth/login'
+                               | 'account/gatewayOAuth/cancel'
+                               | 'modelProvider/capabilities/read'
+                               | 'experimentalFeature/list'
+                               | 'permissionProfile/list'
+                               | 'experimentalFeature/enablement/set'
+                               | 'mcpServer/oauth/login'
+                               | 'config/mcpServer/reload'
+                               | 'mcpServerStatus/list'
+                               | 'mcpServer/resource/read'
+                               | 'mcpServer/tool/call'
+                               | 'windowsSandbox/setupStart'
+                               | 'windowsSandbox/readiness'
+                               | 'account/login/start'
+                               | 'account/login/cancel'
+                               | 'account/logout'
+                               | 'account/rateLimits/read'
+                               | 'account/rateLimitResetCredit/consume'
+                               | 'account/usage/read'
+                               | 'account/workspaceMessages/read'
+                               | 'account/sendAddCreditsNudgeEmail'
+                               | 'feedback/upload'
+                               | 'command/exec'
+                               | 'command/exec/write'
+                               | 'command/exec/terminate'
+                               | 'command/exec/resize'
+                               | 'config/read'
+                               | 'externalAgentConfig/detect'
+                               | 'externalAgentConfig/import'
+                               | 'externalAgentConfig/import/recordHistory'
+                               | 'externalAgentConfig/import/readHistories'
+                               | 'config/value/write'
+                               | 'config/batchWrite'
+                               | 'configRequirements/read'
+                               | 'account/read'
+                               | fuzzyFileSearch
+                               .
 -type server_request_method() :: 'item/commandExecution/requestApproval'
                                | 'item/fileChange/requestApproval'
                                | 'item/tool/requestUserInput'
@@ -112,15 +221,29 @@
                                  | klsn:rule(coderlx_app_server_rules, attestation_generate_response)
                                  .
 -type respond_error_reason() :: unsupported | unhandled | consumer_error.
+-type request_id() :: integer() | klsn:binstr().
+-type response_deadline() :: integer() | infinity.
+-type server_reply() :: {ok, server_request_response()}
+                      | {error, respond_error_reason(), jsone:json_value()}.
+-type server_request_handler() :: fun(
+    ({request, server_request_method(), server_request_param()}) ->
+        {ok, server_request_response()} | error | {error, jsone:json_value()} | unhandled
+).
 
 -spec start(opts()) -> coderlx().
-start(#{bwrap := Bwrap}=Opts) ->
+start(#{bwrap := Bwrap} = Opts) ->
+    MaybeHandler = klsn_map:lookup([server_request_handler], Opts),
+    case MaybeHandler of
+        none -> ok;
+        {value, Handler} when is_function(Handler, 1) -> ok;
+        {value, _} -> erlang:error(badarg, [Opts])
+    end,
     {ok, _} = application:ensure_all_started(coderlx),
     AppServer = maps:get(app_server_path, Opts, default_app_server_path()),
     Stream = klsn_bwrap:open([AppServer], #{
         bwrap => Bwrap
     }),
-    #{
+    Coderlx = #{
         '?MODULE' => ?MODULE
       , stream => Stream
       , buffer => <<>>
@@ -132,7 +255,8 @@ start(#{bwrap := Bwrap}=Opts) ->
       , consume_timeout => 60000
       , raise_consume_permanent_error => true
       , warn_consume_transient_error => false
-    }.
+    },
+    maps:merge(Coderlx, klsn_map:filter(#{server_request_handler => MaybeHandler})).
 
 -spec stop(coderlx()) -> ok.
 stop(#{stream := Stream}) ->
@@ -219,9 +343,25 @@ consume(Consumer, Acc0, Filter, Coderlx0) ->
 
 
 -spec respond_error(
-        klsn:binstr(), respond_error_reason(), term(), coderlx()
+        request_id(), respond_error_reason(), jsone:json_value(), coderlx()
     ) -> ok.
 respond_error(Id, ReasonEnum, ReasonTerm, #{stream := Stream, send_timeout := Timeout}) ->
+    JSON = encode_response(Id, {error, ReasonEnum, ReasonTerm}),
+    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>, Timeout),
+    ok.
+
+
+-spec respond_ok(request_id(), server_request_response(), coderlx()) -> ok.
+respond_ok(Id, Result, #{stream := Stream, send_timeout := Timeout}) ->
+    JSON = encode_response(Id, {ok, Result}),
+    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>, Timeout),
+    ok.
+
+
+-spec encode_response(request_id(), server_reply()) -> binary().
+encode_response(Id, {ok, Result}) ->
+    jsone:encode(#{id => Id, result => Result});
+encode_response(Id, {error, ReasonEnum, ReasonTerm}) ->
     {Code, Msg} = case ReasonEnum of
         unsupported ->
             {-32601, <<"unsupported: Method is not supported by github.com/ts-klassen/coderlx.">>};
@@ -240,30 +380,17 @@ respond_error(Id, ReasonEnum, ReasonTerm, #{stream := Stream, send_timeout := Ti
           , data => ReasonTerm
         }
     },
-    JSON = klsn_binstr:from_any(jsone:encode(Response)),
-    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>, Timeout),
-    ok.
+    jsone:encode(Response).
 
-
--spec respond_ok(klsn:binstr(), server_request_response(), coderlx()) -> ok.
-respond_ok(Id, Result, #{stream := Stream, send_timeout := Timeout}) ->
-    Response = #{
-        id => Id
-      , result => Result
-    },
-    JSON = klsn_binstr:from_any(jsone:encode(Response)),
-    klsn_bwrap:send(Stream, <<JSON/binary, "\n">>, Timeout),
-    ok.
-
-
-
+-spec request(client_request_method() | klsn:binstr(), jsone:json_value(), coderlx()) ->
+    {jsonrpc_error_or(jsone:json_value()), coderlx()}.
 request(Method, Params, Coderlx0) ->
     Id = maps:get(next_id, Coderlx0),
     Stream = maps:get(stream, Coderlx0),
     Message = #{
-        id => Id,
-        method => Method,
-        params => Params
+        id => Id
+      , method => Method
+      , params => Params
     },
     Normalized = klsn_rule:normalize(
         Message
@@ -271,15 +398,18 @@ request(Method, Params, Coderlx0) ->
     ),
     JSON = klsn_binstr:from_any(jsone:encode(Normalized)),
     klsn_bwrap:send(Stream, <<JSON/binary, "\n">>, maps:get(send_timeout, Coderlx0)),
-    {Response, Coderlx} = pop_response(Id, Coderlx0),
-    {Response, Coderlx#{
-        next_id := Id + 1
-    }}.
+    %% A timed-out request can still complete later. Reserve its ID before
+    %% waiting so the recoverable handle cannot reuse it for a new request.
+    Deadline = case maps:get(request_timeout, Coderlx0) of
+        infinity -> infinity;
+        Timeout -> erlang:monotonic_time(millisecond) + Timeout
+    end,
+    pop_response(Id, Deadline, Coderlx0#{next_id := Id + 1}).
 
--spec pop_response(
-        pos_integer(), coderlx()
-    ) -> {jsonrpc_error_or(term()), coderlx()}.
-pop_response(Id, Coderlx0) ->
+-spec pop_response(pos_integer(), response_deadline(), coderlx()) ->
+    {jsonrpc_error_or(jsone:json_value()), coderlx()}.
+pop_response(Id, Deadline, Coderlx0) ->
+    MaybeHandler = klsn_map:lookup([server_request_handler], Coderlx0),
     case
         pop_message(
             fun
@@ -289,13 +419,65 @@ pop_response(Id, Coderlx0) ->
                 (#{id := Id0, error := _} = Message)
                     when Id0 =:= Id, not is_map_key(method, Message) ->
                     true;
+                (#{id := _, method := _}) when MaybeHandler =/= none ->
+                    response_time_remaining(Deadline) =/= 0;
                 (_) ->
                     false
             end
-          , maps:get(request_timeout, Coderlx0)
+          , response_time_remaining(Deadline)
           , Coderlx0
         )
     of
+        {{value, Request = #{id := ServerId, method := Method}}, Coderlx} ->
+            {value, Handler} = MaybeHandler,
+            case server_request_rule_(Request) of
+                none ->
+                    respond_error(ServerId, unsupported, #{}, Coderlx);
+                {value, {ParamAlias, ResponseAlias}} ->
+                    JSON = try
+                        Params = klsn_rule:normalize(
+                            maps:get(params, Request)
+                          , {alias, {coderlx_app_server_rules, ParamAlias}}
+                        ),
+                        Reply = case Handler({request, Method, Params}) of
+                            {ok, Response} ->
+                                {ok, klsn_rule:normalize(
+                                    Response
+                                  , {alias, {coderlx_app_server_rules, ResponseAlias}}
+                                )};
+                            error -> {error, consumer_error, #{}};
+                            {error, Reason} -> {error, consumer_error, Reason};
+                            unhandled -> {error, unhandled, #{}};
+                            Other -> erlang:error({invalid_server_request_handler_reply, Other})
+                        end,
+                        %% JSON metadata may pass schema validation but still
+                        %% fail encoding; protect both stages before sending.
+                        encode_response(ServerId, Reply)
+                    catch
+                        Class:Failure:Stack ->
+                            respond_error(
+                                ServerId
+                              , consumer_error
+                              , #{message => <<"server_request_handler failed">>}
+                              , Coderlx
+                            ),
+                            erlang:raise(
+                                error
+                              , {server_request_handler_failed, ServerId, Class, Failure, Coderlx}
+                              , Stack
+                            )
+                    end,
+                    %% A transport failure is not a callback failure.
+                    klsn_bwrap:send(
+                        maps:get(stream, Coderlx)
+                      , <<JSON/binary, "\n">>
+                      , maps:get(send_timeout, Coderlx)
+                    )
+            end,
+            case response_time_remaining(Deadline) of
+                0 -> erlang:error({response_timeout, Id, Coderlx});
+                _ -> pop_response(Id, Deadline, Coderlx)
+            end;
         {{value, Resp}, Coderlx} ->
             %% Return result or jsonrpc error
             Either = case Resp of
@@ -305,9 +487,14 @@ pop_response(Id, Coderlx0) ->
                     {error, Resp}
             end,
             {Either, Coderlx};
-        {none, _} ->
-            erlang:error(response_timeout, [Id, Coderlx0])
+        {none, Coderlx} ->
+            erlang:error({response_timeout, Id, Coderlx})
     end.
+
+-spec response_time_remaining(response_deadline()) -> timeout().
+response_time_remaining(infinity) -> infinity;
+response_time_remaining(Deadline) ->
+    max(0, Deadline - erlang:monotonic_time(millisecond)).
 
 
 -spec pop_message(
@@ -341,6 +528,8 @@ pop_message(IsTarget, Timeout, Coderlx0) ->
             end
     end.
 
+-spec pop_matching_message_(message_filter(), [message()], [message()]) ->
+    klsn:optnl({message(), [message()]}).
 pop_matching_message_(_, [], _) ->
     none;
 pop_matching_message_(IsTarget, [H|T], Acc) ->
