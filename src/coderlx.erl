@@ -46,6 +46,7 @@
           , stream => {required, term}
           , buffer => {required, binstr}
           , stderr => {required, term}
+          , stream_exit => {optional, term}
           , pending => {required, {list, term}}
           , next_id => {required, {range, {0, '<', integer}}}
           , send_timeout => {required, timeout}
@@ -323,6 +324,10 @@ pop_message(IsTarget, Timeout, Coderlx0) ->
         {value, {Message, Pending}} ->
             {{value, Message}, Coderlx20#{ pending := Pending }};
         none ->
+            case klsn_map:lookup([stream_exit], Coderlx20) of
+                {value, Reason} -> erlang:error({codex_exit, Reason});
+                none -> ok
+            end,
             case receive_stream(Timeout, Coderlx20) of
                 {value, Coderlx30} ->
                     NextTimeout = case Timeout of
@@ -347,6 +352,7 @@ pop_matching_message_(IsTarget, [H|T], Acc) ->
     end.
 
 
+-spec dump_stream(coderlx()) -> coderlx().
 dump_stream(Coderlx0) ->
     case receive_stream(0, Coderlx0) of
         {value, Coderlx} ->
@@ -355,6 +361,9 @@ dump_stream(Coderlx0) ->
             Coderlx0
     end.
 
+-spec receive_stream(timeout(), coderlx()) -> klsn:optnl(coderlx()).
+receive_stream(_Timeout, #{stream_exit := _}) ->
+    none;
 receive_stream(Timeout, Coderlx = #{stream := #{os_pid := OsPid}, buffer := StdOut, stderr := StdErr}) ->
     receive
         {stdout, OsPid, Data} ->
@@ -369,7 +378,8 @@ receive_stream(Timeout, Coderlx = #{stream := #{os_pid := OsPid}, buffer := StdO
             }};
         %% Stream completion uses the OS PID, not a monitor reference.
         {'DOWN', OsPid, process, _Pid, Reason} ->
-            erlang:error({codex_exit, Reason})
+            %% Deliver complete frames already received before reporting EOF.
+            {value, Coderlx#{stream_exit => Reason}}
     after Timeout ->
         none
     end.

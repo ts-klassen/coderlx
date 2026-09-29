@@ -10,6 +10,8 @@
       , error_reply_send_timeout/1
       , request_and_replies/1
       , response_with_same_id_request/1
+      , messages_before_normal_exit/1
+      , messages_before_failed_exit/1
       , response_timeout/1
       , stop_preserves_other_errors/1
     ]).
@@ -19,6 +21,8 @@
                   | error_reply_send_timeout
                   | request_and_replies
                   | response_with_same_id_request
+                  | messages_before_normal_exit
+                  | messages_before_failed_exit
                   | response_timeout
                   | stop_preserves_other_errors.
 
@@ -34,6 +38,8 @@ all() ->
       , error_reply_send_timeout
       , request_and_replies
       , response_with_same_id_request
+      , messages_before_normal_exit
+      , messages_before_failed_exit
       , response_timeout
       , stop_preserves_other_errors
     ].
@@ -45,6 +51,8 @@ init_per_testcase(TestCase, Config) ->
     {Script, ExtraOpts} = case TestCase of
         request_and_replies -> {"echo_codex.sh", #{}};
         response_with_same_id_request -> {"collision_codex.sh", #{}};
+        messages_before_normal_exit -> {"exit_codex.sh", #{}};
+        messages_before_failed_exit -> {"exit_codex.sh", #{}};
         response_timeout -> {"blocked_codex.sh", #{send_timeout => 5000}};
         _ -> {"blocked_codex.sh", #{send_timeout => 100}}
     end,
@@ -142,6 +150,14 @@ response_with_same_id_request(Config) ->
         coderlx:pop_message(fun(_) -> true end, 0, Hnd1),
     ok.
 
+-spec messages_before_normal_exit(proplists:proplist()) -> ok.
+messages_before_normal_exit(Config) ->
+    messages_before_exit(Config, 0, normal).
+
+-spec messages_before_failed_exit(proplists:proplist()) -> ok.
+messages_before_failed_exit(Config) ->
+    messages_before_exit(Config, 7, {exit_status, 7 bsl 8}).
+
 -spec response_timeout(proplists:proplist()) -> ok.
 response_timeout(Config) ->
     Hnd = (?config(coderlx, Config))#{request_timeout := 20},
@@ -195,3 +211,23 @@ stderr_line(OsPid, Buffer) ->
                 ct:fail(stderr_timeout)
             end
     end.
+
+-spec messages_before_exit(
+        proplists:proplist()
+      , non_neg_integer()
+      , normal | {exit_status, non_neg_integer()}
+    ) -> ok.
+messages_before_exit(Config, ExitCode, Reason) ->
+    Hnd0 = ?config(coderlx, Config),
+    #{stream := Stream = #{exec_pid := Worker}} = Hnd0,
+    Monitor = erlang:monitor(process, Worker),
+    ok = klsn_bwrap:send(Stream, <<(integer_to_binary(ExitCode))/binary, "\n">>, 5000),
+    %% Wait for process completion without consuming its stdout or stream DOWN.
+    receive {'DOWN', Monitor, process, Worker, _} -> ok
+    after 5000 -> ct:fail(server_did_not_exit)
+    end,
+    {{value, #{id := 1}}, Hnd1} = coderlx:pop_message(fun(_) -> true end, 0, Hnd0),
+    {{value, #{id := 2}}, Hnd2} = coderlx:pop_message(fun(_) -> true end, 0, Hnd1),
+    ?assertEqual({value, Reason}, klsn_map:lookup([stream_exit], Hnd2)),
+    ?assertError({codex_exit, Reason},
+        coderlx:pop_message(fun(_) -> true end, 0, Hnd2)).
