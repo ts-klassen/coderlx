@@ -94,6 +94,8 @@
                               {optional,
                                {any_of,
                                 [{ref,<<"ReasoningEffort">>},{exact,null}]}},
+                             disabledPluginIds =>
+                              {optional,{any_of,[{list,binstr},{exact,null}]}},
                              outputSchema => {optional,term},
                              serviceTierForTurn =>
                               {optional,{any_of,[binstr,{exact,null}]}},
@@ -424,10 +426,6 @@
                               {required,{all_of,[{ref,<<"ByteRange">>}]}},
                              placeholder =>
                               {optional,{any_of,[binstr,{exact,null}]}}}},
-                         <<"ThreadRollbackParams">> =>
-                          {struct,
-                           #{threadId => {required,binstr},
-                             numTurns => {required,integer}}},
                          <<"CommandExecTerminateParams">> =>
                           {struct,#{processId => {required,binstr}}},
                          <<"ConfigurationReasoning">> =>
@@ -490,15 +488,27 @@
                                 {optional,
                                  {default,
                                   {[],{list,{ref,<<"TextElement">>}}}}}}},
-                            {struct,
-                             #{type => {required,{enum,[image]}},
-                               detail =>
-                                {optional,
-                                 {default,
-                                  {null,
-                                   {any_of,
-                                    [{ref,<<"ImageDetail">>},{exact,null}]}}}},
-                               url => {required,binstr}}},
+                            {any_of,
+                             [{struct,
+                               #{type => {required,{enum,[image]}},
+                                 detail =>
+                                  {optional,
+                                   {default,
+                                    {null,
+                                     {any_of,
+                                      [{ref,<<"ImageDetail">>},
+                                       {exact,null}]}}}},
+                                 url => {required,binstr}}},
+                              {struct,
+                               #{type => {required,{enum,[image]}},
+                                 detail =>
+                                  {optional,
+                                   {default,
+                                    {null,
+                                     {any_of,
+                                      [{ref,<<"ImageDetail">>},
+                                       {exact,null}]}}}},
+                                 fileId => {required,binstr}}}]},
                             {struct,
                              #{type => {required,{enum,[localImage]}},
                                path => {required,binstr},
@@ -567,13 +577,21 @@
                            [{struct,
                              #{type => {required,{enum,[input_text]}},
                                text => {required,binstr}}},
-                            {struct,
-                             #{type => {required,{enum,[input_image]}},
-                               detail =>
-                                {optional,
-                                 {any_of,
-                                  [{ref,<<"ImageDetail">>},{exact,null}]}},
-                               image_url => {required,binstr}}},
+                            {any_of,
+                             [{struct,
+                               #{type => {required,{enum,[input_image]}},
+                                 detail =>
+                                  {optional,
+                                   {any_of,
+                                    [{ref,<<"ImageDetail">>},{exact,null}]}},
+                                 image_url => {required,binstr}}},
+                              {struct,
+                               #{type => {required,{enum,[input_image]}},
+                                 detail =>
+                                  {optional,
+                                   {any_of,
+                                    [{ref,<<"ImageDetail">>},{exact,null}]}},
+                                 file_id => {required,binstr}}}]},
                             {struct,
                              #{type => {required,{enum,[input_audio]}},
                                audio_url => {required,binstr}}},
@@ -661,6 +679,12 @@
                           {struct,
                            #{threadId => {required,binstr},
                              beforeTurnId => {required,binstr}}},
+                         <<"ThreadAttachmentAddParams">> =>
+                          {struct,
+                           #{threadId => {required,binstr},
+                             attachmentType => {required,binstr},
+                             identityKey => {required,binstr},
+                             payload => {required,term}}},
                          <<"ModelProviderCapabilitiesReadParams">> =>
                           {map,{binstr,term}},
                          <<"PermissionProfileListParams">> =>
@@ -869,13 +893,20 @@
                               {optional,
                                {any_of,
                                 [{ref,<<"McpServerStatusDetail">>},
-                                 {exact,null}]}}}},
+                                 {exact,null}]}},
+                             serverName =>
+                              {optional,{any_of,[binstr,{exact,null}]}}}},
                          <<"McpResourceReadParams">> =>
                           {struct,
                            #{server => {required,binstr},
                              uri => {required,binstr},
                              threadId =>
                               {optional,{any_of,[binstr,{exact,null}]}},
+                             target =>
+                              {optional,
+                               {any_of,
+                                [{ref,<<"McpResourceReadTarget">>},
+                                 {exact,null}]}},
                              connectorId =>
                               {optional,{any_of,[binstr,{exact,null}]}},
                              originCallId =>
@@ -983,6 +1014,13 @@
                                description => {required,binstr},
                                deferLoading => {optional,boolean},
                                inputSchema => {required,term}}}]},
+                         <<"ThreadAttachmentRemoveParams">> =>
+                          {struct,
+                           #{threadId => {required,binstr},
+                             attachmentType => {required,binstr},
+                             identityKey => {required,binstr}}},
+                         <<"ThreadItemsListCursor">> =>
+                          {any_of,[binstr,{ref,<<"ThreadItemsListAnchor">>}]},
                          <<"ThreadItemsListParams">> =>
                           {struct,
                            #{limit =>
@@ -991,7 +1029,10 @@
                              turnId =>
                               {optional,{any_of,[binstr,{exact,null}]}},
                              cursor =>
-                              {optional,{any_of,[binstr,{exact,null}]}},
+                              {optional,
+                               {any_of,
+                                [{ref,<<"ThreadItemsListCursor">>},
+                                 {exact,null}]}},
                              sortDirection =>
                               {optional,
                                {any_of,
@@ -1146,6 +1187,11 @@
                                {any_of,
                                 [{list,{ref,<<"PluginListMarketplaceKind">>}},
                                  {exact,null}]}}}},
+                         <<"McpResourceReadTarget">> =>
+                          {struct,
+                           #{connectorId => {required,binstr},
+                             linkId =>
+                              {required,{any_of,[binstr,{exact,null}]}}}},
                          <<"FsWatchParams">> =>
                           {struct,
                            #{path =>
@@ -1270,6 +1316,11 @@
                              failureStage => {required,binstr},
                              subErrorType =>
                               {optional,{any_of,[binstr,{exact,null}]}}}},
+                         <<"ThreadItemsListAnchor">> =>
+                          {any_of,
+                           [{struct,
+                             #{type => {required,{enum,[item]}},
+                               itemId => {required,binstr}}}]},
                          <<"PluginInstallParams">> =>
                           {struct,
                            #{remoteMarketplaceName =>
@@ -1353,13 +1404,21 @@
                            [{struct,
                              #{type => {required,{enum,[input_text]}},
                                text => {required,binstr}}},
-                            {struct,
-                             #{type => {required,{enum,[input_image]}},
-                               detail =>
-                                {optional,
-                                 {any_of,
-                                  [{ref,<<"ImageDetail">>},{exact,null}]}},
-                               image_url => {required,binstr}}},
+                            {any_of,
+                             [{struct,
+                               #{type => {required,{enum,[input_image]}},
+                                 detail =>
+                                  {optional,
+                                   {any_of,
+                                    [{ref,<<"ImageDetail">>},{exact,null}]}},
+                                 image_url => {required,binstr}}},
+                              {struct,
+                               #{type => {required,{enum,[input_image]}},
+                                 detail =>
+                                  {optional,
+                                   {any_of,
+                                    [{ref,<<"ImageDetail">>},{exact,null}]}},
+                                 file_id => {required,binstr}}}]},
                             {struct,
                              #{type => {required,{enum,[input_audio]}},
                                audio_url => {required,binstr}}},
@@ -1438,6 +1497,13 @@
                           {struct,#{refreshToken => {optional,boolean}}},
                          <<"FsUnwatchParams">> =>
                           {struct,#{watchId => {required,binstr}}},
+                         <<"ThreadAttachmentListParams">> =>
+                          {struct,
+                           #{limit =>
+                              {optional,{any_of,[integer,{exact,null}]}},
+                             threadId => {required,binstr},
+                             cursor =>
+                              {optional,{any_of,[binstr,{exact,null}]}}}},
                          <<"AppsReadParams">> =>
                           {struct,
                            #{threadId =>
@@ -1579,6 +1645,7 @@
                                {any_of,[{map,{binstr,term}},{exact,null}]}},
                              experimentalApi =>
                               {optional,{default,{false,boolean}}},
+                             explicitGatewayOauth => {optional,boolean},
                              mcpServerOpenaiFormElicitation =>
                               {optional,boolean},
                              optOutNotificationMethods =>
@@ -1717,6 +1784,25 @@
                          {struct,
                           #{id => {required,{ref,<<"RequestId">>}},
                             params =>
+                             {required,{ref,<<"ThreadAttachmentAddParams">>}},
+                            method =>
+                             {required,{enum,['thread/attachment/add']}}}},
+                         {struct,
+                          #{id => {required,{ref,<<"RequestId">>}},
+                            params =>
+                             {required,{ref,<<"ThreadAttachmentListParams">>}},
+                            method =>
+                             {required,{enum,['thread/attachment/list']}}}},
+                         {struct,
+                          #{id => {required,{ref,<<"RequestId">>}},
+                            params =>
+                             {required,
+                              {ref,<<"ThreadAttachmentRemoveParams">>}},
+                            method =>
+                             {required,{enum,['thread/attachment/remove']}}}},
+                         {struct,
+                          #{id => {required,{ref,<<"RequestId">>}},
+                            params =>
                              {required,{ref,<<"ThreadSectionMoveParams">>}},
                             method =>
                              {required,{enum,['thread/section/move']}}}},
@@ -1746,11 +1832,6 @@
                             method =>
                              {required,
                               {enum,['thread/approveGuardianDeniedAction']}}}},
-                         {struct,
-                          #{id => {required,{ref,<<"RequestId">>}},
-                            params =>
-                             {required,{ref,<<"ThreadRollbackParams">>}},
-                            method => {required,{enum,['thread/rollback']}}}},
                          {struct,
                           #{id => {required,{ref,<<"RequestId">>}},
                             params =>
@@ -1989,6 +2070,23 @@
                           #{id => {required,{ref,<<"RequestId">>}},
                             params => {required,{ref,<<"ModelListParams">>}},
                             method => {required,{enum,['model/list']}}}},
+                         {struct,
+                          #{id => {required,{ref,<<"RequestId">>}},
+                            params => {optional,{exact,null}},
+                            method =>
+                             {required,{enum,['account/gatewayOAuth/read']}}}},
+                         {struct,
+                          #{id => {required,{ref,<<"RequestId">>}},
+                            params => {optional,{exact,null}},
+                            method =>
+                             {required,
+                              {enum,['account/gatewayOAuth/login']}}}},
+                         {struct,
+                          #{id => {required,{ref,<<"RequestId">>}},
+                            params => {optional,{exact,null}},
+                            method =>
+                             {required,
+                              {enum,['account/gatewayOAuth/cancel']}}}},
                          {struct,
                           #{id => {required,{ref,<<"RequestId">>}},
                             params =>
@@ -2375,6 +2473,7 @@
                               {optional,
                                {default,
                                 {null,{any_of,[binstr,{exact,null}]}}}},
+                             itemId => {required,binstr},
                              kind =>
                               {optional,
                                {default,
@@ -2382,7 +2481,6 @@
                                  {all_of,
                                   [{ref,
                                     <<"CommandExecutionApprovalKind">>}]}}}},
-                             itemId => {required,binstr},
                              startedAtMs => {required,integer},
                              approvalId =>
                               {optional,{any_of,[binstr,{exact,null}]}},
@@ -2465,9 +2563,9 @@
                                turnId =>
                                 {optional,{any_of,[binstr,{exact,null}]}},
                                '_meta' => {optional,term},
+                               serverName => {required,binstr},
                                requestedSchema =>
-                                {required,{ref,<<"McpElicitationSchema">>}},
-                               serverName => {required,binstr}}},
+                                {required,{ref,<<"McpElicitationSchema">>}}}},
                             {struct,
                              #{message => {required,binstr},
                                mode => {required,{enum,['openai/form']}},
@@ -2475,8 +2573,8 @@
                                turnId =>
                                 {optional,{any_of,[binstr,{exact,null}]}},
                                '_meta' => {optional,term},
-                               requestedSchema => {required,term},
-                               serverName => {required,binstr}}},
+                               serverName => {required,binstr},
+                               requestedSchema => {required,term}}},
                             {struct,
                              #{message => {required,binstr},
                                mode => {required,{enum,[openaiForm]}},
@@ -2484,8 +2582,8 @@
                                turnId =>
                                 {optional,{any_of,[binstr,{exact,null}]}},
                                '_meta' => {optional,term},
-                               requestedSchema => {required,term},
-                               serverName => {required,binstr}}},
+                               serverName => {required,binstr},
+                               requestedSchema => {required,term}}},
                             {struct,
                              #{message => {required,binstr},
                                mode => {required,{enum,[url]}},
@@ -2493,8 +2591,8 @@
                                turnId =>
                                 {optional,{any_of,[binstr,{exact,null}]}},
                                '_meta' => {optional,term},
-                               url => {required,binstr},
                                serverName => {required,binstr},
+                               url => {required,binstr},
                                elicitationId => {required,binstr}}}]},
                          <<"ChatgptAuthTokensRefreshParams">> =>
                           {struct,
@@ -2953,13 +3051,13 @@
                               <<"McpToolCallAppContext">> =>
                                {struct,
                                 #{connectorId => {required,binstr},
-                                  actionName =>
-                                   {optional,{any_of,[binstr,{exact,null}]}},
-                                  appName =>
-                                   {optional,{any_of,[binstr,{exact,null}]}},
                                   linkId =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   resourceUri =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  actionName =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  appName =>
                                    {optional,{any_of,[binstr,{exact,null}]}}}},
                               <<"ThreadGoalStatus">> =>
                                {enum,
@@ -3068,6 +3166,8 @@
                                     {any_of,
                                      [{ref,<<"ReasoningEffort">>},
                                       {exact,null}]}},
+                                  disabledPluginIds =>
+                                   {optional,{default,{[],{list,binstr}}}},
                                   activePermissionProfile =>
                                    {optional,
                                     {any_of,
@@ -3131,6 +3231,15 @@
                                  {struct,#{other => {required,binstr}}}]},
                               <<"DesktopOnboardingEntrypoint">> =>
                                {enum,[life_sciences]},
+                              <<"GatewayOAuthChangedNotification">> =>
+                               {struct,
+                                #{error =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  status =>
+                                   {required,{ref,<<"GatewayOAuthStatus">>}},
+                                  providerId => {required,binstr},
+                                  authUrl =>
+                                   {optional,{any_of,[binstr,{exact,null}]}}}},
                               <<"ImageGenerationFailure">> =>
                                {any_of,
                                 [{struct,
@@ -3165,16 +3274,27 @@
                                      {optional,
                                       {default,
                                        {[],{list,{ref,<<"TextElement">>}}}}}}},
-                                 {struct,
-                                  #{type => {required,{enum,[image]}},
-                                    detail =>
-                                     {optional,
-                                      {default,
-                                       {null,
-                                        {any_of,
-                                         [{ref,<<"ImageDetail">>},
-                                          {exact,null}]}}}},
-                                    url => {required,binstr}}},
+                                 {any_of,
+                                  [{struct,
+                                    #{type => {required,{enum,[image]}},
+                                      detail =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [{ref,<<"ImageDetail">>},
+                                            {exact,null}]}}}},
+                                      url => {required,binstr}}},
+                                   {struct,
+                                    #{type => {required,{enum,[image]}},
+                                      detail =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [{ref,<<"ImageDetail">>},
+                                            {exact,null}]}}}},
+                                      fileId => {required,binstr}}}]},
                                  {struct,
                                   #{type => {required,{enum,[localImage]}},
                                     path => {required,binstr},
@@ -3199,6 +3319,8 @@
                                   #{name => {required,binstr},
                                     type => {required,{enum,[mention]}},
                                     path => {required,binstr}}}]},
+                              <<"GatewayOAuthStatus">> =>
+                               {enum,[notReady,started,succeeded,failed]},
                               <<"CommandExecutionStatus">> =>
                                {enum,[inProgress,completed,failed,declined]},
                               <<"ThreadRealtimeBemItemPresentation">> =>
@@ -3223,14 +3345,23 @@
                                 [{struct,
                                   #{type => {required,{enum,[input_text]}},
                                     text => {required,binstr}}},
-                                 {struct,
-                                  #{type => {required,{enum,[input_image]}},
-                                    detail =>
-                                     {optional,
-                                      {any_of,
-                                       [{ref,<<"ImageDetail">>},
-                                        {exact,null}]}},
-                                    image_url => {required,binstr}}},
+                                 {any_of,
+                                  [{struct,
+                                    #{type => {required,{enum,[input_image]}},
+                                      detail =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"ImageDetail">>},
+                                          {exact,null}]}},
+                                      image_url => {required,binstr}}},
+                                   {struct,
+                                    #{type => {required,{enum,[input_image]}},
+                                      detail =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"ImageDetail">>},
+                                          {exact,null}]}},
+                                      file_id => {required,binstr}}}]},
                                  {struct,
                                   #{type => {required,{enum,[input_audio]}},
                                     audio_url => {required,binstr}}},
@@ -3281,7 +3412,7 @@
                                     type => {required,{enum,[unknown]}}}}]},
                               <<"PlanType">> =>
                                {enum,
-                                [free,go,plus,pro,prolite,team,
+                                [free,go,plus,pro,prolite,promax,team,
                                  self_serve_business_prolite,
                                  self_serve_business_usage_based,business,
                                  ent26,enterprise_cbp_automation,
@@ -3341,6 +3472,15 @@
                                 #{status =>
                                    {required,{ref,<<"ThreadStatus">>}},
                                   threadId => {required,binstr}}},
+                              <<"ThreadAttachmentUpdatedNotification">> =>
+                               {struct,
+                                #{threadId => {required,binstr},
+                                  attachmentType => {required,binstr},
+                                  identityKey => {required,binstr},
+                                  attachmentId => {required,binstr},
+                                  operation =>
+                                   {required,
+                                    {ref,<<"ThreadAttachmentOperation">>}}}},
                               <<"ConfigWarningNotification">> =>
                                {struct,
                                 #{path =>
@@ -3763,29 +3903,37 @@
                               <<"ThreadRealtimeItem">> =>
                                {any_of,
                                 [{struct,
-                                  #{type =>
+                                  #{id => {required,binstr},
+                                    type =>
                                      {required,
-                                      {enum,[realtimeSessionStarted]}}}},
+                                      {enum,[realtimeSessionStarted]}},
+                                    realtimeSessionId => {required,binstr}}},
                                  {struct,
-                                  #{type =>
+                                  #{id => {required,binstr},
+                                    type =>
                                      {required,{enum,[transcriptSegment]}},
                                     text => {required,binstr},
                                     role =>
                                      {required,
                                       {ref,
-                                       <<"ThreadRealtimeTranscriptRole">>}}}},
+                                       <<"ThreadRealtimeTranscriptRole">>}},
+                                    realtimeSessionId => {required,binstr}}},
                                  {struct,
-                                  #{type =>
+                                  #{id => {required,binstr},
+                                    type =>
                                      {required,{enum,[bemItemPromoted]}},
                                     turn_id => {required,binstr},
+                                    realtimeSessionId => {required,binstr},
                                     item_id => {required,binstr},
                                     presentation =>
                                      {required,
                                       {ref,
                                        <<"ThreadRealtimeBemItemPresentation">>}}}},
                                  {struct,
-                                  #{type =>
+                                  #{id => {required,binstr},
+                                    type =>
                                      {required,{enum,[realtimeSessionClosed]}},
+                                    realtimeSessionId => {required,binstr},
                                     outcome =>
                                      {required,
                                       {ref,
@@ -3882,6 +4030,11 @@
                                {enum,
                                 [agent,userShell,unifiedExecStartup,
                                  unifiedExecInteraction]},
+                              <<"McpAppUi">> =>
+                               {struct,
+                                #{preferredModelDisplayMode =>
+                                   {required,{ref,<<"McpAppDisplayMode">>}},
+                                  resourceUri => {required,binstr}}},
                               <<"CommandExecutionOutputDeltaNotification">> =>
                                {struct,
                                 #{threadId => {required,binstr},
@@ -4185,8 +4338,9 @@
                                 [{enum,
                                   [contextWindowExceeded,
                                    sessionBudgetExceeded,usageLimitExceeded,
-                                   rateLimitExceeded,serverOverloaded,
-                                   cyberPolicy,misalignmentPolicyViolation,
+                                   rateLimitExceeded,flexUnavailable,
+                                   serverOverloaded,cyberPolicy,
+                                   misalignmentPolicyViolation,tooManyDenials,
                                    internalServerError,unauthorized,
                                    badRequest,threadRollbackFailed,
                                    sandboxError,other]},
@@ -4486,6 +4640,10 @@
                                         {exact,null}]}},
                                     mcpAppResourceUri =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
+                                    mcpAppUi =>
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"McpAppUi">>},{exact,null}]}},
                                     readOnlyHint =>
                                      {optional,
                                       {any_of,[boolean,{exact,null}]}}}},
@@ -4690,6 +4848,8 @@
                                   turnId => {required,binstr},
                                   itemId => {required,binstr},
                                   delta => {required,binstr}}},
+                              <<"ThreadAttachmentOperation">> =>
+                               {enum,[created,deleted]},
                               <<"ThreadRealtimeErrorNotification">> =>
                                {struct,
                                 #{message => {required,binstr},
@@ -4715,6 +4875,8 @@
                               <<"ThreadSource">> => binstr,
                               <<"WindowsSandboxSetupMode">> =>
                                {enum,[elevated,unelevated]},
+                              <<"McpAppDisplayMode">> =>
+                               {enum,[inline,fullscreen]},
                               <<"McpServerEventStreamNotification">> =>
                                {struct,
                                 #{notification =>
@@ -4842,95 +5004,116 @@
                              [{struct,
                                #{params =>
                                   {required,{ref,<<"ErrorNotification">>}},
-                                 method => {required,{enum,[error]}}}},
+                                 method => {required,{enum,[error]}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ThreadStartedNotification">>}},
                                  method =>
-                                  {required,{enum,['thread/started']}}}},
+                                  {required,{enum,['thread/started']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,
                                     <<"ThreadStatusChangedNotification">>}},
                                  method =>
-                                  {required,
-                                   {enum,['thread/status/changed']}}}},
+                                  {required,{enum,['thread/status/changed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ThreadArchivedNotification">>}},
                                  method =>
-                                  {required,{enum,['thread/archived']}}}},
+                                  {required,{enum,['thread/archived']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ThreadDeletedNotification">>}},
                                  method =>
-                                  {required,{enum,['thread/deleted']}}}},
+                                  {required,{enum,['thread/deleted']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ThreadUnarchivedNotification">>}},
                                  method =>
-                                  {required,{enum,['thread/unarchived']}}}},
+                                  {required,{enum,['thread/unarchived']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ThreadClosedNotification">>}},
-                                 method =>
-                                  {required,{enum,['thread/closed']}}}},
+                                 method => {required,{enum,['thread/closed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ThreadRevertedNotification">>}},
                                  method =>
-                                  {required,{enum,['thread/reverted']}}}},
+                                  {required,{enum,['thread/reverted']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"SkillsChangedNotification">>}},
                                  method =>
-                                  {required,{enum,['skills/changed']}}}},
+                                  {required,{enum,['skills/changed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ThreadNameUpdatedNotification">>}},
                                  method =>
-                                  {required,{enum,['thread/name/updated']}}}},
+                                  {required,{enum,['thread/name/updated']}},
+                                 emittedAtMs => {optional,integer}}},
+                              {struct,
+                               #{params =>
+                                  {required,
+                                   {ref,
+                                    <<"ThreadAttachmentUpdatedNotification">>}},
+                                 method =>
+                                  {required,
+                                   {enum,['thread/attachment/updated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ThreadGoalUpdatedNotification">>}},
                                  method =>
-                                  {required,{enum,['thread/goal/updated']}}}},
+                                  {required,{enum,['thread/goal/updated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ThreadGoalClearedNotification">>}},
                                  method =>
-                                  {required,{enum,['thread/goal/cleared']}}}},
+                                  {required,{enum,['thread/goal/cleared']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ThreadQueueChangedNotification">>}},
                                  method =>
-                                  {required,{enum,['thread/queue/changed']}}}},
+                                  {required,{enum,['thread/queue/changed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ProjectChangedNotification">>}},
                                  method =>
-                                  {required,{enum,['project/changed']}}}},
+                                  {required,{enum,['project/changed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,
                                     <<"ThreadProjectUpdatedNotification">>}},
                                  method =>
-                                  {required,
-                                   {enum,['thread/project/updated']}}}},
+                                  {required,{enum,['thread/project/updated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -4938,7 +5121,8 @@
                                     <<"EnvironmentConnectionNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['thread/environment/connected']}}}},
+                                   {enum,['thread/environment/connected']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -4946,8 +5130,8 @@
                                     <<"EnvironmentConnectionNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,
-                                    ['thread/environment/disconnected']}}}},
+                                   {enum,['thread/environment/disconnected']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -4955,7 +5139,8 @@
                                     <<"ThreadSettingsUpdatedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['thread/settings/updated']}}}},
+                                   {enum,['thread/settings/updated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -4963,49 +5148,54 @@
                                     <<"ThreadTokenUsageUpdatedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['thread/tokenUsage/updated']}}}},
+                                   {enum,['thread/tokenUsage/updated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"TurnStartedNotification">>}},
-                                 method =>
-                                  {required,{enum,['turn/started']}}}},
+                                 method => {required,{enum,['turn/started']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"HookStartedNotification">>}},
-                                 method =>
-                                  {required,{enum,['hook/started']}}}},
+                                 method => {required,{enum,['hook/started']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"TurnCompletedNotification">>}},
                                  method =>
-                                  {required,{enum,['turn/completed']}}}},
+                                  {required,{enum,['turn/completed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"HookCompletedNotification">>}},
                                  method =>
-                                  {required,{enum,['hook/completed']}}}},
+                                  {required,{enum,['hook/completed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"TurnDiffUpdatedNotification">>}},
                                  method =>
-                                  {required,{enum,['turn/diff/updated']}}}},
+                                  {required,{enum,['turn/diff/updated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"TurnPlanUpdatedNotification">>}},
                                  method =>
-                                  {required,{enum,['turn/plan/updated']}}}},
+                                  {required,{enum,['turn/plan/updated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ItemStartedNotification">>}},
-                                 method =>
-                                  {required,{enum,['item/started']}}}},
+                                 method => {required,{enum,['item/started']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5013,8 +5203,8 @@
                                     <<"ItemGuardianApprovalReviewStartedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,
-                                    ['item/autoApprovalReview/started']}}}},
+                                   {enum,['item/autoApprovalReview/started']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5023,7 +5213,8 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['item/autoApprovalReview/completed']}}}},
+                                    ['item/autoApprovalReview/completed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5032,25 +5223,29 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['autoApprovalReview/strictReviewRequired']}}}},
+                                    ['autoApprovalReview/strictReviewRequired']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ItemCompletedNotification">>}},
                                  method =>
-                                  {required,{enum,['item/completed']}}}},
+                                  {required,{enum,['item/completed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"AgentMessageDeltaNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['item/agentMessage/delta']}}}},
+                                   {enum,['item/agentMessage/delta']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,{ref,<<"PlanDeltaNotification">>}},
                                  method =>
-                                  {required,{enum,['item/plan/delta']}}}},
+                                  {required,{enum,['item/plan/delta']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5058,19 +5253,22 @@
                                     <<"CommandExecOutputDeltaNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['command/exec/outputDelta']}}}},
+                                   {enum,['command/exec/outputDelta']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ProcessOutputDeltaNotification">>}},
                                  method =>
-                                  {required,{enum,['process/outputDelta']}}}},
+                                  {required,{enum,['process/outputDelta']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ProcessExitedNotification">>}},
                                  method =>
-                                  {required,{enum,['process/exited']}}}},
+                                  {required,{enum,['process/exited']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5079,7 +5277,8 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['item/commandExecution/outputDelta']}}}},
+                                    ['item/commandExecution/outputDelta']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5088,7 +5287,8 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['item/commandExecution/terminalInteraction']}}}},
+                                    ['item/commandExecution/terminalInteraction']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5096,7 +5296,8 @@
                                     <<"FileChangeOutputDeltaNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['item/fileChange/outputDelta']}}}},
+                                   {enum,['item/fileChange/outputDelta']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5104,15 +5305,16 @@
                                     <<"FileChangePatchUpdatedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['item/fileChange/patchUpdated']}}}},
+                                   {enum,['item/fileChange/patchUpdated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,
                                     <<"ServerRequestResolvedNotification">>}},
                                  method =>
-                                  {required,
-                                   {enum,['serverRequest/resolved']}}}},
+                                  {required,{enum,['serverRequest/resolved']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5120,7 +5322,8 @@
                                     <<"McpToolCallProgressNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['item/mcpToolCall/progress']}}}},
+                                   {enum,['item/mcpToolCall/progress']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5128,8 +5331,8 @@
                                     <<"McpServerOauthLoginCompletedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,
-                                    ['mcpServer/oauthLogin/completed']}}}},
+                                   {enum,['mcpServer/oauthLogin/completed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5137,8 +5340,8 @@
                                     <<"McpServerStatusUpdatedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,
-                                    ['mcpServer/startupStatus/updated']}}}},
+                                   {enum,['mcpServer/startupStatus/updated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5147,13 +5350,24 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['mcpServer/event/stream/notification']}}}},
+                                    ['mcpServer/event/stream/notification']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"AccountUpdatedNotification">>}},
                                  method =>
-                                  {required,{enum,['account/updated']}}}},
+                                  {required,{enum,['account/updated']}},
+                                 emittedAtMs => {optional,integer}}},
+                              {struct,
+                               #{params =>
+                                  {required,
+                                   {ref,
+                                    <<"GatewayOAuthChangedNotification">>}},
+                                 method =>
+                                  {required,
+                                   {enum,['account/gatewayOAuth/changed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5161,13 +5375,15 @@
                                     <<"AccountRateLimitsUpdatedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['account/rateLimits/updated']}}}},
+                                   {enum,['account/rateLimits/updated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"AppListUpdatedNotification">>}},
                                  method =>
-                                  {required,{enum,['app/list/updated']}}}},
+                                  {required,{enum,['app/list/updated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5175,7 +5391,8 @@
                                     <<"RemoteControlStatusChangedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['remoteControl/status/changed']}}}},
+                                   {enum,['remoteControl/status/changed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5184,7 +5401,8 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['externalAgentConfig/import/progress']}}}},
+                                    ['externalAgentConfig/import/progress']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5193,11 +5411,13 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['externalAgentConfig/import/completed']}}}},
+                                    ['externalAgentConfig/import/completed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,{ref,<<"FsChangedNotification">>}},
-                                 method => {required,{enum,['fs/changed']}}}},
+                                 method => {required,{enum,['fs/changed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5205,8 +5425,8 @@
                                     <<"ReasoningSummaryTextDeltaNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,
-                                    ['item/reasoning/summaryTextDelta']}}}},
+                                   {enum,['item/reasoning/summaryTextDelta']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5214,33 +5434,37 @@
                                     <<"ReasoningSummaryPartAddedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,
-                                    ['item/reasoning/summaryPartAdded']}}}},
+                                   {enum,['item/reasoning/summaryPartAdded']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ReasoningTextDeltaNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['item/reasoning/textDelta']}}}},
+                                   {enum,['item/reasoning/textDelta']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ContextCompactedNotification">>}},
                                  method =>
-                                  {required,{enum,['thread/compacted']}}}},
+                                  {required,{enum,['thread/compacted']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ModelReroutedNotification">>}},
                                  method =>
-                                  {required,{enum,['model/rerouted']}}}},
+                                  {required,{enum,['model/rerouted']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ModelVerificationNotification">>}},
                                  method =>
-                                  {required,{enum,['model/verification']}}}},
+                                  {required,{enum,['model/verification']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5248,7 +5472,8 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['modelProvider/authRecoveryStarted']}}}},
+                                    ['modelProvider/authRecoveryStarted']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5256,7 +5481,8 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['modelProvider/authRecoveryCompleted']}}}},
+                                    ['modelProvider/authRecoveryCompleted']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5264,7 +5490,8 @@
                                     <<"TurnModerationMetadataNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['turn/moderationMetadata']}}}},
+                                   {enum,['turn/moderationMetadata']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5272,28 +5499,32 @@
                                     <<"ModelSafetyBufferingUpdatedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['model/safetyBuffering/updated']}}}},
+                                   {enum,['model/safetyBuffering/updated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,{ref,<<"WarningNotification">>}},
-                                 method => {required,{enum,[warning]}}}},
+                                 method => {required,{enum,[warning]}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"GuardianWarningNotification">>}},
-                                 method =>
-                                  {required,{enum,[guardianWarning]}}}},
+                                 method => {required,{enum,[guardianWarning]}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"DeprecationNoticeNotification">>}},
                                  method =>
-                                  {required,{enum,[deprecationNotice]}}}},
+                                  {required,{enum,[deprecationNotice]}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ConfigWarningNotification">>}},
-                                 method => {required,{enum,[configWarning]}}}},
+                                 method => {required,{enum,[configWarning]}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5301,8 +5532,8 @@
                                     <<"FuzzyFileSearchSessionUpdatedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,
-                                    ['fuzzyFileSearch/sessionUpdated']}}}},
+                                   {enum,['fuzzyFileSearch/sessionUpdated']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5311,7 +5542,8 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['fuzzyFileSearch/sessionCompleted']}}}},
+                                    ['fuzzyFileSearch/sessionCompleted']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5319,7 +5551,8 @@
                                     <<"ThreadRealtimeStartedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['thread/realtime/started']}}}},
+                                   {enum,['thread/realtime/started']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5327,7 +5560,8 @@
                                     <<"ThreadRealtimeItemAddedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['thread/realtime/itemAdded']}}}},
+                                   {enum,['thread/realtime/itemAdded']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5335,7 +5569,8 @@
                                     <<"ThreadRealtimeItemStartedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['thread/realtime/item/started']}}}},
+                                   {enum,['thread/realtime/item/started']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5344,7 +5579,8 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['thread/realtime/item/transcript/delta']}}}},
+                                    ['thread/realtime/item/transcript/delta']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5352,8 +5588,8 @@
                                     <<"ThreadRealtimeItemCompletedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,
-                                    ['thread/realtime/item/completed']}}}},
+                                   {enum,['thread/realtime/item/completed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5362,7 +5598,8 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['thread/realtime/transcript/delta']}}}},
+                                    ['thread/realtime/transcript/delta']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5370,8 +5607,8 @@
                                     <<"ThreadRealtimeTranscriptDoneNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,
-                                    ['thread/realtime/transcript/done']}}}},
+                                   {enum,['thread/realtime/transcript/done']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5380,29 +5617,31 @@
                                  method =>
                                   {required,
                                    {enum,
-                                    ['thread/realtime/outputAudio/delta']}}}},
+                                    ['thread/realtime/outputAudio/delta']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,<<"ThreadRealtimeSdpNotification">>}},
                                  method =>
-                                  {required,{enum,['thread/realtime/sdp']}}}},
+                                  {required,{enum,['thread/realtime/sdp']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,
                                     <<"ThreadRealtimeErrorNotification">>}},
                                  method =>
-                                  {required,
-                                   {enum,['thread/realtime/error']}}}},
+                                  {required,{enum,['thread/realtime/error']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
                                    {ref,
                                     <<"ThreadRealtimeClosedNotification">>}},
                                  method =>
-                                  {required,
-                                   {enum,['thread/realtime/closed']}}}},
+                                  {required,{enum,['thread/realtime/closed']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5410,7 +5649,8 @@
                                     <<"WindowsWorldWritableWarningNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['windows/worldWritableWarning']}}}},
+                                   {enum,['windows/worldWritableWarning']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5418,7 +5658,8 @@
                                     <<"WindowsSandboxSetupCompletedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['windowsSandbox/setupCompleted']}}}},
+                                   {enum,['windowsSandbox/setupCompleted']}},
+                                 emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
                                   {required,
@@ -5426,7 +5667,8 @@
                                     <<"AccountLoginCompletedNotification">>}},
                                  method =>
                                   {required,
-                                   {enum,['account/login/completed']}}}}]}}}},
+                                   {enum,['account/login/completed']}},
+                                 emittedAtMs => {optional,integer}}}]}}}},
     {command_execution_request_approval_params, {with_defs,
                                                  {#{<<"AdditionalFileSystemPermissions">> =>
                                                      {struct,
@@ -5688,6 +5930,8 @@
                                                          {any_of,
                                                           [binstr,
                                                            {exact,null}]}}}},
+                                                     itemId =>
+                                                      {required,binstr},
                                                      kind =>
                                                       {optional,
                                                        {default,
@@ -5695,8 +5939,6 @@
                                                          {all_of,
                                                           [{ref,
                                                             <<"CommandExecutionApprovalKind">>}]}}}},
-                                                     itemId =>
-                                                      {required,binstr},
                                                      startedAtMs =>
                                                       {required,integer},
                                                      approvalId =>
@@ -6161,12 +6403,12 @@
                                                      {any_of,
                                                       [binstr,{exact,null}]}},
                                                    '_meta' => {optional,term},
+                                                   serverName =>
+                                                    {required,binstr},
                                                    requestedSchema =>
                                                     {required,
                                                      {ref,
-                                                      <<"McpElicitationSchema">>}},
-                                                   serverName =>
-                                                    {required,binstr}}},
+                                                      <<"McpElicitationSchema">>}}}},
                                                 {struct,
                                                  #{message =>
                                                     {required,binstr},
@@ -6180,10 +6422,10 @@
                                                      {any_of,
                                                       [binstr,{exact,null}]}},
                                                    '_meta' => {optional,term},
-                                                   requestedSchema =>
-                                                    {required,term},
                                                    serverName =>
-                                                    {required,binstr}}},
+                                                    {required,binstr},
+                                                   requestedSchema =>
+                                                    {required,term}}},
                                                 {struct,
                                                  #{message =>
                                                     {required,binstr},
@@ -6197,10 +6439,10 @@
                                                      {any_of,
                                                       [binstr,{exact,null}]}},
                                                    '_meta' => {optional,term},
-                                                   requestedSchema =>
-                                                    {required,term},
                                                    serverName =>
-                                                    {required,binstr}}},
+                                                    {required,binstr},
+                                                   requestedSchema =>
+                                                    {required,term}}},
                                                 {struct,
                                                  #{message =>
                                                     {required,binstr},
@@ -6213,9 +6455,9 @@
                                                      {any_of,
                                                       [binstr,{exact,null}]}},
                                                    '_meta' => {optional,term},
-                                                   url => {required,binstr},
                                                    serverName =>
                                                     {required,binstr},
+                                                   url => {required,binstr},
                                                    elicitationId =>
                                                     {required,binstr}}}]}}}},
     {mcp_server_elicitation_request_response, {with_defs,
@@ -6594,6 +6836,7 @@
                                   {any_of,[{map,{binstr,term}},{exact,null}]}},
                                 experimentalApi =>
                                  {optional,{default,{false,boolean}}},
+                                explicitGatewayOauth => {optional,boolean},
                                 mcpServerOpenaiFormElicitation =>
                                  {optional,boolean},
                                 optOutNotificationMethods =>
@@ -6785,13 +7028,13 @@
                                 <<"McpToolCallAppContext">> =>
                                  {struct,
                                   #{connectorId => {required,binstr},
-                                    actionName =>
-                                     {optional,{any_of,[binstr,{exact,null}]}},
-                                    appName =>
-                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     linkId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     resourceUri =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    actionName =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    appName =>
                                      {optional,
                                       {any_of,[binstr,{exact,null}]}}}},
                                 <<"SandboxPolicy">> =>
@@ -6895,16 +7138,27 @@
                                         {default,
                                          {[],
                                           {list,{ref,<<"TextElement">>}}}}}}},
-                                   {struct,
-                                    #{type => {required,{enum,[image]}},
-                                      detail =>
-                                       {optional,
-                                        {default,
-                                         {null,
-                                          {any_of,
-                                           [{ref,<<"ImageDetail">>},
-                                            {exact,null}]}}}},
-                                      url => {required,binstr}}},
+                                   {any_of,
+                                    [{struct,
+                                      #{type => {required,{enum,[image]}},
+                                        detail =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [{ref,<<"ImageDetail">>},
+                                              {exact,null}]}}}},
+                                        url => {required,binstr}}},
+                                     {struct,
+                                      #{type => {required,{enum,[image]}},
+                                        detail =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [{ref,<<"ImageDetail">>},
+                                              {exact,null}]}}}},
+                                        fileId => {required,binstr}}}]},
                                    {struct,
                                     #{type => {required,{enum,[localImage]}},
                                       path => {required,binstr},
@@ -6937,14 +7191,25 @@
                                   [{struct,
                                     #{type => {required,{enum,[input_text]}},
                                       text => {required,binstr}}},
-                                   {struct,
-                                    #{type => {required,{enum,[input_image]}},
-                                      detail =>
-                                       {optional,
-                                        {any_of,
-                                         [{ref,<<"ImageDetail">>},
-                                          {exact,null}]}},
-                                      image_url => {required,binstr}}},
+                                   {any_of,
+                                    [{struct,
+                                      #{type =>
+                                         {required,{enum,[input_image]}},
+                                        detail =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"ImageDetail">>},
+                                            {exact,null}]}},
+                                        image_url => {required,binstr}}},
+                                     {struct,
+                                      #{type =>
+                                         {required,{enum,[input_image]}},
+                                        detail =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"ImageDetail">>},
+                                            {exact,null}]}},
+                                        file_id => {required,binstr}}}]},
                                    {struct,
                                     #{type => {required,{enum,[input_audio]}},
                                       audio_url => {required,binstr}}},
@@ -7117,6 +7382,11 @@
                                  {enum,
                                   [agent,userShell,unifiedExecStartup,
                                    unifiedExecInteraction]},
+                                <<"McpAppUi">> =>
+                                 {struct,
+                                  #{preferredModelDisplayMode =>
+                                     {required,{ref,<<"McpAppDisplayMode">>}},
+                                    resourceUri => {required,binstr}}},
                                 <<"HookPromptFragment">> =>
                                  {struct,
                                   #{text => {required,binstr},
@@ -7211,11 +7481,12 @@
                                   [{enum,
                                     [contextWindowExceeded,
                                      sessionBudgetExceeded,usageLimitExceeded,
-                                     rateLimitExceeded,serverOverloaded,
-                                     cyberPolicy,misalignmentPolicyViolation,
-                                     internalServerError,unauthorized,
-                                     badRequest,threadRollbackFailed,
-                                     sandboxError,other]},
+                                     rateLimitExceeded,flexUnavailable,
+                                     serverOverloaded,cyberPolicy,
+                                     misalignmentPolicyViolation,
+                                     tooManyDenials,internalServerError,
+                                     unauthorized,badRequest,
+                                     threadRollbackFailed,sandboxError,other]},
                                    {struct,
                                     #{httpConnectionFailed =>
                                        {required,
@@ -7417,6 +7688,10 @@
                                       mcpAppResourceUri =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
+                                      mcpAppUi =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"McpAppUi">>},{exact,null}]}},
                                       readOnlyHint =>
                                        {optional,
                                         {any_of,[boolean,{exact,null}]}}}},
@@ -7581,6 +7856,8 @@
                                 <<"ApprovalsReviewer">> =>
                                  {enum,[user,auto_review,guardian_subagent]},
                                 <<"ThreadSource">> => binstr,
+                                <<"McpAppDisplayMode">> =>
+                                 {enum,[inline,fullscreen]},
                                 <<"ImageDetail">> =>
                                  {enum,[auto,low,high,original]},
                                 <<"ThreadHistoryMode">> =>
@@ -7674,6 +7951,8 @@
                                    {all_of,[{ref,<<"SandboxPolicy">>}]}},
                                  serviceTier =>
                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                 disabledPluginIds =>
+                                  {optional,{default,{[],{list,binstr}}}},
                                  reasoningEffort =>
                                   {optional,
                                    {any_of,
@@ -7732,13 +8011,23 @@
                               [{struct,
                                 #{type => {required,{enum,[input_text]}},
                                   text => {required,binstr}}},
-                               {struct,
-                                #{type => {required,{enum,[input_image]}},
-                                  detail =>
-                                   {optional,
-                                    {any_of,
-                                     [{ref,<<"ImageDetail">>},{exact,null}]}},
-                                  image_url => {required,binstr}}},
+                               {any_of,
+                                [{struct,
+                                  #{type => {required,{enum,[input_image]}},
+                                    detail =>
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"ImageDetail">>},
+                                        {exact,null}]}},
+                                    image_url => {required,binstr}}},
+                                 {struct,
+                                  #{type => {required,{enum,[input_image]}},
+                                    detail =>
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"ImageDetail">>},
+                                        {exact,null}]}},
+                                    file_id => {required,binstr}}}]},
                                {struct,
                                 #{type => {required,{enum,[input_audio]}},
                                   audio_url => {required,binstr}}},
@@ -7834,16 +8123,27 @@
                                    {optional,
                                     {default,
                                      {[],{list,{ref,<<"TextElement">>}}}}}}},
-                               {struct,
-                                #{type => {required,{enum,[image]}},
-                                  detail =>
-                                   {optional,
-                                    {default,
-                                     {null,
-                                      {any_of,
-                                       [{ref,<<"ImageDetail">>},
-                                        {exact,null}]}}}},
-                                  url => {required,binstr}}},
+                               {any_of,
+                                [{struct,
+                                  #{type => {required,{enum,[image]}},
+                                    detail =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,
+                                         [{ref,<<"ImageDetail">>},
+                                          {exact,null}]}}}},
+                                    url => {required,binstr}}},
+                                 {struct,
+                                  #{type => {required,{enum,[image]}},
+                                    detail =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,
+                                         [{ref,<<"ImageDetail">>},
+                                          {exact,null}]}}}},
+                                    fileId => {required,binstr}}}]},
                                {struct,
                                 #{type => {required,{enum,[localImage]}},
                                   path => {required,binstr},
@@ -7902,6 +8202,8 @@
                               {optional,
                                {any_of,
                                 [{ref,<<"ReasoningEffort">>},{exact,null}]}},
+                             disabledPluginIds =>
+                              {optional,{any_of,[{list,binstr},{exact,null}]}},
                              outputSchema => {optional,term},
                              serviceTierForTurn =>
                               {optional,{any_of,[binstr,{exact,null}]}},
@@ -7929,13 +8231,13 @@
                               <<"McpToolCallAppContext">> =>
                                {struct,
                                 #{connectorId => {required,binstr},
-                                  actionName =>
-                                   {optional,{any_of,[binstr,{exact,null}]}},
-                                  appName =>
-                                   {optional,{any_of,[binstr,{exact,null}]}},
                                   linkId =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   resourceUri =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  actionName =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  appName =>
                                    {optional,{any_of,[binstr,{exact,null}]}}}},
                               <<"TextElement">> =>
                                {struct,
@@ -7966,16 +8268,27 @@
                                      {optional,
                                       {default,
                                        {[],{list,{ref,<<"TextElement">>}}}}}}},
-                                 {struct,
-                                  #{type => {required,{enum,[image]}},
-                                    detail =>
-                                     {optional,
-                                      {default,
-                                       {null,
-                                        {any_of,
-                                         [{ref,<<"ImageDetail">>},
-                                          {exact,null}]}}}},
-                                    url => {required,binstr}}},
+                                 {any_of,
+                                  [{struct,
+                                    #{type => {required,{enum,[image]}},
+                                      detail =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [{ref,<<"ImageDetail">>},
+                                            {exact,null}]}}}},
+                                      url => {required,binstr}}},
+                                   {struct,
+                                    #{type => {required,{enum,[image]}},
+                                      detail =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [{ref,<<"ImageDetail">>},
+                                            {exact,null}]}}}},
+                                      fileId => {required,binstr}}}]},
                                  {struct,
                                   #{type => {required,{enum,[localImage]}},
                                     path => {required,binstr},
@@ -8008,14 +8321,23 @@
                                 [{struct,
                                   #{type => {required,{enum,[input_text]}},
                                     text => {required,binstr}}},
-                                 {struct,
-                                  #{type => {required,{enum,[input_image]}},
-                                    detail =>
-                                     {optional,
-                                      {any_of,
-                                       [{ref,<<"ImageDetail">>},
-                                        {exact,null}]}},
-                                    image_url => {required,binstr}}},
+                                 {any_of,
+                                  [{struct,
+                                    #{type => {required,{enum,[input_image]}},
+                                      detail =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"ImageDetail">>},
+                                          {exact,null}]}},
+                                      image_url => {required,binstr}}},
+                                   {struct,
+                                    #{type => {required,{enum,[input_image]}},
+                                      detail =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"ImageDetail">>},
+                                          {exact,null}]}},
+                                      file_id => {required,binstr}}}]},
                                  {struct,
                                   #{type => {required,{enum,[input_audio]}},
                                     audio_url => {required,binstr}}},
@@ -8146,6 +8468,11 @@
                                {enum,
                                 [agent,userShell,unifiedExecStartup,
                                  unifiedExecInteraction]},
+                              <<"McpAppUi">> =>
+                               {struct,
+                                #{preferredModelDisplayMode =>
+                                   {required,{ref,<<"McpAppDisplayMode">>}},
+                                  resourceUri => {required,binstr}}},
                               <<"HookPromptFragment">> =>
                                {struct,
                                 #{text => {required,binstr},
@@ -8215,8 +8542,9 @@
                                 [{enum,
                                   [contextWindowExceeded,
                                    sessionBudgetExceeded,usageLimitExceeded,
-                                   rateLimitExceeded,serverOverloaded,
-                                   cyberPolicy,misalignmentPolicyViolation,
+                                   rateLimitExceeded,flexUnavailable,
+                                   serverOverloaded,cyberPolicy,
+                                   misalignmentPolicyViolation,tooManyDenials,
                                    internalServerError,unauthorized,
                                    badRequest,threadRollbackFailed,
                                    sandboxError,other]},
@@ -8410,6 +8738,10 @@
                                         {exact,null}]}},
                                     mcpAppResourceUri =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
+                                    mcpAppUi =>
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"McpAppUi">>},{exact,null}]}},
                                     readOnlyHint =>
                                      {optional,
                                       {any_of,[boolean,{exact,null}]}}}},
@@ -8547,6 +8879,8 @@
                                {enum,[inProgress,completed,failed]},
                               <<"MisalignmentSteer">> =>
                                {struct,#{message => {required,binstr}}},
+                              <<"McpAppDisplayMode">> =>
+                               {enum,[inline,fullscreen]},
                               <<"ImageDetail">> =>
                                {enum,[auto,low,high,original]}},
                             {struct,#{turn => {required,{ref,<<"Turn">>}}}}}}},
@@ -8580,16 +8914,27 @@
                                    {optional,
                                     {default,
                                      {[],{list,{ref,<<"TextElement">>}}}}}}},
-                               {struct,
-                                #{type => {required,{enum,[image]}},
-                                  detail =>
-                                   {optional,
-                                    {default,
-                                     {null,
-                                      {any_of,
-                                       [{ref,<<"ImageDetail">>},
-                                        {exact,null}]}}}},
-                                  url => {required,binstr}}},
+                               {any_of,
+                                [{struct,
+                                  #{type => {required,{enum,[image]}},
+                                    detail =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,
+                                         [{ref,<<"ImageDetail">>},
+                                          {exact,null}]}}}},
+                                    url => {required,binstr}}},
+                                 {struct,
+                                  #{type => {required,{enum,[image]}},
+                                    detail =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,
+                                         [{ref,<<"ImageDetail">>},
+                                          {exact,null}]}}}},
+                                    fileId => {required,binstr}}}]},
                                {struct,
                                 #{type => {required,{enum,[localImage]}},
                                   path => {required,binstr},
@@ -8665,14 +9010,23 @@
                                  [{struct,
                                    #{type => {required,{enum,[input_text]}},
                                      text => {required,binstr}}},
-                                  {struct,
-                                   #{type => {required,{enum,[input_image]}},
-                                     detail =>
-                                      {optional,
-                                       {any_of,
-                                        [{ref,<<"ImageDetail">>},
-                                         {exact,null}]}},
-                                     image_url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[input_image]}},
+                                       detail =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ImageDetail">>},
+                                           {exact,null}]}},
+                                       image_url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[input_image]}},
+                                       detail =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ImageDetail">>},
+                                           {exact,null}]}},
+                                       file_id => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[input_audio]}},
                                      audio_url => {required,binstr}}},
@@ -8690,14 +9044,23 @@
                                  [{struct,
                                    #{type => {required,{enum,[input_text]}},
                                      text => {required,binstr}}},
-                                  {struct,
-                                   #{type => {required,{enum,[input_image]}},
-                                     detail =>
-                                      {optional,
-                                       {any_of,
-                                        [{ref,<<"ImageDetail">>},
-                                         {exact,null}]}},
-                                     image_url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[input_image]}},
+                                       detail =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ImageDetail">>},
+                                           {exact,null}]}},
+                                       image_url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[input_image]}},
+                                       detail =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ImageDetail">>},
+                                           {exact,null}]}},
+                                       file_id => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[input_audio]}},
                                      audio_url => {required,binstr}}},
@@ -9164,16 +9527,16 @@
                                  <<"McpToolCallAppContext">> =>
                                   {struct,
                                    #{connectorId => {required,binstr},
-                                     actionName =>
-                                      {optional,
-                                       {any_of,[binstr,{exact,null}]}},
-                                     appName =>
-                                      {optional,
-                                       {any_of,[binstr,{exact,null}]}},
                                      linkId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
                                      resourceUri =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     actionName =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     appName =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}}}},
                                  <<"SandboxPolicy">> =>
@@ -9278,16 +9641,27 @@
                                          {default,
                                           {[],
                                            {list,{ref,<<"TextElement">>}}}}}}},
-                                    {struct,
-                                     #{type => {required,{enum,[image]}},
-                                       detail =>
-                                        {optional,
-                                         {default,
-                                          {null,
-                                           {any_of,
-                                            [{ref,<<"ImageDetail">>},
-                                             {exact,null}]}}}},
-                                       url => {required,binstr}}},
+                                    {any_of,
+                                     [{struct,
+                                       #{type => {required,{enum,[image]}},
+                                         detail =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [{ref,<<"ImageDetail">>},
+                                               {exact,null}]}}}},
+                                         url => {required,binstr}}},
+                                      {struct,
+                                       #{type => {required,{enum,[image]}},
+                                         detail =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [{ref,<<"ImageDetail">>},
+                                               {exact,null}]}}}},
+                                         fileId => {required,binstr}}}]},
                                     {struct,
                                      #{type => {required,{enum,[localImage]}},
                                        path => {required,binstr},
@@ -9321,14 +9695,25 @@
                                    [{struct,
                                      #{type => {required,{enum,[input_text]}},
                                        text => {required,binstr}}},
-                                    {struct,
-                                     #{type => {required,{enum,[input_image]}},
-                                       detail =>
-                                        {optional,
-                                         {any_of,
-                                          [{ref,<<"ImageDetail">>},
-                                           {exact,null}]}},
-                                       image_url => {required,binstr}}},
+                                    {any_of,
+                                     [{struct,
+                                       #{type =>
+                                          {required,{enum,[input_image]}},
+                                         detail =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"ImageDetail">>},
+                                             {exact,null}]}},
+                                         image_url => {required,binstr}}},
+                                      {struct,
+                                       #{type =>
+                                          {required,{enum,[input_image]}},
+                                         detail =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"ImageDetail">>},
+                                             {exact,null}]}},
+                                         file_id => {required,binstr}}}]},
                                     {struct,
                                      #{type => {required,{enum,[input_audio]}},
                                        audio_url => {required,binstr}}},
@@ -9415,6 +9800,17 @@
                                    [spawnAgent,sendInput,resumeAgent,wait,
                                     closeAgent,sendMessage,followupTask,
                                     interruptAgent,listAgents]},
+                                 <<"Settings">> =>
+                                  {struct,
+                                   #{model => {required,binstr},
+                                     developer_instructions =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     reasoning_effort =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"ReasoningEffort">>},
+                                         {exact,null}]}}}},
                                  <<"MisalignmentErrorDetails">> =>
                                   {struct,
                                    #{errorType =>
@@ -9472,6 +9868,7 @@
                                  <<"PatchApplyStatus">> =>
                                   {enum,
                                    [inProgress,completed,failed,declined]},
+                                 <<"ModeKind">> => {enum,[plan,default]},
                                  <<"TurnsPage">> =>
                                   {struct,
                                    #{data =>
@@ -9517,6 +9914,11 @@
                                   {enum,
                                    [agent,userShell,unifiedExecStartup,
                                     unifiedExecInteraction]},
+                                 <<"McpAppUi">> =>
+                                  {struct,
+                                   #{preferredModelDisplayMode =>
+                                      {required,{ref,<<"McpAppDisplayMode">>}},
+                                     resourceUri => {required,binstr}}},
                                  <<"HookPromptFragment">> =>
                                   {struct,
                                    #{text => {required,binstr},
@@ -9614,11 +10016,12 @@
                                      [contextWindowExceeded,
                                       sessionBudgetExceeded,
                                       usageLimitExceeded,rateLimitExceeded,
-                                      serverOverloaded,cyberPolicy,
-                                      misalignmentPolicyViolation,
-                                      internalServerError,unauthorized,
-                                      badRequest,threadRollbackFailed,
-                                      sandboxError,other]},
+                                      flexUnavailable,serverOverloaded,
+                                      cyberPolicy,misalignmentPolicyViolation,
+                                      tooManyDenials,internalServerError,
+                                      unauthorized,badRequest,
+                                      threadRollbackFailed,sandboxError,
+                                      other]},
                                     {struct,
                                      #{httpConnectionFailed =>
                                         {required,
@@ -9825,6 +10228,11 @@
                                        mcpAppResourceUri =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
+                                       mcpAppUi =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"McpAppUi">>},
+                                           {exact,null}]}},
                                        readOnlyHint =>
                                         {optional,
                                          {any_of,[boolean,{exact,null}]}}}},
@@ -9963,6 +10371,11 @@
                                        type =>
                                         {required,
                                          {enum,[contextCompaction]}}}}]},
+                                 <<"CollaborationMode">> =>
+                                  {struct,
+                                   #{mode => {required,{ref,<<"ModeKind">>}},
+                                     settings =>
+                                      {required,{ref,<<"Settings">>}}}},
                                  <<"McpToolCallResult">> =>
                                   {struct,
                                    #{'_meta' => {optional,term},
@@ -9994,6 +10407,8 @@
                                  <<"ApprovalsReviewer">> =>
                                   {enum,[user,auto_review,guardian_subagent]},
                                  <<"ThreadSource">> => binstr,
+                                 <<"McpAppDisplayMode">> =>
+                                  {enum,[inline,fullscreen]},
                                  <<"ImageDetail">> =>
                                   {enum,[auto,low,high,original]},
                                  <<"ThreadHistoryMode">> =>
@@ -10097,10 +10512,17 @@
                                     {all_of,[{ref,<<"SandboxPolicy">>}]}},
                                   serviceTier =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                  disabledPluginIds =>
+                                   {optional,{default,{[],{list,binstr}}}},
                                   reasoningEffort =>
                                    {optional,
                                     {any_of,
                                      [{ref,<<"ReasoningEffort">>},
+                                      {exact,null}]}},
+                                  collaborationMode =>
+                                   {optional,
+                                    {any_of,
+                                     [{ref,<<"CollaborationMode">>},
                                       {exact,null}]}},
                                   instructionSources =>
                                    {optional,
@@ -10214,13 +10636,13 @@
                                <<"McpToolCallAppContext">> =>
                                 {struct,
                                  #{connectorId => {required,binstr},
-                                   actionName =>
-                                    {optional,{any_of,[binstr,{exact,null}]}},
-                                   appName =>
-                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    linkId =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    resourceUri =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   actionName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   appName =>
                                     {optional,
                                      {any_of,[binstr,{exact,null}]}}}},
                                <<"SandboxPolicy">> =>
@@ -10323,16 +10745,27 @@
                                        {default,
                                         {[],
                                          {list,{ref,<<"TextElement">>}}}}}}},
-                                  {struct,
-                                   #{type => {required,{enum,[image]}},
-                                     detail =>
-                                      {optional,
-                                       {default,
-                                        {null,
-                                         {any_of,
-                                          [{ref,<<"ImageDetail">>},
-                                           {exact,null}]}}}},
-                                     url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[image]}},
+                                       detail =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,<<"ImageDetail">>},
+                                             {exact,null}]}}}},
+                                       url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[image]}},
+                                       detail =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,<<"ImageDetail">>},
+                                             {exact,null}]}}}},
+                                       fileId => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[localImage]}},
                                      path => {required,binstr},
@@ -10365,14 +10798,23 @@
                                  [{struct,
                                    #{type => {required,{enum,[input_text]}},
                                      text => {required,binstr}}},
-                                  {struct,
-                                   #{type => {required,{enum,[input_image]}},
-                                     detail =>
-                                      {optional,
-                                       {any_of,
-                                        [{ref,<<"ImageDetail">>},
-                                         {exact,null}]}},
-                                     image_url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[input_image]}},
+                                       detail =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ImageDetail">>},
+                                           {exact,null}]}},
+                                       image_url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[input_image]}},
+                                       detail =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ImageDetail">>},
+                                           {exact,null}]}},
+                                       file_id => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[input_audio]}},
                                      audio_url => {required,binstr}}},
@@ -10539,6 +10981,11 @@
                                 {enum,
                                  [agent,userShell,unifiedExecStartup,
                                   unifiedExecInteraction]},
+                               <<"McpAppUi">> =>
+                                {struct,
+                                 #{preferredModelDisplayMode =>
+                                    {required,{ref,<<"McpAppDisplayMode">>}},
+                                   resourceUri => {required,binstr}}},
                                <<"HookPromptFragment">> =>
                                 {struct,
                                  #{text => {required,binstr},
@@ -10630,11 +11077,12 @@
                                  [{enum,
                                    [contextWindowExceeded,
                                     sessionBudgetExceeded,usageLimitExceeded,
-                                    rateLimitExceeded,serverOverloaded,
-                                    cyberPolicy,misalignmentPolicyViolation,
-                                    internalServerError,unauthorized,
-                                    badRequest,threadRollbackFailed,
-                                    sandboxError,other]},
+                                    rateLimitExceeded,flexUnavailable,
+                                    serverOverloaded,cyberPolicy,
+                                    misalignmentPolicyViolation,
+                                    tooManyDenials,internalServerError,
+                                    unauthorized,badRequest,
+                                    threadRollbackFailed,sandboxError,other]},
                                   {struct,
                                    #{httpConnectionFailed =>
                                       {required,
@@ -10835,6 +11283,10 @@
                                      mcpAppResourceUri =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     mcpAppUi =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"McpAppUi">>},{exact,null}]}},
                                      readOnlyHint =>
                                       {optional,
                                        {any_of,[boolean,{exact,null}]}}}},
@@ -10998,6 +11450,8 @@
                                <<"ApprovalsReviewer">> =>
                                 {enum,[user,auto_review,guardian_subagent]},
                                <<"ThreadSource">> => binstr,
+                               <<"McpAppDisplayMode">> =>
+                                {enum,[inline,fullscreen]},
                                <<"ImageDetail">> =>
                                 {enum,[auto,low,high,original]},
                                <<"ThreadHistoryMode">> =>
@@ -11088,6 +11542,8 @@
                                   {all_of,[{ref,<<"SandboxPolicy">>}]}},
                                 serviceTier =>
                                  {optional,{any_of,[binstr,{exact,null}]}},
+                                disabledPluginIds =>
+                                 {optional,{default,{[],{list,binstr}}}},
                                 reasoningEffort =>
                                  {optional,
                                   {any_of,
@@ -11166,13 +11622,13 @@
                                <<"McpToolCallAppContext">> =>
                                 {struct,
                                  #{connectorId => {required,binstr},
-                                   actionName =>
-                                    {optional,{any_of,[binstr,{exact,null}]}},
-                                   appName =>
-                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    linkId =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    resourceUri =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   actionName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   appName =>
                                     {optional,
                                      {any_of,[binstr,{exact,null}]}}}},
                                <<"TextElement">> =>
@@ -11238,16 +11694,27 @@
                                        {default,
                                         {[],
                                          {list,{ref,<<"TextElement">>}}}}}}},
-                                  {struct,
-                                   #{type => {required,{enum,[image]}},
-                                     detail =>
-                                      {optional,
-                                       {default,
-                                        {null,
-                                         {any_of,
-                                          [{ref,<<"ImageDetail">>},
-                                           {exact,null}]}}}},
-                                     url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[image]}},
+                                       detail =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,<<"ImageDetail">>},
+                                             {exact,null}]}}}},
+                                       url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[image]}},
+                                       detail =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,<<"ImageDetail">>},
+                                             {exact,null}]}}}},
+                                       fileId => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[localImage]}},
                                      path => {required,binstr},
@@ -11280,14 +11747,23 @@
                                  [{struct,
                                    #{type => {required,{enum,[input_text]}},
                                      text => {required,binstr}}},
-                                  {struct,
-                                   #{type => {required,{enum,[input_image]}},
-                                     detail =>
-                                      {optional,
-                                       {any_of,
-                                        [{ref,<<"ImageDetail">>},
-                                         {exact,null}]}},
-                                     image_url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[input_image]}},
+                                       detail =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ImageDetail">>},
+                                           {exact,null}]}},
+                                       image_url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[input_image]}},
+                                       detail =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ImageDetail">>},
+                                           {exact,null}]}},
+                                       file_id => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[input_audio]}},
                                      audio_url => {required,binstr}}},
@@ -11454,6 +11930,11 @@
                                 {enum,
                                  [agent,userShell,unifiedExecStartup,
                                   unifiedExecInteraction]},
+                               <<"McpAppUi">> =>
+                                {struct,
+                                 #{preferredModelDisplayMode =>
+                                    {required,{ref,<<"McpAppDisplayMode">>}},
+                                   resourceUri => {required,binstr}}},
                                <<"HookPromptFragment">> =>
                                 {struct,
                                  #{text => {required,binstr},
@@ -11537,11 +12018,12 @@
                                  [{enum,
                                    [contextWindowExceeded,
                                     sessionBudgetExceeded,usageLimitExceeded,
-                                    rateLimitExceeded,serverOverloaded,
-                                    cyberPolicy,misalignmentPolicyViolation,
-                                    internalServerError,unauthorized,
-                                    badRequest,threadRollbackFailed,
-                                    sandboxError,other]},
+                                    rateLimitExceeded,flexUnavailable,
+                                    serverOverloaded,cyberPolicy,
+                                    misalignmentPolicyViolation,
+                                    tooManyDenials,internalServerError,
+                                    unauthorized,badRequest,
+                                    threadRollbackFailed,sandboxError,other]},
                                   {struct,
                                    #{httpConnectionFailed =>
                                       {required,
@@ -11740,6 +12222,10 @@
                                      mcpAppResourceUri =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     mcpAppUi =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"McpAppUi">>},{exact,null}]}},
                                      readOnlyHint =>
                                       {optional,
                                        {any_of,[boolean,{exact,null}]}}}},
@@ -11901,6 +12387,8 @@
                                <<"MisalignmentSteer">> =>
                                 {struct,#{message => {required,binstr}}},
                                <<"ThreadSource">> => binstr,
+                               <<"McpAppDisplayMode">> =>
+                                {enum,[inline,fullscreen]},
                                <<"ImageDetail">> =>
                                 {enum,[auto,low,high,original]},
                                <<"ThreadHistoryMode">> =>
@@ -12013,13 +12501,13 @@
                                <<"McpToolCallAppContext">> =>
                                 {struct,
                                  #{connectorId => {required,binstr},
-                                   actionName =>
-                                    {optional,{any_of,[binstr,{exact,null}]}},
-                                   appName =>
-                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    linkId =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    resourceUri =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   actionName =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                   appName =>
                                     {optional,
                                      {any_of,[binstr,{exact,null}]}}}},
                                <<"TextElement">> =>
@@ -12085,16 +12573,27 @@
                                        {default,
                                         {[],
                                          {list,{ref,<<"TextElement">>}}}}}}},
-                                  {struct,
-                                   #{type => {required,{enum,[image]}},
-                                     detail =>
-                                      {optional,
-                                       {default,
-                                        {null,
-                                         {any_of,
-                                          [{ref,<<"ImageDetail">>},
-                                           {exact,null}]}}}},
-                                     url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[image]}},
+                                       detail =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,<<"ImageDetail">>},
+                                             {exact,null}]}}}},
+                                       url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[image]}},
+                                       detail =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,<<"ImageDetail">>},
+                                             {exact,null}]}}}},
+                                       fileId => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[localImage]}},
                                      path => {required,binstr},
@@ -12127,14 +12626,23 @@
                                  [{struct,
                                    #{type => {required,{enum,[input_text]}},
                                      text => {required,binstr}}},
-                                  {struct,
-                                   #{type => {required,{enum,[input_image]}},
-                                     detail =>
-                                      {optional,
-                                       {any_of,
-                                        [{ref,<<"ImageDetail">>},
-                                         {exact,null}]}},
-                                     image_url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[input_image]}},
+                                       detail =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ImageDetail">>},
+                                           {exact,null}]}},
+                                       image_url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[input_image]}},
+                                       detail =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ImageDetail">>},
+                                           {exact,null}]}},
+                                       file_id => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[input_audio]}},
                                      audio_url => {required,binstr}}},
@@ -12301,6 +12809,11 @@
                                 {enum,
                                  [agent,userShell,unifiedExecStartup,
                                   unifiedExecInteraction]},
+                               <<"McpAppUi">> =>
+                                {struct,
+                                 #{preferredModelDisplayMode =>
+                                    {required,{ref,<<"McpAppDisplayMode">>}},
+                                   resourceUri => {required,binstr}}},
                                <<"HookPromptFragment">> =>
                                 {struct,
                                  #{text => {required,binstr},
@@ -12384,11 +12897,12 @@
                                  [{enum,
                                    [contextWindowExceeded,
                                     sessionBudgetExceeded,usageLimitExceeded,
-                                    rateLimitExceeded,serverOverloaded,
-                                    cyberPolicy,misalignmentPolicyViolation,
-                                    internalServerError,unauthorized,
-                                    badRequest,threadRollbackFailed,
-                                    sandboxError,other]},
+                                    rateLimitExceeded,flexUnavailable,
+                                    serverOverloaded,cyberPolicy,
+                                    misalignmentPolicyViolation,
+                                    tooManyDenials,internalServerError,
+                                    unauthorized,badRequest,
+                                    threadRollbackFailed,sandboxError,other]},
                                   {struct,
                                    #{httpConnectionFailed =>
                                       {required,
@@ -12587,6 +13101,10 @@
                                      mcpAppResourceUri =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     mcpAppUi =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"McpAppUi">>},{exact,null}]}},
                                      readOnlyHint =>
                                       {optional,
                                        {any_of,[boolean,{exact,null}]}}}},
@@ -12748,6 +13266,8 @@
                                <<"MisalignmentSteer">> =>
                                 {struct,#{message => {required,binstr}}},
                                <<"ThreadSource">> => binstr,
+                               <<"McpAppDisplayMode">> =>
+                                {enum,[inline,fullscreen]},
                                <<"ImageDetail">> =>
                                 {enum,[auto,low,high,original]},
                                <<"ThreadHistoryMode">> =>
@@ -12871,16 +13391,16 @@
                                      <<"McpToolCallAppContext">> =>
                                       {struct,
                                        #{connectorId => {required,binstr},
-                                         actionName =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         appName =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
                                          linkId =>
                                           {optional,
                                            {any_of,[binstr,{exact,null}]}},
                                          resourceUri =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         actionName =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         appName =>
                                           {optional,
                                            {any_of,[binstr,{exact,null}]}}}},
                                      <<"TextElement">> =>
@@ -12918,16 +13438,27 @@
                                               {[],
                                                {list,
                                                 {ref,<<"TextElement">>}}}}}}},
-                                        {struct,
-                                         #{type => {required,{enum,[image]}},
-                                           detail =>
-                                            {optional,
-                                             {default,
-                                              {null,
-                                               {any_of,
-                                                [{ref,<<"ImageDetail">>},
-                                                 {exact,null}]}}}},
-                                           url => {required,binstr}}},
+                                        {any_of,
+                                         [{struct,
+                                           #{type => {required,{enum,[image]}},
+                                             detail =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [{ref,<<"ImageDetail">>},
+                                                   {exact,null}]}}}},
+                                             url => {required,binstr}}},
+                                          {struct,
+                                           #{type => {required,{enum,[image]}},
+                                             detail =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [{ref,<<"ImageDetail">>},
+                                                   {exact,null}]}}}},
+                                             fileId => {required,binstr}}}]},
                                         {struct,
                                          #{type =>
                                             {required,{enum,[localImage]}},
@@ -12964,15 +13495,25 @@
                                          #{type =>
                                             {required,{enum,[input_text]}},
                                            text => {required,binstr}}},
-                                        {struct,
-                                         #{type =>
-                                            {required,{enum,[input_image]}},
-                                           detail =>
-                                            {optional,
-                                             {any_of,
-                                              [{ref,<<"ImageDetail">>},
-                                               {exact,null}]}},
-                                           image_url => {required,binstr}}},
+                                        {any_of,
+                                         [{struct,
+                                           #{type =>
+                                              {required,{enum,[input_image]}},
+                                             detail =>
+                                              {optional,
+                                               {any_of,
+                                                [{ref,<<"ImageDetail">>},
+                                                 {exact,null}]}},
+                                             image_url => {required,binstr}}},
+                                          {struct,
+                                           #{type =>
+                                              {required,{enum,[input_image]}},
+                                             detail =>
+                                              {optional,
+                                               {any_of,
+                                                [{ref,<<"ImageDetail">>},
+                                                 {exact,null}]}},
+                                             file_id => {required,binstr}}}]},
                                         {struct,
                                          #{type =>
                                             {required,{enum,[input_audio]}},
@@ -13127,6 +13668,12 @@
                                       {enum,
                                        [agent,userShell,unifiedExecStartup,
                                         unifiedExecInteraction]},
+                                     <<"McpAppUi">> =>
+                                      {struct,
+                                       #{preferredModelDisplayMode =>
+                                          {required,
+                                           {ref,<<"McpAppDisplayMode">>}},
+                                         resourceUri => {required,binstr}}},
                                      <<"HookPromptFragment">> =>
                                       {struct,
                                        #{text => {required,binstr},
@@ -13210,12 +13757,13 @@
                                          [contextWindowExceeded,
                                           sessionBudgetExceeded,
                                           usageLimitExceeded,
-                                          rateLimitExceeded,serverOverloaded,
-                                          cyberPolicy,
+                                          rateLimitExceeded,flexUnavailable,
+                                          serverOverloaded,cyberPolicy,
                                           misalignmentPolicyViolation,
-                                          internalServerError,unauthorized,
-                                          badRequest,threadRollbackFailed,
-                                          sandboxError,other]},
+                                          tooManyDenials,internalServerError,
+                                          unauthorized,badRequest,
+                                          threadRollbackFailed,sandboxError,
+                                          other]},
                                         {struct,
                                          #{httpConnectionFailed =>
                                             {required,
@@ -13439,6 +13987,11 @@
                                            mcpAppResourceUri =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
+                                           mcpAppUi =>
+                                            {optional,
+                                             {any_of,
+                                              [{ref,<<"McpAppUi">>},
+                                               {exact,null}]}},
                                            readOnlyHint =>
                                             {optional,
                                              {any_of,
@@ -13600,6 +14153,8 @@
                                       {enum,[inProgress,completed,failed]},
                                      <<"MisalignmentSteer">> =>
                                       {struct,#{message => {required,binstr}}},
+                                     <<"McpAppDisplayMode">> =>
+                                      {enum,[inline,fullscreen]},
                                      <<"ImageDetail">> =>
                                       {enum,[auto,low,high,original]}},
                                    {struct,
@@ -13612,7 +14167,16 @@
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}}}}}}},
     {thread_items_list_params, {with_defs,
-                                {#{<<"SortDirection">> => {enum,[asc,desc]}},
+                                {#{<<"SortDirection">> => {enum,[asc,desc]},
+                                   <<"ThreadItemsListAnchor">> =>
+                                    {any_of,
+                                     [{struct,
+                                       #{type => {required,{enum,[item]}},
+                                         itemId => {required,binstr}}}]},
+                                   <<"ThreadItemsListCursor">> =>
+                                    {any_of,
+                                     [binstr,
+                                      {ref,<<"ThreadItemsListAnchor">>}]}},
                                  {struct,
                                   #{limit =>
                                      {optional,
@@ -13621,7 +14185,10 @@
                                     turnId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     cursor =>
-                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"ThreadItemsListCursor">>},
+                                        {exact,null}]}},
                                     sortDirection =>
                                      {optional,
                                       {any_of,
@@ -13649,16 +14216,16 @@
                                      <<"McpToolCallAppContext">> =>
                                       {struct,
                                        #{connectorId => {required,binstr},
-                                         actionName =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         appName =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
                                          linkId =>
                                           {optional,
                                            {any_of,[binstr,{exact,null}]}},
                                          resourceUri =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         actionName =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         appName =>
                                           {optional,
                                            {any_of,[binstr,{exact,null}]}}}},
                                      <<"TextElement">> =>
@@ -13696,16 +14263,27 @@
                                               {[],
                                                {list,
                                                 {ref,<<"TextElement">>}}}}}}},
-                                        {struct,
-                                         #{type => {required,{enum,[image]}},
-                                           detail =>
-                                            {optional,
-                                             {default,
-                                              {null,
-                                               {any_of,
-                                                [{ref,<<"ImageDetail">>},
-                                                 {exact,null}]}}}},
-                                           url => {required,binstr}}},
+                                        {any_of,
+                                         [{struct,
+                                           #{type => {required,{enum,[image]}},
+                                             detail =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [{ref,<<"ImageDetail">>},
+                                                   {exact,null}]}}}},
+                                             url => {required,binstr}}},
+                                          {struct,
+                                           #{type => {required,{enum,[image]}},
+                                             detail =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [{ref,<<"ImageDetail">>},
+                                                   {exact,null}]}}}},
+                                             fileId => {required,binstr}}}]},
                                         {struct,
                                          #{type =>
                                             {required,{enum,[localImage]}},
@@ -13742,15 +14320,25 @@
                                          #{type =>
                                             {required,{enum,[input_text]}},
                                            text => {required,binstr}}},
-                                        {struct,
-                                         #{type =>
-                                            {required,{enum,[input_image]}},
-                                           detail =>
-                                            {optional,
-                                             {any_of,
-                                              [{ref,<<"ImageDetail">>},
-                                               {exact,null}]}},
-                                           image_url => {required,binstr}}},
+                                        {any_of,
+                                         [{struct,
+                                           #{type =>
+                                              {required,{enum,[input_image]}},
+                                             detail =>
+                                              {optional,
+                                               {any_of,
+                                                [{ref,<<"ImageDetail">>},
+                                                 {exact,null}]}},
+                                             image_url => {required,binstr}}},
+                                          {struct,
+                                           #{type =>
+                                              {required,{enum,[input_image]}},
+                                             detail =>
+                                              {optional,
+                                               {any_of,
+                                                [{ref,<<"ImageDetail">>},
+                                                 {exact,null}]}},
+                                             file_id => {required,binstr}}}]},
                                         {struct,
                                          #{type =>
                                             {required,{enum,[input_audio]}},
@@ -13814,7 +14402,13 @@
                                       {struct,
                                        #{item =>
                                           {required,{ref,<<"ThreadItem">>}},
-                                         turnId => {required,binstr}}},
+                                         turnId => {required,binstr},
+                                         startedAtMs =>
+                                          {optional,
+                                           {any_of,[integer,{exact,null}]}},
+                                         completedAtMs =>
+                                          {optional,
+                                           {any_of,[integer,{exact,null}]}}}},
                                      <<"CollabAgentTool">> =>
                                       {enum,
                                        [spawnAgent,sendInput,resumeAgent,wait,
@@ -13848,6 +14442,12 @@
                                       {enum,
                                        [agent,userShell,unifiedExecStartup,
                                         unifiedExecInteraction]},
+                                     <<"McpAppUi">> =>
+                                      {struct,
+                                       #{preferredModelDisplayMode =>
+                                          {required,
+                                           {ref,<<"McpAppDisplayMode">>}},
+                                         resourceUri => {required,binstr}}},
                                      <<"HookPromptFragment">> =>
                                       {struct,
                                        #{text => {required,binstr},
@@ -14093,6 +14693,11 @@
                                            mcpAppResourceUri =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
+                                           mcpAppUi =>
+                                            {optional,
+                                             {any_of,
+                                              [{ref,<<"McpAppUi">>},
+                                               {exact,null}]}},
                                            readOnlyHint =>
                                             {optional,
                                              {any_of,
@@ -14252,6 +14857,8 @@
                                           {optional,term}}},
                                      <<"DynamicToolCallStatus">> =>
                                       {enum,[inProgress,completed,failed]},
+                                     <<"McpAppDisplayMode">> =>
+                                      {enum,[inline,fullscreen]},
                                      <<"ImageDetail">> =>
                                       {enum,[auto,low,high,original]}},
                                    {struct,
@@ -14291,16 +14898,16 @@
                                     <<"McpToolCallAppContext">> =>
                                      {struct,
                                       #{connectorId => {required,binstr},
-                                        actionName =>
-                                         {optional,
-                                          {any_of,[binstr,{exact,null}]}},
-                                        appName =>
-                                         {optional,
-                                          {any_of,[binstr,{exact,null}]}},
                                         linkId =>
                                          {optional,
                                           {any_of,[binstr,{exact,null}]}},
                                         resourceUri =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        actionName =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        appName =>
                                          {optional,
                                           {any_of,[binstr,{exact,null}]}}}},
                                     <<"TextElement">> =>
@@ -14371,16 +14978,27 @@
                                              {[],
                                               {list,
                                                {ref,<<"TextElement">>}}}}}}},
-                                       {struct,
-                                        #{type => {required,{enum,[image]}},
-                                          detail =>
-                                           {optional,
-                                            {default,
-                                             {null,
-                                              {any_of,
-                                               [{ref,<<"ImageDetail">>},
-                                                {exact,null}]}}}},
-                                          url => {required,binstr}}},
+                                       {any_of,
+                                        [{struct,
+                                          #{type => {required,{enum,[image]}},
+                                            detail =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [{ref,<<"ImageDetail">>},
+                                                  {exact,null}]}}}},
+                                            url => {required,binstr}}},
+                                         {struct,
+                                          #{type => {required,{enum,[image]}},
+                                            detail =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [{ref,<<"ImageDetail">>},
+                                                  {exact,null}]}}}},
+                                            fileId => {required,binstr}}}]},
                                        {struct,
                                         #{type =>
                                            {required,{enum,[localImage]}},
@@ -14417,15 +15035,25 @@
                                         #{type =>
                                            {required,{enum,[input_text]}},
                                           text => {required,binstr}}},
-                                       {struct,
-                                        #{type =>
-                                           {required,{enum,[input_image]}},
-                                          detail =>
-                                           {optional,
-                                            {any_of,
-                                             [{ref,<<"ImageDetail">>},
-                                              {exact,null}]}},
-                                          image_url => {required,binstr}}},
+                                       {any_of,
+                                        [{struct,
+                                          #{type =>
+                                             {required,{enum,[input_image]}},
+                                            detail =>
+                                             {optional,
+                                              {any_of,
+                                               [{ref,<<"ImageDetail">>},
+                                                {exact,null}]}},
+                                            image_url => {required,binstr}}},
+                                         {struct,
+                                          #{type =>
+                                             {required,{enum,[input_image]}},
+                                            detail =>
+                                             {optional,
+                                              {any_of,
+                                               [{ref,<<"ImageDetail">>},
+                                                {exact,null}]}},
+                                            file_id => {required,binstr}}}]},
                                        {struct,
                                         #{type =>
                                            {required,{enum,[input_audio]}},
@@ -14618,6 +15246,12 @@
                                      {enum,
                                       [agent,userShell,unifiedExecStartup,
                                        unifiedExecInteraction]},
+                                    <<"McpAppUi">> =>
+                                     {struct,
+                                      #{preferredModelDisplayMode =>
+                                         {required,
+                                          {ref,<<"McpAppDisplayMode">>}},
+                                        resourceUri => {required,binstr}}},
                                     <<"HookPromptFragment">> =>
                                      {struct,
                                       #{text => {required,binstr},
@@ -14714,11 +15348,13 @@
                                         [contextWindowExceeded,
                                          sessionBudgetExceeded,
                                          usageLimitExceeded,rateLimitExceeded,
-                                         serverOverloaded,cyberPolicy,
+                                         flexUnavailable,serverOverloaded,
+                                         cyberPolicy,
                                          misalignmentPolicyViolation,
-                                         internalServerError,unauthorized,
-                                         badRequest,threadRollbackFailed,
-                                         sandboxError,other]},
+                                         tooManyDenials,internalServerError,
+                                         unauthorized,badRequest,
+                                         threadRollbackFailed,sandboxError,
+                                         other]},
                                        {struct,
                                         #{httpConnectionFailed =>
                                            {required,
@@ -14942,6 +15578,11 @@
                                           mcpAppResourceUri =>
                                            {optional,
                                             {any_of,[binstr,{exact,null}]}},
+                                          mcpAppUi =>
+                                           {optional,
+                                            {any_of,
+                                             [{ref,<<"McpAppUi">>},
+                                              {exact,null}]}},
                                           readOnlyHint =>
                                            {optional,
                                             {any_of,[boolean,{exact,null}]}}}},
@@ -15117,6 +15758,8 @@
                                     <<"MisalignmentSteer">> =>
                                      {struct,#{message => {required,binstr}}},
                                     <<"ThreadSource">> => binstr,
+                                    <<"McpAppDisplayMode">> =>
+                                     {enum,[inline,fullscreen]},
                                     <<"ImageDetail">> =>
                                      {enum,[auto,low,high,original]},
                                     <<"ThreadHistoryMode">> =>
@@ -15213,924 +15856,6 @@
                                       {required,{ref,<<"Thread">>}}}}}}},
     {thread_compact_start_params, {struct,#{threadId => {required,binstr}}}},
     {thread_compact_start_response, {map,{binstr,term}}},
-    {thread_rollback_params, {struct,#{threadId => {required,binstr},
-                                       numTurns => {required,integer}}}},
-    {thread_rollback_response, {with_defs,
-                                {#{<<"PatchChangeKind">> =>
-                                    {any_of,
-                                     [{struct,
-                                       #{type => {required,{enum,[add]}}}},
-                                      {struct,
-                                       #{type => {required,{enum,[delete]}}}},
-                                      {struct,
-                                       #{type => {required,{enum,[update]}},
-                                         move_path =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}}}}]},
-                                   <<"ReasoningEffort">> => binstr,
-                                   <<"MessagePhase">> =>
-                                    {any_of,
-                                     [{enum,[commentary]},
-                                      {enum,[final_answer]}]},
-                                   <<"McpToolCallAppContext">> =>
-                                    {struct,
-                                     #{connectorId => {required,binstr},
-                                       actionName =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       appName =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       linkId =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       resourceUri =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}}}},
-                                   <<"TextElement">> =>
-                                    {struct,
-                                     #{byteRange =>
-                                        {required,
-                                         {all_of,[{ref,<<"ByteRange">>}]}},
-                                       placeholder =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}}}},
-                                   <<"McpToolCallError">> =>
-                                    {struct,#{message => {required,binstr}}},
-                                   <<"CollabAgentToolCallStatus">> =>
-                                    {enum,
-                                     [inProgress,completed,failed,
-                                      interrupted]},
-                                   <<"SubAgentSource">> =>
-                                    {any_of,
-                                     [{enum,
-                                       [review,compact,memory_consolidation]},
-                                      {struct,
-                                       #{thread_spawn =>
-                                          {required,
-                                           {struct,
-                                            #{depth => {required,integer},
-                                              agent_nickname =>
-                                               {optional,
-                                                {default,
-                                                 {null,
-                                                  {any_of,
-                                                   [binstr,{exact,null}]}}}},
-                                              agent_path =>
-                                               {optional,
-                                                {default,
-                                                 {null,
-                                                  {any_of,
-                                                   [{ref,<<"AgentPath">>},
-                                                    {exact,null}]}}}},
-                                              agent_role =>
-                                               {optional,
-                                                {default,
-                                                 {null,
-                                                  {any_of,
-                                                   [binstr,{exact,null}]}}}},
-                                              parent_thread_id =>
-                                               {required,
-                                                {ref,<<"ThreadId">>}}}}}}},
-                                      {struct,#{other => {required,binstr}}}]},
-                                   <<"ImageGenerationFailure">> =>
-                                    {any_of,
-                                     [{struct,
-                                       #{type =>
-                                          {required,
-                                           {enum,[usageLimitExceeded]}},
-                                         resetsAt =>
-                                          {optional,
-                                           {any_of,[integer,{exact,null}]}},
-                                         limitId => {required,binstr}}}]},
-                                   <<"UserInput">> =>
-                                    {any_of,
-                                     [{struct,
-                                       #{type => {required,{enum,[text]}},
-                                         text => {required,binstr},
-                                         text_elements =>
-                                          {optional,
-                                           {default,
-                                            {[],
-                                             {list,
-                                              {ref,<<"TextElement">>}}}}}}},
-                                      {struct,
-                                       #{type => {required,{enum,[image]}},
-                                         detail =>
-                                          {optional,
-                                           {default,
-                                            {null,
-                                             {any_of,
-                                              [{ref,<<"ImageDetail">>},
-                                               {exact,null}]}}}},
-                                         url => {required,binstr}}},
-                                      {struct,
-                                       #{type =>
-                                          {required,{enum,[localImage]}},
-                                         path => {required,binstr},
-                                         detail =>
-                                          {optional,
-                                           {default,
-                                            {null,
-                                             {any_of,
-                                              [{ref,<<"ImageDetail">>},
-                                               {exact,null}]}}}}}},
-                                      {struct,
-                                       #{type => {required,{enum,[audio]}},
-                                         url => {required,binstr}}},
-                                      {struct,
-                                       #{type =>
-                                          {required,{enum,[localAudio]}},
-                                         path => {required,binstr}}},
-                                      {struct,
-                                       #{name => {required,binstr},
-                                         type => {required,{enum,[skill]}},
-                                         path => {required,binstr}}},
-                                      {struct,
-                                       #{name => {required,binstr},
-                                         type => {required,{enum,[mention]}},
-                                         path => {required,binstr}}}]},
-                                   <<"CommandExecutionStatus">> =>
-                                    {enum,
-                                     [inProgress,completed,failed,declined]},
-                                   <<"AbsolutePathBuf">> => binstr,
-                                   <<"FunctionCallOutputContentItem">> =>
-                                    {any_of,
-                                     [{struct,
-                                       #{type =>
-                                          {required,{enum,[input_text]}},
-                                         text => {required,binstr}}},
-                                      {struct,
-                                       #{type =>
-                                          {required,{enum,[input_image]}},
-                                         detail =>
-                                          {optional,
-                                           {any_of,
-                                            [{ref,<<"ImageDetail">>},
-                                             {exact,null}]}},
-                                         image_url => {required,binstr}}},
-                                      {struct,
-                                       #{type =>
-                                          {required,{enum,[input_audio]}},
-                                         audio_url => {required,binstr}}},
-                                      {struct,
-                                       #{type =>
-                                          {required,
-                                           {enum,[encrypted_content]}},
-                                         encrypted_content =>
-                                          {required,binstr}}}]},
-                                   <<"CommandAction">> =>
-                                    {any_of,
-                                     [{struct,
-                                       #{command => {required,binstr},
-                                         name => {required,binstr},
-                                         type => {required,{enum,[read]}},
-                                         path =>
-                                          {required,
-                                           {ref,<<"LegacyAppPathString">>}}}},
-                                      {struct,
-                                       #{command => {required,binstr},
-                                         type => {required,{enum,[listFiles]}},
-                                         path =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}}}},
-                                      {struct,
-                                       #{command => {required,binstr},
-                                         type => {required,{enum,[search]}},
-                                         path =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         query =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}}}},
-                                      {struct,
-                                       #{command => {required,binstr},
-                                         type =>
-                                          {required,{enum,[unknown]}}}}]},
-                                   <<"ThreadExtra">> => {map,{binstr,term}},
-                                   <<"ThreadId">> => binstr,
-                                   <<"LegacyAppPathString">> => binstr,
-                                   <<"ThreadStatus">> =>
-                                    {any_of,
-                                     [{struct,
-                                       #{type =>
-                                          {required,{enum,[notLoaded]}}}},
-                                      {struct,
-                                       #{type => {required,{enum,[idle]}}}},
-                                      {struct,
-                                       #{type =>
-                                          {required,{enum,[systemError]}}}},
-                                      {struct,
-                                       #{type => {required,{enum,[active]}},
-                                         activeFlags =>
-                                          {required,
-                                           {list,
-                                            {ref,<<"ThreadActiveFlag">>}}}}}]},
-                                   <<"MemoryCitationEntry">> =>
-                                    {struct,
-                                     #{path => {required,binstr},
-                                       lineEnd => {required,integer},
-                                       lineStart => {required,integer},
-                                       note => {required,binstr}}},
-                                   <<"AgentMessageDelivery">> =>
-                                    {enum,[async]},
-                                   <<"CollabAgentStatus">> =>
-                                    {enum,
-                                     [pendingInit,running,interrupted,
-                                      completed,errored,shutdown,notFound]},
-                                   <<"ThreadSection">> =>
-                                    {struct,
-                                     #{id => {required,binstr},
-                                       name => {required,binstr},
-                                       appearance =>
-                                        {optional,
-                                         {default,
-                                          {null,
-                                           {any_of,
-                                            [{ref,
-                                              <<"ThreadSectionAppearance">>},
-                                             {exact,null}]}}}}}},
-                                   <<"FunctionCallOutputBody">> =>
-                                    {any_of,
-                                     [binstr,
-                                      {list,
-                                       {ref,
-                                        <<"FunctionCallOutputContentItem">>}}]},
-                                   <<"CollabAgentTool">> =>
-                                    {enum,
-                                     [spawnAgent,sendInput,resumeAgent,wait,
-                                      closeAgent,sendMessage,followupTask,
-                                      interruptAgent,listAgents]},
-                                   <<"MisalignmentErrorDetails">> =>
-                                    {struct,
-                                     #{errorType =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       detailedExplanation =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       steer =>
-                                        {optional,
-                                         {any_of,
-                                          [{ref,<<"MisalignmentSteer">>},
-                                           {exact,null}]}}}},
-                                   <<"MemoryCitation">> =>
-                                    {struct,
-                                     #{entries =>
-                                        {required,
-                                         {list,
-                                          {ref,<<"MemoryCitationEntry">>}}},
-                                       threadIds => {required,{list,binstr}}}},
-                                   <<"ThreadSectionAppearance">> =>
-                                    {struct,
-                                     #{color =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       icon =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}}}},
-                                   <<"TurnError">> =>
-                                    {struct,
-                                     #{message => {required,binstr},
-                                       additionalDetails =>
-                                        {optional,
-                                         {default,
-                                          {null,
-                                           {any_of,[binstr,{exact,null}]}}}},
-                                       codexErrorInfo =>
-                                        {optional,
-                                         {any_of,
-                                          [{ref,<<"CodexErrorInfo">>},
-                                           {exact,null}]}},
-                                       misalignment =>
-                                        {optional,
-                                         {default,
-                                          {null,
-                                           {any_of,
-                                            [{ref,
-                                              <<"MisalignmentErrorDetails">>},
-                                             {exact,null}]}}}}}},
-                                   <<"AsyncUserInputQuestion">> =>
-                                    {struct,
-                                     #{options =>
-                                        {optional,
-                                         {any_of,
-                                          [{list,binstr},{exact,null}]}},
-                                       title => {required,binstr}}},
-                                   <<"PatchApplyStatus">> =>
-                                    {enum,
-                                     [inProgress,completed,failed,declined]},
-                                   <<"SubAgentActivityKind">> =>
-                                    {enum,
-                                     [started,interacted,interrupted,
-                                      completed]},
-                                   <<"McpToolCallStatus">> =>
-                                    {enum,[inProgress,completed,failed]},
-                                   <<"Turn">> =>
-                                    {struct,
-                                     #{error =>
-                                        {optional,
-                                         {any_of,
-                                          [{ref,<<"TurnError">>},
-                                           {exact,null}]}},
-                                       id => {required,binstr},
-                                       status =>
-                                        {required,{ref,<<"TurnStatus">>}},
-                                       items =>
-                                        {required,
-                                         {list,{ref,<<"ThreadItem">>}}},
-                                       itemsView =>
-                                        {optional,
-                                         {default,
-                                          {<<"full">>,
-                                           {all_of,
-                                            [{ref,<<"TurnItemsView">>}]}}}},
-                                       durationMs =>
-                                        {optional,
-                                         {any_of,[integer,{exact,null}]}},
-                                       completedAt =>
-                                        {optional,
-                                         {any_of,[integer,{exact,null}]}},
-                                       startedAt =>
-                                        {optional,
-                                         {any_of,[integer,{exact,null}]}}}},
-                                   <<"CommandExecutionSource">> =>
-                                    {enum,
-                                     [agent,userShell,unifiedExecStartup,
-                                      unifiedExecInteraction]},
-                                   <<"HookPromptFragment">> =>
-                                    {struct,
-                                     #{text => {required,binstr},
-                                       hookRunId => {required,binstr}}},
-                                   <<"ThreadActiveFlag">> =>
-                                    {enum,
-                                     [waitingOnApproval,waitingOnUserInput]},
-                                   <<"TurnStatus">> =>
-                                    {enum,
-                                     [completed,interrupted,failed,
-                                      inProgress]},
-                                   <<"WebSearchAction">> =>
-                                    {any_of,
-                                     [{struct,
-                                       #{type => {required,{enum,[search]}},
-                                         query =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         queries =>
-                                          {optional,
-                                           {any_of,
-                                            [{list,binstr},{exact,null}]}}}},
-                                      {struct,
-                                       #{type => {required,{enum,[openPage]}},
-                                         url =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}}}},
-                                      {struct,
-                                       #{type =>
-                                          {required,{enum,[findInPage]}},
-                                         pattern =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         url =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}}}},
-                                      {struct,
-                                       #{type => {required,{enum,[other]}}}}]},
-                                   <<"CollabAgentState">> =>
-                                    {struct,
-                                     #{message =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       status =>
-                                        {required,
-                                         {ref,<<"CollabAgentStatus">>}}}},
-                                   <<"DynamicToolCallOutputContentItem">> =>
-                                    {any_of,
-                                     [{struct,
-                                       #{type => {required,{enum,[inputText]}},
-                                         text => {required,binstr}}},
-                                      {struct,
-                                       #{type =>
-                                          {required,{enum,[inputImage]}},
-                                         imageUrl => {required,binstr}}},
-                                      {struct,
-                                       #{type =>
-                                          {required,{enum,[inputAudio]}},
-                                         audioUrl => {required,binstr}}}]},
-                                   <<"FileUpdateChange">> =>
-                                    {struct,
-                                     #{path => {required,binstr},
-                                       diff => {required,binstr},
-                                       kind =>
-                                        {required,
-                                         {ref,<<"PatchChangeKind">>}}}},
-                                   <<"TurnItemsView">> =>
-                                    {any_of,
-                                     [{enum,[notLoaded]},
-                                      {enum,[summary]},
-                                      {enum,[full]}]},
-                                   <<"NonSteerableTurnKind">> =>
-                                    {enum,[review,compact]},
-                                   <<"ByteRange">> =>
-                                    {struct,
-                                     #{start => {required,integer},
-                                       'end' => {required,integer}}},
-                                   <<"AgentPath">> => binstr,
-                                   <<"ThreadEnvironment">> =>
-                                    {struct,
-                                     #{cwd =>
-                                        {required,
-                                         {ref,<<"LegacyAppPathString">>}},
-                                       environmentId => {required,binstr},
-                                       runtimeWorkspaceRoots =>
-                                        {required,
-                                         {list,
-                                          {ref,<<"LegacyAppPathString">>}}}}},
-                                   <<"CodexErrorInfo">> =>
-                                    {any_of,
-                                     [{enum,
-                                       [contextWindowExceeded,
-                                        sessionBudgetExceeded,
-                                        usageLimitExceeded,rateLimitExceeded,
-                                        serverOverloaded,cyberPolicy,
-                                        misalignmentPolicyViolation,
-                                        internalServerError,unauthorized,
-                                        badRequest,threadRollbackFailed,
-                                        sandboxError,other]},
-                                      {struct,
-                                       #{httpConnectionFailed =>
-                                          {required,
-                                           {struct,
-                                            #{httpStatusCode =>
-                                               {optional,
-                                                {any_of,
-                                                 [integer,{exact,null}]}}}}}}},
-                                      {struct,
-                                       #{responseStreamConnectionFailed =>
-                                          {required,
-                                           {struct,
-                                            #{httpStatusCode =>
-                                               {optional,
-                                                {any_of,
-                                                 [integer,{exact,null}]}}}}}}},
-                                      {struct,
-                                       #{responseStreamDisconnected =>
-                                          {required,
-                                           {struct,
-                                            #{httpStatusCode =>
-                                               {optional,
-                                                {any_of,
-                                                 [integer,{exact,null}]}}}}}}},
-                                      {struct,
-                                       #{responseTooManyFailedAttempts =>
-                                          {required,
-                                           {struct,
-                                            #{httpStatusCode =>
-                                               {optional,
-                                                {any_of,
-                                                 [integer,{exact,null}]}}}}}}},
-                                      {struct,
-                                       #{activeTurnNotSteerable =>
-                                          {required,
-                                           {struct,
-                                            #{turnKind =>
-                                               {required,
-                                                {ref,
-                                                 <<"NonSteerableTurnKind">>}}}}}}}]},
-                                   <<"ThreadItem">> =>
-                                    {any_of,
-                                     [{struct,
-                                       #{id => {required,binstr},
-                                         type =>
-                                          {required,{enum,[userMessage]}},
-                                         content =>
-                                          {required,
-                                           {list,{ref,<<"UserInput">>}}},
-                                         clientId =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         type =>
-                                          {required,{enum,[hookPrompt]}},
-                                         fragments =>
-                                          {required,
-                                           {list,
-                                            {ref,<<"HookPromptFragment">>}}}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         type =>
-                                          {required,{enum,[agentMessage]}},
-                                         text => {required,binstr},
-                                         phase =>
-                                          {optional,
-                                           {default,
-                                            {null,
-                                             {any_of,
-                                              [{ref,<<"MessagePhase">>},
-                                               {exact,null}]}}}},
-                                         delivery =>
-                                          {optional,
-                                           {default,
-                                            {null,
-                                             {any_of,
-                                              [{ref,
-                                                <<"AgentMessageDelivery">>},
-                                               {exact,null}]}}}},
-                                         questions =>
-                                          {optional,
-                                           {default,
-                                            {null,
-                                             {any_of,
-                                              [{list,
-                                                {ref,
-                                                 <<"AsyncUserInputQuestion">>}},
-                                               {exact,null}]}}}},
-                                         memoryCitation =>
-                                          {optional,
-                                           {default,
-                                            {null,
-                                             {any_of,
-                                              [{ref,<<"MemoryCitation">>},
-                                               {exact,null}]}}}}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         name => {required,binstr},
-                                         output =>
-                                          {required,
-                                           {ref,<<"FunctionCallOutputBody">>}},
-                                         type =>
-                                          {required,
-                                           {enum,[functionCallOutput]}},
-                                         namespace =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         type => {required,{enum,[plan]}},
-                                         text => {required,binstr}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         type => {required,{enum,[reasoning]}},
-                                         summary =>
-                                          {optional,
-                                           {default,{[],{list,binstr}}}},
-                                         content =>
-                                          {optional,
-                                           {default,{[],{list,binstr}}}}}},
-                                      {struct,
-                                       #{command => {required,binstr},
-                                         id => {required,binstr},
-                                         status =>
-                                          {required,
-                                           {ref,<<"CommandExecutionStatus">>}},
-                                         type =>
-                                          {required,{enum,[commandExecution]}},
-                                         source =>
-                                          {optional,
-                                           {default,
-                                            {<<"agent">>,
-                                             {all_of,
-                                              [{ref,
-                                                <<"CommandExecutionSource">>}]}}}},
-                                         cwd =>
-                                          {required,
-                                           {all_of,
-                                            [{ref,
-                                              <<"LegacyAppPathString">>}]}},
-                                         processId =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         pluginId =>
-                                          {optional,
-                                           {default,
-                                            {null,
-                                             {any_of,[binstr,{exact,null}]}}}},
-                                         commandActions =>
-                                          {required,
-                                           {list,{ref,<<"CommandAction">>}}},
-                                         aggregatedOutput =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         durationMs =>
-                                          {optional,
-                                           {any_of,[integer,{exact,null}]}},
-                                         exitCode =>
-                                          {optional,
-                                           {any_of,[integer,{exact,null}]}},
-                                         scriptPath =>
-                                          {optional,
-                                           {default,
-                                            {null,
-                                             {any_of,
-                                              [binstr,{exact,null}]}}}}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         status =>
-                                          {required,
-                                           {ref,<<"PatchApplyStatus">>}},
-                                         type =>
-                                          {required,{enum,[fileChange]}},
-                                         changes =>
-                                          {required,
-                                           {list,
-                                            {ref,<<"FileUpdateChange">>}}}}},
-                                      {struct,
-                                       #{error =>
-                                          {optional,
-                                           {any_of,
-                                            [{ref,<<"McpToolCallError">>},
-                                             {exact,null}]}},
-                                         id => {required,binstr},
-                                         status =>
-                                          {required,
-                                           {ref,<<"McpToolCallStatus">>}},
-                                         type =>
-                                          {required,{enum,[mcpToolCall]}},
-                                         arguments => {required,term},
-                                         result =>
-                                          {optional,
-                                           {any_of,
-                                            [{ref,<<"McpToolCallResult">>},
-                                             {exact,null}]}},
-                                         server => {required,binstr},
-                                         tool => {required,binstr},
-                                         pluginId =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         durationMs =>
-                                          {optional,
-                                           {any_of,[integer,{exact,null}]}},
-                                         appContext =>
-                                          {optional,
-                                           {any_of,
-                                            [{ref,<<"McpToolCallAppContext">>},
-                                             {exact,null}]}},
-                                         mcpAppResourceUri =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         readOnlyHint =>
-                                          {optional,
-                                           {any_of,[boolean,{exact,null}]}}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         status =>
-                                          {required,
-                                           {ref,<<"DynamicToolCallStatus">>}},
-                                         type =>
-                                          {required,{enum,[dynamicToolCall]}},
-                                         success =>
-                                          {optional,
-                                           {any_of,[boolean,{exact,null}]}},
-                                         arguments => {required,term},
-                                         namespace =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         tool => {required,binstr},
-                                         durationMs =>
-                                          {optional,
-                                           {any_of,[integer,{exact,null}]}},
-                                         contentItems =>
-                                          {optional,
-                                           {any_of,
-                                            [{list,
-                                              {ref,
-                                               <<"DynamicToolCallOutputContentItem">>}},
-                                             {exact,null}]}}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         status =>
-                                          {required,
-                                           {all_of,
-                                            [{ref,
-                                              <<"CollabAgentToolCallStatus">>}]}},
-                                         type =>
-                                          {required,
-                                           {enum,[collabAgentToolCall]}},
-                                         prompt =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         tool =>
-                                          {required,
-                                           {all_of,
-                                            [{ref,<<"CollabAgentTool">>}]}},
-                                         model =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         reasoningEffort =>
-                                          {optional,
-                                           {any_of,
-                                            [{ref,<<"ReasoningEffort">>},
-                                             {exact,null}]}},
-                                         agentsStates =>
-                                          {required,
-                                           {map,
-                                            {binstr,
-                                             {ref,<<"CollabAgentState">>}}}},
-                                         receiverThreadIds =>
-                                          {required,{list,binstr}},
-                                         senderThreadId => {required,binstr}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         type =>
-                                          {required,{enum,[subAgentActivity]}},
-                                         kind =>
-                                          {required,
-                                           {ref,<<"SubAgentActivityKind">>}},
-                                         agentPath => {required,binstr},
-                                         agentThreadId => {required,binstr}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         type => {required,{enum,[webSearch]}},
-                                         query => {required,binstr},
-                                         action =>
-                                          {optional,
-                                           {any_of,
-                                            [{ref,<<"WebSearchAction">>},
-                                             {exact,null}]}},
-                                         results =>
-                                          {optional,
-                                           {default,
-                                            {null,
-                                             {any_of,
-                                              [{list,term},{exact,null}]}}}}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         type => {required,{enum,[imageView]}},
-                                         path =>
-                                          {required,
-                                           {ref,<<"LegacyAppPathString">>}}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         type => {required,{enum,[sleep]}},
-                                         durationMs => {required,integer}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         status => {required,binstr},
-                                         type =>
-                                          {required,{enum,[imageGeneration]}},
-                                         failure =>
-                                          {optional,
-                                           {default,
-                                            {null,
-                                             {any_of,
-                                              [{ref,
-                                                <<"ImageGenerationFailure">>},
-                                               {exact,null}]}}}},
-                                         result => {required,binstr},
-                                         revisedPrompt =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         savedPath =>
-                                          {optional,
-                                           {any_of,
-                                            [{ref,<<"AbsolutePathBuf">>},
-                                             {exact,null}]}},
-                                         transparentBackground =>
-                                          {optional,
-                                           {default,
-                                            {null,
-                                             {any_of,
-                                              [boolean,{exact,null}]}}}}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         type =>
-                                          {required,
-                                           {enum,[enteredReviewMode]}},
-                                         review => {required,binstr}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         type =>
-                                          {required,{enum,[exitedReviewMode]}},
-                                         review => {required,binstr}}},
-                                      {struct,
-                                       #{id => {required,binstr},
-                                         type =>
-                                          {required,
-                                           {enum,[contextCompaction]}}}}]},
-                                   <<"McpToolCallResult">> =>
-                                    {struct,
-                                     #{'_meta' => {optional,term},
-                                       content => {required,{list,term}},
-                                       structuredContent => {optional,term}}},
-                                   <<"SessionSource">> =>
-                                    {any_of,
-                                     [{enum,
-                                       [cli,vscode,exec,appServer,unknown]},
-                                      {struct,#{custom => {required,binstr}}},
-                                      {struct,
-                                       #{subAgent =>
-                                          {required,
-                                           {ref,<<"SubAgentSource">>}}}}]},
-                                   <<"GitInfo">> =>
-                                    {struct,
-                                     #{branch =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       originUrl =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       sha =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}}}},
-                                   <<"DynamicToolCallStatus">> =>
-                                    {enum,[inProgress,completed,failed]},
-                                   <<"MisalignmentSteer">> =>
-                                    {struct,#{message => {required,binstr}}},
-                                   <<"ThreadSource">> => binstr,
-                                   <<"ImageDetail">> =>
-                                    {enum,[auto,low,high,original]},
-                                   <<"ThreadHistoryMode">> =>
-                                    {enum,[legacy,paginated]},
-                                   <<"Thread">> =>
-                                    {struct,
-                                     #{id => {required,binstr},
-                                       name =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       status =>
-                                        {required,
-                                         {all_of,[{ref,<<"ThreadStatus">>}]}},
-                                       path =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       source =>
-                                        {required,
-                                         {all_of,[{ref,<<"SessionSource">>}]}},
-                                       cwd =>
-                                        {required,
-                                         {all_of,
-                                          [{ref,<<"AbsolutePathBuf">>}]}},
-                                       ephemeral => {required,boolean},
-                                       model =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       modelProvider => {required,binstr},
-                                       threadSource =>
-                                        {optional,
-                                         {any_of,
-                                          [{ref,<<"ThreadSource">>},
-                                           {exact,null}]}},
-                                       gitInfo =>
-                                        {optional,
-                                         {any_of,
-                                          [{ref,<<"GitInfo">>},{exact,null}]}},
-                                       recencyAt =>
-                                        {optional,
-                                         {any_of,[integer,{exact,null}]}},
-                                       agentNickname =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       agentRole =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       cliVersion => {required,binstr},
-                                       createdAt => {required,integer},
-                                       forkedFromId =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       historyMode =>
-                                        {optional,
-                                         {default,
-                                          {<<"legacy">>,
-                                           {all_of,
-                                            [{ref,
-                                              <<"ThreadHistoryMode">>}]}}}},
-                                       originator =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       parentThreadId =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       preview => {required,binstr},
-                                       projectId =>
-                                        {required,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       reasoningEffort =>
-                                        {optional,
-                                         {any_of,
-                                          [{ref,<<"ReasoningEffort">>},
-                                           {exact,null}]}},
-                                       section =>
-                                        {optional,
-                                         {default,
-                                          {null,
-                                           {any_of,
-                                            [{ref,<<"ThreadSection">>},
-                                             {exact,null}]}}}},
-                                       sectionEnteredAt =>
-                                        {optional,
-                                         {default,
-                                          {null,
-                                           {any_of,[integer,{exact,null}]}}}},
-                                       sessionId => {required,binstr},
-                                       turns =>
-                                        {required,{list,{ref,<<"Turn">>}}},
-                                       updatedAt => {required,integer}}}},
-                                 {struct,
-                                  #{thread =>
-                                     {required,
-                                      {all_of,[{ref,<<"Thread">>}]}}}}}}},
     {thread_revert_params, {struct,#{threadId => {required,binstr},
                                      beforeTurnId => {required,binstr}}}},
     {thread_revert_response, {with_defs,
@@ -16153,16 +15878,16 @@
                                  <<"McpToolCallAppContext">> =>
                                   {struct,
                                    #{connectorId => {required,binstr},
-                                     actionName =>
-                                      {optional,
-                                       {any_of,[binstr,{exact,null}]}},
-                                     appName =>
-                                      {optional,
-                                       {any_of,[binstr,{exact,null}]}},
                                      linkId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
                                      resourceUri =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     actionName =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     appName =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}}}},
                                  <<"TextElement">> =>
@@ -16229,16 +15954,27 @@
                                          {default,
                                           {[],
                                            {list,{ref,<<"TextElement">>}}}}}}},
-                                    {struct,
-                                     #{type => {required,{enum,[image]}},
-                                       detail =>
-                                        {optional,
-                                         {default,
-                                          {null,
-                                           {any_of,
-                                            [{ref,<<"ImageDetail">>},
-                                             {exact,null}]}}}},
-                                       url => {required,binstr}}},
+                                    {any_of,
+                                     [{struct,
+                                       #{type => {required,{enum,[image]}},
+                                         detail =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [{ref,<<"ImageDetail">>},
+                                               {exact,null}]}}}},
+                                         url => {required,binstr}}},
+                                      {struct,
+                                       #{type => {required,{enum,[image]}},
+                                         detail =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [{ref,<<"ImageDetail">>},
+                                               {exact,null}]}}}},
+                                         fileId => {required,binstr}}}]},
                                     {struct,
                                      #{type => {required,{enum,[localImage]}},
                                        path => {required,binstr},
@@ -16272,14 +16008,25 @@
                                    [{struct,
                                      #{type => {required,{enum,[input_text]}},
                                        text => {required,binstr}}},
-                                    {struct,
-                                     #{type => {required,{enum,[input_image]}},
-                                       detail =>
-                                        {optional,
-                                         {any_of,
-                                          [{ref,<<"ImageDetail">>},
-                                           {exact,null}]}},
-                                       image_url => {required,binstr}}},
+                                    {any_of,
+                                     [{struct,
+                                       #{type =>
+                                          {required,{enum,[input_image]}},
+                                         detail =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"ImageDetail">>},
+                                             {exact,null}]}},
+                                         image_url => {required,binstr}}},
+                                      {struct,
+                                       #{type =>
+                                          {required,{enum,[input_image]}},
+                                         detail =>
+                                          {optional,
+                                           {any_of,
+                                            [{ref,<<"ImageDetail">>},
+                                             {exact,null}]}},
+                                         file_id => {required,binstr}}}]},
                                     {struct,
                                      #{type => {required,{enum,[input_audio]}},
                                        audio_url => {required,binstr}}},
@@ -16458,6 +16205,11 @@
                                   {enum,
                                    [agent,userShell,unifiedExecStartup,
                                     unifiedExecInteraction]},
+                                 <<"McpAppUi">> =>
+                                  {struct,
+                                   #{preferredModelDisplayMode =>
+                                      {required,{ref,<<"McpAppDisplayMode">>}},
+                                     resourceUri => {required,binstr}}},
                                  <<"HookPromptFragment">> =>
                                   {struct,
                                    #{text => {required,binstr},
@@ -16547,11 +16299,12 @@
                                      [contextWindowExceeded,
                                       sessionBudgetExceeded,
                                       usageLimitExceeded,rateLimitExceeded,
-                                      serverOverloaded,cyberPolicy,
-                                      misalignmentPolicyViolation,
-                                      internalServerError,unauthorized,
-                                      badRequest,threadRollbackFailed,
-                                      sandboxError,other]},
+                                      flexUnavailable,serverOverloaded,
+                                      cyberPolicy,misalignmentPolicyViolation,
+                                      tooManyDenials,internalServerError,
+                                      unauthorized,badRequest,
+                                      threadRollbackFailed,sandboxError,
+                                      other]},
                                     {struct,
                                      #{httpConnectionFailed =>
                                         {required,
@@ -16756,6 +16509,11 @@
                                        mcpAppResourceUri =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
+                                       mcpAppUi =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"McpAppUi">>},
+                                           {exact,null}]}},
                                        readOnlyHint =>
                                         {optional,
                                          {any_of,[boolean,{exact,null}]}}}},
@@ -16923,6 +16681,8 @@
                                  <<"MisalignmentSteer">> =>
                                   {struct,#{message => {required,binstr}}},
                                  <<"ThreadSource">> => binstr,
+                                 <<"McpAppDisplayMode">> =>
+                                  {enum,[inline,fullscreen]},
                                  <<"ImageDetail">> =>
                                   {enum,[auto,low,high,original]},
                                  <<"ThreadHistoryMode">> =>
@@ -17143,19 +16903,19 @@
                                           <<"McpToolCallAppContext">> =>
                                            {struct,
                                             #{connectorId => {required,binstr},
-                                              actionName =>
-                                               {optional,
-                                                {any_of,
-                                                 [binstr,{exact,null}]}},
-                                              appName =>
-                                               {optional,
-                                                {any_of,
-                                                 [binstr,{exact,null}]}},
                                               linkId =>
                                                {optional,
                                                 {any_of,
                                                  [binstr,{exact,null}]}},
                                               resourceUri =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              actionName =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
+                                              appName =>
                                                {optional,
                                                 {any_of,
                                                  [binstr,{exact,null}]}}}},
@@ -17240,17 +17000,32 @@
                                                     {list,
                                                      {ref,
                                                       <<"TextElement">>}}}}}}},
-                                             {struct,
-                                              #{type =>
-                                                 {required,{enum,[image]}},
-                                                detail =>
-                                                 {optional,
-                                                  {default,
-                                                   {null,
-                                                    {any_of,
-                                                     [{ref,<<"ImageDetail">>},
-                                                      {exact,null}]}}}},
-                                                url => {required,binstr}}},
+                                             {any_of,
+                                              [{struct,
+                                                #{type =>
+                                                   {required,{enum,[image]}},
+                                                  detail =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [{ref,
+                                                         <<"ImageDetail">>},
+                                                        {exact,null}]}}}},
+                                                  url => {required,binstr}}},
+                                               {struct,
+                                                #{type =>
+                                                   {required,{enum,[image]}},
+                                                  detail =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [{ref,
+                                                         <<"ImageDetail">>},
+                                                        {exact,null}]}}}},
+                                                  fileId =>
+                                                   {required,binstr}}}]},
                                              {struct,
                                               #{type =>
                                                  {required,
@@ -17294,17 +17069,29 @@
                                                  {required,
                                                   {enum,[input_text]}},
                                                 text => {required,binstr}}},
-                                             {struct,
-                                              #{type =>
-                                                 {required,
-                                                  {enum,[input_image]}},
-                                                detail =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{ref,<<"ImageDetail">>},
-                                                    {exact,null}]}},
-                                                image_url =>
-                                                 {required,binstr}}},
+                                             {any_of,
+                                              [{struct,
+                                                #{type =>
+                                                   {required,
+                                                    {enum,[input_image]}},
+                                                  detail =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [{ref,<<"ImageDetail">>},
+                                                      {exact,null}]}},
+                                                  image_url =>
+                                                   {required,binstr}}},
+                                               {struct,
+                                                #{type =>
+                                                   {required,
+                                                    {enum,[input_image]}},
+                                                  detail =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [{ref,<<"ImageDetail">>},
+                                                      {exact,null}]}},
+                                                  file_id =>
+                                                   {required,binstr}}}]},
                                              {struct,
                                               #{type =>
                                                  {required,
@@ -17529,6 +17316,13 @@
                                             [agent,userShell,
                                              unifiedExecStartup,
                                              unifiedExecInteraction]},
+                                          <<"McpAppUi">> =>
+                                           {struct,
+                                            #{preferredModelDisplayMode =>
+                                               {required,
+                                                {ref,<<"McpAppDisplayMode">>}},
+                                              resourceUri =>
+                                               {required,binstr}}},
                                           <<"HookPromptFragment">> =>
                                            {struct,
                                             #{text => {required,binstr},
@@ -17644,8 +17438,10 @@
                                                sessionBudgetExceeded,
                                                usageLimitExceeded,
                                                rateLimitExceeded,
+                                               flexUnavailable,
                                                serverOverloaded,cyberPolicy,
                                                misalignmentPolicyViolation,
+                                               tooManyDenials,
                                                internalServerError,
                                                unauthorized,badRequest,
                                                threadRollbackFailed,
@@ -17899,6 +17695,11 @@
                                                  {optional,
                                                   {any_of,
                                                    [binstr,{exact,null}]}},
+                                                mcpAppUi =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,<<"McpAppUi">>},
+                                                    {exact,null}]}},
                                                 readOnlyHint =>
                                                  {optional,
                                                   {any_of,
@@ -18107,6 +17908,8 @@
                                            {struct,
                                             #{message => {required,binstr}}},
                                           <<"ThreadSource">> => binstr,
+                                          <<"McpAppDisplayMode">> =>
+                                           {enum,[inline,fullscreen]},
                                           <<"ImageDetail">> =>
                                            {enum,[auto,low,high,original]},
                                           <<"ThreadHistoryMode">> =>
@@ -18217,6 +18020,62 @@
                                         {struct,
                                          #{thread =>
                                             {required,{ref,<<"Thread">>}}}}}}},
+    {thread_attachment_add_params, {struct,
+                                       #{threadId => {required,binstr},
+                                         attachmentType => {required,binstr},
+                                         identityKey => {required,binstr},
+                                         payload => {required,term}}}},
+    {thread_attachment_add_response, {with_defs,
+                                      {#{<<"ThreadAttachment">> =>
+                                          {struct,
+                                           #{id => {required,binstr},
+                                             attachmentType =>
+                                              {required,binstr},
+                                             identityKey => {required,binstr},
+                                             payload => {required,term},
+                                             createdAt => {required,integer}}},
+                                         <<"ThreadAttachmentAddOutcome">> =>
+                                          {enum,[created,existing]}},
+                                       {struct,
+                                        #{outcome =>
+                                           {required,
+                                            {ref,
+                                             <<"ThreadAttachmentAddOutcome">>}},
+                                          attachment =>
+                                           {required,
+                                            {ref,<<"ThreadAttachment">>}}}}}}},
+    {thread_attachment_list_params, {struct,
+                                     #{limit =>
+                                        {optional,
+                                         {any_of,[integer,{exact,null}]}},
+                                       threadId => {required,binstr},
+                                       cursor =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}}}}},
+    {thread_attachment_list_response, {with_defs,
+                                       {#{<<"ThreadAttachment">> =>
+                                           {struct,
+                                            #{id => {required,binstr},
+                                              attachmentType =>
+                                               {required,binstr},
+                                              identityKey => {required,binstr},
+                                              payload => {required,term},
+                                              createdAt =>
+                                               {required,integer}}}},
+                                        {struct,
+                                         #{data =>
+                                            {required,
+                                             {list,
+                                              {ref,<<"ThreadAttachment">>}}},
+                                           nextCursor =>
+                                            {optional,
+                                             {any_of,
+                                              [binstr,{exact,null}]}}}}}}},
+    {thread_attachment_remove_params, {struct,
+                                       #{threadId => {required,binstr},
+                                         attachmentType => {required,binstr},
+                                         identityKey => {required,binstr}}}},
+    {thread_attachment_remove_response, {map,{binstr,term}}},
     {thread_section_move_params, {struct,
                                   #{threadId => {required,binstr},
                                     sectionId =>
@@ -18418,13 +18277,13 @@
                                 <<"McpToolCallAppContext">> =>
                                  {struct,
                                   #{connectorId => {required,binstr},
-                                    actionName =>
-                                     {optional,{any_of,[binstr,{exact,null}]}},
-                                    appName =>
-                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     linkId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     resourceUri =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    actionName =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    appName =>
                                      {optional,
                                       {any_of,[binstr,{exact,null}]}}}},
                                 <<"TextElement">> =>
@@ -18459,16 +18318,27 @@
                                         {default,
                                          {[],
                                           {list,{ref,<<"TextElement">>}}}}}}},
-                                   {struct,
-                                    #{type => {required,{enum,[image]}},
-                                      detail =>
-                                       {optional,
-                                        {default,
-                                         {null,
-                                          {any_of,
-                                           [{ref,<<"ImageDetail">>},
-                                            {exact,null}]}}}},
-                                      url => {required,binstr}}},
+                                   {any_of,
+                                    [{struct,
+                                      #{type => {required,{enum,[image]}},
+                                        detail =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [{ref,<<"ImageDetail">>},
+                                              {exact,null}]}}}},
+                                        url => {required,binstr}}},
+                                     {struct,
+                                      #{type => {required,{enum,[image]}},
+                                        detail =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [{ref,<<"ImageDetail">>},
+                                              {exact,null}]}}}},
+                                        fileId => {required,binstr}}}]},
                                    {struct,
                                     #{type => {required,{enum,[localImage]}},
                                       path => {required,binstr},
@@ -18501,14 +18371,25 @@
                                   [{struct,
                                     #{type => {required,{enum,[input_text]}},
                                       text => {required,binstr}}},
-                                   {struct,
-                                    #{type => {required,{enum,[input_image]}},
-                                      detail =>
-                                       {optional,
-                                        {any_of,
-                                         [{ref,<<"ImageDetail">>},
-                                          {exact,null}]}},
-                                      image_url => {required,binstr}}},
+                                   {any_of,
+                                    [{struct,
+                                      #{type =>
+                                         {required,{enum,[input_image]}},
+                                        detail =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"ImageDetail">>},
+                                            {exact,null}]}},
+                                        image_url => {required,binstr}}},
+                                     {struct,
+                                      #{type =>
+                                         {required,{enum,[input_image]}},
+                                        detail =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"ImageDetail">>},
+                                            {exact,null}]}},
+                                        file_id => {required,binstr}}}]},
                                    {struct,
                                     #{type => {required,{enum,[input_audio]}},
                                       audio_url => {required,binstr}}},
@@ -18646,6 +18527,11 @@
                                  {enum,
                                   [agent,userShell,unifiedExecStartup,
                                    unifiedExecInteraction]},
+                                <<"McpAppUi">> =>
+                                 {struct,
+                                  #{preferredModelDisplayMode =>
+                                     {required,{ref,<<"McpAppDisplayMode">>}},
+                                    resourceUri => {required,binstr}}},
                                 <<"HookPromptFragment">> =>
                                  {struct,
                                   #{text => {required,binstr},
@@ -18719,11 +18605,12 @@
                                   [{enum,
                                     [contextWindowExceeded,
                                      sessionBudgetExceeded,usageLimitExceeded,
-                                     rateLimitExceeded,serverOverloaded,
-                                     cyberPolicy,misalignmentPolicyViolation,
-                                     internalServerError,unauthorized,
-                                     badRequest,threadRollbackFailed,
-                                     sandboxError,other]},
+                                     rateLimitExceeded,flexUnavailable,
+                                     serverOverloaded,cyberPolicy,
+                                     misalignmentPolicyViolation,
+                                     tooManyDenials,internalServerError,
+                                     unauthorized,badRequest,
+                                     threadRollbackFailed,sandboxError,other]},
                                    {struct,
                                     #{httpConnectionFailed =>
                                        {required,
@@ -18923,6 +18810,10 @@
                                       mcpAppResourceUri =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
+                                      mcpAppUi =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"McpAppUi">>},{exact,null}]}},
                                       readOnlyHint =>
                                        {optional,
                                         {any_of,[boolean,{exact,null}]}}}},
@@ -19067,6 +18958,8 @@
                                  {enum,[inProgress,completed,failed]},
                                 <<"MisalignmentSteer">> =>
                                  {struct,#{message => {required,binstr}}},
+                                <<"McpAppDisplayMode">> =>
+                                 {enum,[inline,fullscreen]},
                                 <<"ImageDetail">> =>
                                  {enum,[auto,low,high,original]}},
                               {struct,
@@ -19171,7 +19064,9 @@
                               includeHidden =>
                                   {optional,{any_of,[boolean,{exact,null}]}}}}},
     {model_list_response, {with_defs,
-                           {#{<<"InputModality">> =>
+                           {#{<<"CyberAccessProgram">> =>
+                               {enum,[standard,daybreakBlue,daybreakRed]},
+                              <<"InputModality">> =>
                                {any_of,
                                 [{enum,[text]},{enum,[image]},{enum,[audio]}]},
                               <<"Model">> =>
@@ -19187,6 +19082,13 @@
                                     {any_of,
                                      [{ref,<<"ModelAvailabilityNux">>},
                                       {exact,null}]}},
+                                  availableAccessPrograms =>
+                                   {optional,
+                                    {default,
+                                     {null,
+                                      {any_of,
+                                       [{ref,<<"ModelAccessPrograms">>},
+                                        {exact,null}]}}}},
                                   defaultReasoningEffort =>
                                    {required,{ref,<<"ReasoningEffort">>}},
                                   defaultServiceTier =>
@@ -19226,6 +19128,11 @@
                                     {any_of,
                                      [{ref,<<"ModelUpgradeInfo">>},
                                       {exact,null}]}}}},
+                              <<"ModelAccessPrograms">> =>
+                               {struct,
+                                #{cyber =>
+                                   {required,
+                                    {list,{ref,<<"CyberAccessProgram">>}}}}},
                               <<"ModelAvailabilityNux">> =>
                                {struct,#{message => {required,binstr}}},
                               <<"ModelServiceTier">> =>
@@ -19582,7 +19489,10 @@
                                           {optional,
                                            {any_of,
                                             [{ref,<<"McpServerStatusDetail">>},
-                                             {exact,null}]}}}}}}},
+                                             {exact,null}]}},
+                                         serverName =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}}}}}}},
     {mcp_server_status_list_response, {with_defs,
                                        {#{<<"McpAuthStatus">> =>
                                            {enum,
@@ -19627,6 +19537,10 @@
                                               authStatus =>
                                                {required,
                                                 {ref,<<"McpAuthStatus">>}},
+                                              httpOrigin =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
                                               resourceTemplates =>
                                                {required,
                                                 {list,
@@ -19641,6 +19555,8 @@
                                                  [{ref,
                                                    <<"McpServerConnectionStatus">>},
                                                   {exact,null}]}},
+                                              serverCapabilities =>
+                                               {optional,term},
                                               serverInfo =>
                                                {optional,
                                                 {any_of,
@@ -19723,18 +19639,33 @@
                                             {optional,
                                              {any_of,
                                               [binstr,{exact,null}]}}}}}}},
-    {mcp_server_resource_read_params, {struct,
-                                       #{server => {required,binstr},
-                                         uri => {required,binstr},
-                                         threadId =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         connectorId =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}},
-                                         originCallId =>
-                                          {optional,
-                                           {any_of,[binstr,{exact,null}]}}}}},
+    {mcp_server_resource_read_params, {with_defs,
+                                       {#{<<"McpResourceReadTarget">> =>
+                                           {struct,
+                                            #{connectorId => {required,binstr},
+                                              linkId =>
+                                               {required,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}}}}},
+                                        {struct,
+                                         #{server => {required,binstr},
+                                           uri => {required,binstr},
+                                           threadId =>
+                                            {optional,
+                                             {any_of,[binstr,{exact,null}]}},
+                                           target =>
+                                            {optional,
+                                             {any_of,
+                                              [{ref,
+                                                <<"McpResourceReadTarget">>},
+                                               {exact,null}]}},
+                                           connectorId =>
+                                            {optional,
+                                             {any_of,[binstr,{exact,null}]}},
+                                           originCallId =>
+                                            {optional,
+                                             {any_of,
+                                              [binstr,{exact,null}]}}}}}}},
     {mcp_server_resource_read_response, {with_defs,
                                          {#{<<"ResourceContent">> =>
                                              {any_of,
@@ -19875,8 +19806,12 @@
                                    open_world_enabled =>
                                     {optional,{any_of,[boolean,{exact,null}]}},
                                    default_tools_enabled =>
+                                    {optional,{any_of,[boolean,{exact,null}]}},
+                                   omit_tools_from =>
                                     {optional,
-                                     {any_of,[boolean,{exact,null}]}}}},
+                                     {any_of,
+                                      [{list,{ref,<<"ToolExposureSurface">>}},
+                                       {exact,null}]}}}},
                                <<"SandboxWorkspaceWrite">> =>
                                 {struct,
                                  #{exclude_slash_tmp =>
@@ -20049,6 +19984,11 @@
                                       [{map,{binstr,term}},{exact,null}]}}}},
                                <<"AllowDenyRequirement">> =>
                                 {enum,[allow,deny]},
+                               <<"ToolExposureSurface">> =>
+                                {any_of,
+                                 [{enum,[code_mode]},
+                                  {enum,[deferred]},
+                                  {enum,[direct]}]},
                                <<"ToolsV2">> =>
                                 {struct,
                                  #{web_search =>
@@ -20527,7 +20467,16 @@
                                                     {exact,null}]}}}},
                                             <<"ConfigRequirements">> =>
                                              {struct,
-                                              #{feedback =>
+                                              #{modelProvider =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                modelProviders =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{map,{binstr,term}},
+                                                    {exact,null}]}},
+                                                feedback =>
                                                  {optional,
                                                   {any_of,
                                                    [{ref,
@@ -20570,6 +20519,13 @@
                                                      {ref,
                                                       <<"AskForApproval">>}},
                                                     {exact,null}]}},
+                                                allowedLoginMethods =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{list,
+                                                     {ref,
+                                                      <<"ForcedLoginMethod">>}},
+                                                    {exact,null}]}},
                                                 allowedPermissionProfiles =>
                                                  {optional,
                                                   {any_of,
@@ -20593,7 +20549,7 @@
                                                   {any_of,
                                                    [{list,
                                                      {ref,
-                                                      <<"WindowsSandboxSetupMode">>}},
+                                                      <<"WindowsSandboxImplementation">>}},
                                                     {exact,null}]}},
                                                 browserUse =>
                                                  {optional,
@@ -20659,11 +20615,7 @@
                                                 sqliteHome =>
                                                  {optional,
                                                   {any_of,
-                                                   [binstr,{exact,null}]}},
-                                                windowsSandboxPrivateDesktop =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [boolean,{exact,null}]}}}},
+                                                   [binstr,{exact,null}]}}}},
                                             <<"ConfiguredHookHandler">> =>
                                              {any_of,
                                               [{struct,
@@ -20731,6 +20683,8 @@
                                                  {optional,
                                                   {any_of,
                                                    [boolean,{exact,null}]}}}},
+                                            <<"ForcedLoginMethod">> =>
+                                             {enum,[chatgpt,api]},
                                             <<"InAppBrowserRequirements">> =>
                                              {struct,
                                               #{allowExternalBrowserSettingsImport =>
@@ -20908,8 +20862,8 @@
                                             <<"WebSearchMode">> =>
                                              {enum,
                                               [disabled,cached,indexed,live]},
-                                            <<"WindowsSandboxSetupMode">> =>
-                                             {enum,[elevated,unelevated]}},
+                                            <<"WindowsSandboxImplementation">> =>
+                                             {enum,[elevated,unelevated,mxc]}},
                                           {struct,
                                            #{requirements =>
                                               {optional,
@@ -20937,14 +20891,23 @@
                                       usesCodexManagedCredentials =>
                                        {optional,
                                         {default,{false,boolean}}}}}]},
+                                <<"AccountRoutingOverride">> =>
+                                 {enum,['NO_CONSTRAINT',us,us_cr]},
                                 <<"PlanType">> =>
                                  {enum,
-                                  [free,go,plus,pro,prolite,team,
+                                  [free,go,plus,pro,prolite,promax,team,
                                    self_serve_business_prolite,
                                    self_serve_business_usage_based,business,
                                    ent26,enterprise_cbp_automation,
                                    enterprise_cbp_usage_based,enterprise,edu,
-                                   edu_plus,edu_pro,unknown]}},
+                                   edu_plus,edu_pro,unknown]},
+                                <<"WorkspaceRouting">> =>
+                                 {struct,
+                                  #{chatgptAccountId => {required,binstr},
+                                    accountRoutingOverride =>
+                                     {required,
+                                      {ref,<<"AccountRoutingOverride">>}},
+                                    backendOrigin => {required,binstr}}}},
                               {struct,
                                #{account =>
                                   {optional,
@@ -21028,6 +20991,28 @@
                                           {required,
                                            {ref,
                                             <<"CancelLoginAccountStatus">>}}}}}}},
+    {account_gateway_oauth_read_response, {with_defs,
+                                           {#{<<"GatewayOAuthStatus">> =>
+                                               {enum,
+                                                [notReady,started,succeeded,
+                                                 failed]}},
+                                            {struct,
+                                             #{error =>
+                                                {optional,
+                                                 {any_of,
+                                                  [binstr,{exact,null}]}},
+                                               status =>
+                                                {optional,
+                                                 {any_of,
+                                                  [{ref,
+                                                    <<"GatewayOAuthStatus">>},
+                                                   {exact,null}]}},
+                                               required => {required,boolean},
+                                               providerId => {required,binstr},
+                                               providerName =>
+                                                {required,binstr}}}}}},
+    {account_gateway_oauth_login_response, {map,{binstr,term}}},
+    {account_gateway_oauth_cancel_response, {map,{binstr,term}}},
     {account_logout_response, {map,{binstr,term}}},
     {account_rate_limits_read_response, {with_defs,
                                          {#{<<"CreditsSnapshot">> =>
@@ -21042,7 +21027,8 @@
                                                  {required,boolean}}},
                                             <<"PlanType">> =>
                                              {enum,
-                                              [free,go,plus,pro,prolite,team,
+                                              [free,go,plus,pro,prolite,
+                                               promax,team,
                                                self_serve_business_prolite,
                                                self_serve_business_usage_based,
                                                business,ent26,
@@ -21375,19 +21361,108 @@
                                   #{async =>
                                      {optional,{default,{false,boolean}}},
                                     command => {required,binstr},
-                                    handlerType =>
-                                     {required,{enum,[command]}}}},
+                                    enabled => {required,boolean},
+                                    key => {required,binstr},
+                                    source =>
+                                     {required,{ref,<<"HookSource">>}},
+                                    sourcePath =>
+                                     {required,{ref,<<"AbsolutePathBuf">>}},
+                                    pluginId =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    displayOrder => {required,integer},
+                                    eventName =>
+                                     {required,{ref,<<"HookEventName">>}},
+                                    handlerType => {required,{enum,[command]}},
+                                    statusMessage =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    additionalContextLimit =>
+                                     {optional,
+                                      {any_of,[integer,{exact,null}]}},
+                                    timeoutSec => {required,integer},
+                                    matcher =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    currentHash => {required,binstr},
+                                    isManaged => {required,boolean},
+                                    trustStatus =>
+                                     {required,{ref,<<"HookTrustStatus">>}}}},
                                  {struct,
-                                  #{server => {required,binstr},
+                                  #{enabled => {required,boolean},
+                                    server => {required,binstr},
+                                    key => {required,binstr},
+                                    source =>
+                                     {required,{ref,<<"HookSource">>}},
+                                    sourcePath =>
+                                     {required,{ref,<<"AbsolutePathBuf">>}},
                                     tool => {required,binstr},
-                                    handlerType =>
-                                     {required,{enum,[mcpTool]}}}},
+                                    pluginId =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    displayOrder => {required,integer},
+                                    eventName =>
+                                     {required,{ref,<<"HookEventName">>}},
+                                    handlerType => {required,{enum,[mcpTool]}},
+                                    statusMessage =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    additionalContextLimit =>
+                                     {optional,
+                                      {any_of,[integer,{exact,null}]}},
+                                    timeoutSec => {required,integer},
+                                    matcher =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    currentHash => {required,binstr},
+                                    isManaged => {required,boolean},
+                                    trustStatus =>
+                                     {required,{ref,<<"HookTrustStatus">>}}}},
                                  {struct,
-                                  #{handlerType =>
-                                     {required,{enum,[prompt]}}}},
+                                  #{enabled => {required,boolean},
+                                    key => {required,binstr},
+                                    source =>
+                                     {required,{ref,<<"HookSource">>}},
+                                    sourcePath =>
+                                     {required,{ref,<<"AbsolutePathBuf">>}},
+                                    pluginId =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    displayOrder => {required,integer},
+                                    eventName =>
+                                     {required,{ref,<<"HookEventName">>}},
+                                    handlerType => {required,{enum,[prompt]}},
+                                    statusMessage =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    additionalContextLimit =>
+                                     {optional,
+                                      {any_of,[integer,{exact,null}]}},
+                                    timeoutSec => {required,integer},
+                                    matcher =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    currentHash => {required,binstr},
+                                    isManaged => {required,boolean},
+                                    trustStatus =>
+                                     {required,{ref,<<"HookTrustStatus">>}}}},
                                  {struct,
-                                  #{handlerType =>
-                                     {required,{enum,[agent]}}}}]},
+                                  #{enabled => {required,boolean},
+                                    key => {required,binstr},
+                                    source =>
+                                     {required,{ref,<<"HookSource">>}},
+                                    sourcePath =>
+                                     {required,{ref,<<"AbsolutePathBuf">>}},
+                                    pluginId =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    displayOrder => {required,integer},
+                                    eventName =>
+                                     {required,{ref,<<"HookEventName">>}},
+                                    handlerType => {required,{enum,[agent]}},
+                                    statusMessage =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    additionalContextLimit =>
+                                     {optional,
+                                      {any_of,[integer,{exact,null}]}},
+                                    timeoutSec => {required,integer},
+                                    matcher =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    currentHash => {required,binstr},
+                                    isManaged => {required,boolean},
+                                    trustStatus =>
+                                     {required,
+                                      {ref,<<"HookTrustStatus">>}}}}]},
                               <<"HookSource">> =>
                                {enum,
                                 [system,user,project,mdm,sessionFlags,plugin,
@@ -22105,6 +22180,13 @@
                                    appTemplates =>
                                     {required,
                                      {list,{ref,<<"AppTemplateSummary">>}}},
+                                   onboardingSkill =>
+                                    {optional,
+                                     {default,
+                                      {null,
+                                       {any_of,
+                                        [{ref,<<"SkillSummary">>},
+                                         {exact,null}]}}}},
                                    scheduledTasks =>
                                     {optional,
                                      {any_of,
