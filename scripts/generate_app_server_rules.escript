@@ -101,8 +101,6 @@ schema_files() ->
       , {thread_unarchive_response, from_json, "v2/ThreadUnarchiveResponse.json"}
       , {thread_compact_start_params, to_json, "v2/ThreadCompactStartParams.json"}
       , {thread_compact_start_response, from_json, "v2/ThreadCompactStartResponse.json"}
-      , {thread_rollback_params, to_json, "v2/ThreadRollbackParams.json"}
-      , {thread_rollback_response, from_json, "v2/ThreadRollbackResponse.json"}
       , {thread_revert_params, to_json, "v2/ThreadRevertParams.json"}
       , {thread_revert_response, from_json, "v2/ThreadRevertResponse.json"}
       , {thread_delete_params, to_json, "v2/ThreadDeleteParams.json"}
@@ -117,6 +115,12 @@ schema_files() ->
       , {thread_goal_clear_response, from_json, "v2/ThreadGoalClearResponse.json"}
       , {thread_metadata_update_params, to_json, "v2/ThreadMetadataUpdateParams.json"}
       , {thread_metadata_update_response, from_json, "v2/ThreadMetadataUpdateResponse.json"}
+      , {thread_attachment_add_params, to_json, "v2/ThreadAttachmentAddParams.json"}
+      , {thread_attachment_add_response, from_json, "v2/ThreadAttachmentAddResponse.json"}
+      , {thread_attachment_list_params, to_json, "v2/ThreadAttachmentListParams.json"}
+      , {thread_attachment_list_response, from_json, "v2/ThreadAttachmentListResponse.json"}
+      , {thread_attachment_remove_params, to_json, "v2/ThreadAttachmentRemoveParams.json"}
+      , {thread_attachment_remove_response, from_json, "v2/ThreadAttachmentRemoveResponse.json"}
       , {thread_section_move_params, to_json, "v2/ThreadSectionMoveParams.json"}
       , {thread_section_move_response, from_json, "v2/ThreadSectionMoveResponse.json"}
       , {thread_shell_command_params, to_json, "v2/ThreadShellCommandParams.json"}
@@ -186,6 +190,9 @@ schema_files() ->
       , {account_login_start_response, from_json, "v2/LoginAccountResponse.json"}
       , {account_login_cancel_params, to_json, "v2/CancelLoginAccountParams.json"}
       , {account_login_cancel_response, from_json, "v2/CancelLoginAccountResponse.json"}
+      , {account_gateway_oauth_read_response, from_json, "v2/GatewayOAuthReadResponse.json"}
+      , {account_gateway_oauth_login_response, from_json, "v2/GatewayOAuthLoginResponse.json"}
+      , {account_gateway_oauth_cancel_response, from_json, "v2/GatewayOAuthCancelResponse.json"}
       , {account_logout_response, from_json, "v2/LogoutAccountResponse.json"}
       , {account_rate_limits_read_response, from_json,
             "v2/GetAccountRateLimitsResponse.json"}
