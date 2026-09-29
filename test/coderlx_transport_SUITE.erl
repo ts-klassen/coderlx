@@ -5,32 +5,46 @@
 
 -export([suite/0, all/0, init_per_testcase/2, end_per_testcase/2]).
 -export([
-    request_send_timeout/1,
-    success_reply_send_timeout/1,
-    error_reply_send_timeout/1,
-    request_and_replies/1,
-    response_timeout/1,
-    stop_preserves_other_errors/1
-]).
+        request_send_timeout/1
+      , success_reply_send_timeout/1
+      , error_reply_send_timeout/1
+      , request_and_replies/1
+      , response_with_same_id_request/1
+      , response_timeout/1
+      , stop_preserves_other_errors/1
+    ]).
 
+-type test_case() :: request_send_timeout
+                  | success_reply_send_timeout
+                  | error_reply_send_timeout
+                  | request_and_replies
+                  | response_with_same_id_request
+                  | response_timeout
+                  | stop_preserves_other_errors.
+
+-spec suite() -> [{timetrap, {seconds, pos_integer()}}].
 suite() ->
     [{timetrap, {seconds, 15}}].
 
+-spec all() -> [test_case()].
 all() ->
     [
-        request_send_timeout,
-        success_reply_send_timeout,
-        error_reply_send_timeout,
-        request_and_replies,
-        response_timeout,
-        stop_preserves_other_errors
+        request_send_timeout
+      , success_reply_send_timeout
+      , error_reply_send_timeout
+      , request_and_replies
+      , response_with_same_id_request
+      , response_timeout
+      , stop_preserves_other_errors
     ].
 
+-spec init_per_testcase(test_case(), proplists:proplist()) -> proplists:proplist().
 init_per_testcase(stop_preserves_other_errors, Config) ->
     Config;
 init_per_testcase(TestCase, Config) ->
     {Script, ExtraOpts} = case TestCase of
         request_and_replies -> {"echo_codex.sh", #{}};
+        response_with_same_id_request -> {"collision_codex.sh", #{}};
         response_timeout -> {"blocked_codex.sh", #{send_timeout => 5000}};
         _ -> {"blocked_codex.sh", #{send_timeout => 100}}
     end,
@@ -38,14 +52,14 @@ init_per_testcase(TestCase, Config) ->
         filename:join(?config(data_dir, Config), Script)
     ),
     Hnd = coderlx:start(ExtraOpts#{
-        app_server_path => <<"/tmp/app-server">>,
-        bwrap => [
-            {ro_bind, <<"/">>, <<"/">>},
-            {tmpfs, <<"/tmp">>},
-            {proc, <<"/proc">>},
-            {dev, <<"/dev">>},
-            {ro_bind, ScriptPath, <<"/tmp/app-server">>},
-            {chdir, <<"/tmp">>}
+        app_server_path => <<"/tmp/app-server">>
+      , bwrap => [
+            {ro_bind, <<"/">>, <<"/">>}
+          , {tmpfs, <<"/tmp">>}
+          , {proc, <<"/proc">>}
+          , {dev, <<"/dev">>}
+          , {ro_bind, ScriptPath, <<"/tmp/app-server">>}
+          , {chdir, <<"/tmp">>}
         ]
     }),
     #{stream := #{os_pid := OsPid}} = Hnd,
@@ -58,38 +72,100 @@ init_per_testcase(TestCase, Config) ->
             erlang:raise(Class, Reason, Stack)
     end.
 
+-spec end_per_testcase(test_case(), proplists:proplist()) -> ok.
 end_per_testcase(stop_preserves_other_errors, _Config) ->
     ok;
 end_per_testcase(_TestCase, Config) ->
     coderlx:stop(?config(coderlx, Config)).
 
+-spec request_send_timeout(proplists:proplist()) -> ok.
 request_send_timeout(Config) ->
     Params = #{clientInfo => #{name => large_input(), version => <<"0.1.0">>}},
     assert_send_timeout(Config, fun(Hnd) ->
         coderlx:initialize(Params, Hnd)
     end).
 
+-spec success_reply_send_timeout(proplists:proplist()) -> ok.
 success_reply_send_timeout(Config) ->
     Result = #{
-        contentItems => [#{type => inputText, text => large_input()}],
-        success => true
+        contentItems => [#{type => inputText, text => large_input()}]
+      , success => true
     },
     assert_send_timeout(Config, fun(Hnd) ->
         coderlx:respond_ok(<<"tool-1">>, Result, Hnd)
     end).
 
+-spec error_reply_send_timeout(proplists:proplist()) -> ok.
 error_reply_send_timeout(Config) ->
     Reason = #{details => large_input()},
     assert_send_timeout(Config, fun(Hnd) ->
         coderlx:respond_error(<<"tool-1">>, consumer_error, Reason, Hnd)
     end).
 
+-spec request_and_replies(proplists:proplist()) -> ok.
+request_and_replies(Config) ->
+    Hnd0 = ?config(coderlx, Config),
+    ?assertEqual(60000, maps:get(send_timeout, Hnd0)),
+    ?assertEqual(none, klsn_map:lookup([stream_exit], Hnd0)),
+    ?assertEqual(none, klsn_map:lookup([server_request_handler], Hnd0)),
+    Params = #{clientInfo => #{name => <<"transport-test">>, version => <<"0.1.0">>}},
+    {{ok, #{}}, Hnd1} = coderlx:request(initialize, Params, Hnd0),
+    ?assertEqual(2, maps:get(next_id, Hnd1)),
+    #{stream := #{os_pid := OsPid}} = Hnd1,
+    Request = jsone:decode(stderr_line(OsPid, maps:get(stderr, Hnd1))),
+    ?assertMatch(#{
+        <<"id">> := 1
+      , <<"method">> := <<"initialize">>
+      , <<"params">> := #{<<"clientInfo">> := #{<<"name">> := <<"transport-test">>}}
+    }, Request),
+    ok = coderlx:respond_ok(<<"approval-1">>, #{decision => accept}, Hnd1),
+    ?assertEqual(#{
+        <<"id">> => <<"approval-1">>
+      , <<"result">> => #{<<"decision">> => <<"accept">>}
+    }, jsone:decode(stderr_line(OsPid, <<>>))),
+    ok = coderlx:respond_error(<<"tool-1">>, consumer_error, #{detail => <<"failed">>}, Hnd1),
+    ?assertMatch(#{
+        <<"id">> := <<"tool-1">>
+      , <<"error">> := #{
+            <<"code">> := -32000
+          , <<"data">> := #{<<"detail">> := <<"failed">>}
+        }
+    }, jsone:decode(stderr_line(OsPid, <<>>))).
+
+-spec response_with_same_id_request(proplists:proplist()) -> ok.
+response_with_same_id_request(Config) ->
+    Hnd0 = ?config(coderlx, Config),
+    Params = #{clientInfo => #{name => <<"transport-test">>, version => <<"0.1.0">>}},
+    {{ok, #{}}, Hnd1} = coderlx:request(initialize, Params, Hnd0),
+    ?assertEqual(2, maps:get(next_id, Hnd1)),
+    {{value, #{id := 1, method := 'attestation/generate'}}, _} =
+        coderlx:pop_message(fun(_) -> true end, 0, Hnd1),
+    ok.
+
+-spec response_timeout(proplists:proplist()) -> ok.
+response_timeout(Config) ->
+    Hnd = (?config(coderlx, Config))#{request_timeout := 20},
+    #{stream := #{exec_pid := Worker}} = Hnd,
+    Params = #{clientInfo => #{name => <<"transport-test">>, version => <<"0.1.0">>}},
+    %% A small request fits the input buffer. Only the response wait expires.
+    ?assertError(response_timeout, coderlx:initialize(Params, Hnd)),
+    ?assert(is_process_alive(Worker)).
+
+-spec stop_preserves_other_errors(proplists:proplist()) -> ok.
+stop_preserves_other_errors(_Config) ->
+    ?assertError(badarg, coderlx:stop(#{stream => #{}})).
+
+-spec assert_send_timeout(
+        proplists:proplist()
+      , fun((coderlx:coderlx()) -> ok |
+            {coderlx:jsonrpc_error_or(jsone:json_value()), coderlx:coderlx()})
+    ) -> ok.
 assert_send_timeout(Config, Send) ->
     Hnd = ?config(coderlx, Config),
     #{
-        stream := #{exec_pid := Worker},
-        send_timeout := 100,
-        request_timeout := 60000
+        stream := #{exec_pid := Worker}
+      , send_timeout := 100
+      , request_timeout := 60000
     } = Hnd,
     Start = erlang:monotonic_time(millisecond),
     %% Exercise callers' usual try/after cleanup: a stopped transport must
@@ -101,47 +177,11 @@ assert_send_timeout(Config, Send) ->
     ?assertNot(is_process_alive(Worker)),
     ?assertEqual(ok, coderlx:stop(Hnd)).
 
-request_and_replies(Config) ->
-    Hnd0 = ?config(coderlx, Config),
-    ?assertEqual(60000, maps:get(send_timeout, Hnd0)),
-    Params = #{clientInfo => #{name => <<"transport-test">>, version => <<"0.1.0">>}},
-    {{ok, #{}}, Hnd1} = coderlx:request(initialize, Params, Hnd0),
-    ?assertEqual(2, maps:get(next_id, Hnd1)),
-    #{stream := #{os_pid := OsPid}} = Hnd1,
-    Request = jsone:decode(stderr_line(OsPid, maps:get(stderr, Hnd1))),
-    ?assertMatch(#{
-        <<"id">> := 1,
-        <<"method">> := <<"initialize">>,
-        <<"params">> := #{<<"clientInfo">> := #{<<"name">> := <<"transport-test">>}}
-    }, Request),
-    ok = coderlx:respond_ok(<<"approval-1">>, #{decision => accept}, Hnd1),
-    ?assertEqual(#{
-        <<"id">> => <<"approval-1">>,
-        <<"result">> => #{<<"decision">> => <<"accept">>}
-    }, jsone:decode(stderr_line(OsPid, <<>>))),
-    ok = coderlx:respond_error(<<"tool-1">>, consumer_error, #{detail => <<"failed">>}, Hnd1),
-    ?assertMatch(#{
-        <<"id">> := <<"tool-1">>,
-        <<"error">> := #{
-            <<"code">> := -32000,
-            <<"data">> := #{<<"detail">> := <<"failed">>}
-        }
-    }, jsone:decode(stderr_line(OsPid, <<>>))).
-
-response_timeout(Config) ->
-    Hnd = (?config(coderlx, Config))#{request_timeout := 20},
-    #{stream := #{exec_pid := Worker}} = Hnd,
-    Params = #{clientInfo => #{name => <<"transport-test">>, version => <<"0.1.0">>}},
-    %% A small request fits the input buffer. Only the response wait expires.
-    ?assertError(response_timeout, coderlx:initialize(Params, Hnd)),
-    ?assert(is_process_alive(Worker)).
-
-stop_preserves_other_errors(_Config) ->
-    ?assertError(badarg, coderlx:stop(#{stream => #{}})).
-
+-spec large_input() -> binary().
 large_input() ->
     binary:copy(<<"x">>, 8 * 1024 * 1024).
 
+-spec stderr_line(integer(), binary()) -> binary().
 stderr_line(OsPid, Buffer) ->
     case binary:split(Buffer, <<"\n">>) of
         [Line, <<>>] -> Line;

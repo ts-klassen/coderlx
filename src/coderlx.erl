@@ -282,7 +282,11 @@ pop_response(Id, Coderlx0) ->
     case
         pop_message(
             fun
-                (#{id := Id0}) when Id0 =:= Id ->
+                (#{id := Id0, result := _} = Message)
+                    when Id0 =:= Id, not is_map_key(method, Message) ->
+                    true;
+                (#{id := Id0, error := _} = Message)
+                    when Id0 =:= Id, not is_map_key(method, Message) ->
                     true;
                 (_) ->
                     false
