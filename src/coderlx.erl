@@ -9,8 +9,8 @@
       , initialize/2
       , consume/3
       , consume/4
-      , default_codex_path/0
-      , default_code_mode_host_path/0
+      , default_runtime_path/0
+      , default_app_server_path/0
     ]).
 
 %% Low level api
@@ -56,7 +56,7 @@
         }}}
       , {opts, {struct, #{
             bwrap => {required, term}
-          , codex_path => {optional, binstr}
+          , app_server_path => {optional, binstr}
           , send_timeout => {optional, timeout}
         }}}
       , {message, {any_of, [
@@ -115,8 +115,8 @@
 -spec start(opts()) -> coderlx().
 start(#{bwrap := Bwrap}=Opts) ->
     {ok, _} = application:ensure_all_started(coderlx),
-    Codex = maps:get(codex_path, Opts, default_codex_path()),
-    Stream = klsn_bwrap:open([Codex, <<"app-server">>], #{
+    AppServer = maps:get(app_server_path, Opts, default_app_server_path()),
+    Stream = klsn_bwrap:open([AppServer], #{
         bwrap => Bwrap
     }),
     #{
@@ -509,18 +509,19 @@ server_request_rule_(#{method := 'attestation/generate'}) ->
 server_request_rule_(_) ->
     none.
 
--spec default_codex_path() -> klsn:binstr().
-default_codex_path() ->
+-spec default_runtime_path() -> klsn:binstr().
+default_runtime_path() ->
     klsn_binstr:from_any(filename:join([
         code:priv_dir(coderlx)
-      , "codex"
+      , "codex-runtime"
     ])).
 
--spec default_code_mode_host_path() -> klsn:binstr().
-default_code_mode_host_path() ->
+-spec default_app_server_path() -> klsn:binstr().
+default_app_server_path() ->
     klsn_binstr:from_any(filename:join([
-        code:priv_dir(coderlx)
-      , "codex-code-mode-host"
+        default_runtime_path()
+      , "bin"
+      , "codex-app-server"
     ])).
 
 

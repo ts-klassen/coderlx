@@ -11,7 +11,7 @@ codex について言及されていたとしても、それはこのリポジ�
 ## 重要な制約
 
 - `_build` は rebar3 の作業ディレクトリなので、修正・コミットしない。
-- `priv/codex` と `priv/codex-code-mode-host` は取得された Codex バイナリで `.gitignore` 対象なので、通常コミットしない。
+- `priv/codex-runtime/` と `priv/.codex-*/` は取得された Codex パッケージと一時ファイルで `.gitignore` 対象なので、通常コミットしない。
 - `klsn` ライブラリ自体の修正が必要になった場合は、このリポジトリ内で無理に完遂しない。失敗内容、該当 schema、必要そうな `klsn` 側変更を人間に報告して中断する。
 - このリポジトリ内の修正だけで済む場合のみ、更新、検証、差分整理まで完遂する。
 - ユーザーの未コミット変更がある場合は上書きしない。
@@ -21,10 +21,9 @@ codex について言及されていたとしても、それはこのリポジ�
 通常コミット対象になる可能性があるファイルは次の通り。
 
 - `CODEX_VERSION`
-- `CODEX_TARBALL_SHA256`
-- `CODEX_BINARY_SHA256`
-- `CODEX_CODE_MODE_HOST_TARBALL_SHA256`
-- `CODEX_CODE_MODE_HOST_BINARY_SHA256`
+- `scripts/codex/CODEX_RUNTIME_TARBALL_SHA256`
+- `scripts/codex/CODEX_RUNTIME_FILES_SHA256`
+- `scripts/codex/CODEX_SCHEMA_CLI_TARBALL_SHA256`
 - `src/coderlx_app_server_rules.erl`
 - `LICENSE-CODEX`
 - `NOTICE-CODEX`
@@ -49,10 +48,10 @@ codex について言及されていたとしても、それはこのリポジ�
    ```
 
    このスクリプトは次を行う。
-   - Codex app-server と code-mode host の tarball を取得する。
-   - 両方の tarball と binary の SHA256 を更新する。
-   - `priv/codex` と `priv/codex-code-mode-host` を更新する。
-   - `codex app-server generate-json-schema --out ...` を実行する。
+   - 実行用の `codex-app-server-package-<target>.tar.gz` と、同一版のスキーマ生成用 `codex-<target>.tar.gz` を取得する。
+   - 両方の tarball と実行用パッケージ内の全ファイルの SHA256 を更新する。
+   - 相対配置を維持して `priv/codex-runtime/` を更新する。
+   - 専用 app-server ではスキーマを生成できないため、一時取得した CLI で `codex app-server generate-json-schema --out ...` を実行する。
    - `scripts/generate_app_server_rules.escript` で `src/coderlx_app_server_rules.erl` を再生成する。
    - `LICENSE-CODEX` と `NOTICE-CODEX` を更新する。
 
@@ -70,6 +69,7 @@ codex について言及されていたとしても、それはこのリポジ�
 6. 検証する。
    ```bash
    rebar3 compile
+   rebar3 eunit
    rebar3 ct
    ```
 
@@ -81,14 +81,14 @@ codex について言及されていたとしても、それはこのリポジ�
    git diff
    ```
 
-   `_build`, `priv/codex`, `priv/codex-code-mode-host` は差分対象にしない。
+   `_build`, `priv/codex-runtime/`, `priv/.codex-*/` は差分対象にしない。
 
 ## 新しい client request method が追加された場合
 
 `fca1f4a`, `29d9487`, `4e47bbd`, `17766f7` と同じように、次の 4 つに分けてコミットする。
 
 1. `fca1f4a`: バージョン固定とライセンス情報の更新をコミットする。
-   - `CODEX_VERSION` と 4 つの SHA256 ファイルを更新する。
+   - `CODEX_VERSION` と `scripts/codex/` 内の 3 つの SHA256 ファイルを更新する。
    - `LICENSE-CODEX` と `NOTICE-CODEX` に差分があれば、このコミットに含める。
 
 2. `29d9487`: `scripts/generate_app_server_rules.escript` だけを変更する。

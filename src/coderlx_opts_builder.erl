@@ -74,10 +74,7 @@ sandbox(Args) ->
           , {ro_bind, <<"/etc">>, <<"/etc">>}
           , {ro_bind, <<"/run">>, <<"/run">>}
           , {ro_bind, <<"/sys">>, <<"/sys">>}
-          , {dir, <<"/cbin">>}
-          , {ro_bind, coderlx:default_codex_path(), <<"/cbin/codex">>}
-          , {ro_bind, coderlx:default_code_mode_host_path(),
-                <<"/cbin/codex-code-mode-host">>}
+          , {ro_bind, coderlx:default_runtime_path(), <<"/codex-runtime">>}
           , {dir, <<"/home">>}
           , SandboxHome
           , {bind, CodexHome, <<"/home/", User/binary, "/.codex">>}
@@ -87,10 +84,10 @@ sandbox(Args) ->
           , {setenv, <<"HOME">>, <<"/home/", User/binary>>}
           , {setenv, <<"USER">>, User}
           , {setenv, <<"LOGNAME">>, User}
-          , {setenv, <<"PATH">>, <<"/cbin:/usr/bin:/bin">>}
+          , {setenv, <<"PATH">>, <<"/codex-runtime/bin:/usr/bin:/bin">>}
           , {setenv, <<"SHELL">>, <<"/bin/bash">>}
           , {setenv, <<"TMPDIR">>, <<"/tmp">>}
           , Chdir
         ]
-      , codex_path => <<"/cbin/codex">>
+      , app_server_path => <<"/codex-runtime/bin/codex-app-server">>
     }.

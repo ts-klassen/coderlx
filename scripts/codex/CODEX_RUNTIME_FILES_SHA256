@@ -1,0 +1,7 @@
+# Codex 0.159.0 x86_64-unknown-linux-musl
+62e50b57a2a5c19ee646748493021e60272bda09a257c6c0c7391ac06c898086  bin/codex-app-server
+ac0dee4322bafd104eb5508eaf8e4794364768f3bd3b5e249fd5a94102f770a5  bin/codex-code-mode-host
+0ccd1f95327bed0f6fc8d9b8b695206dbe469fc5451f45f0076fe8faa03e1051  codex-package.json
+e62198eb19b136b88c330af83647b5a962cb99b6b1f066758568f12de1974849  codex-path/rg
+77360cb751ccedc5971391444ac86a8a33c15b04d6b4a6fe45f5d25496e62c4c  codex-resources/bwrap
+67faaaa89242c4a332e16e508a1977cffc24bf7fca31d4411cdfd101f3831ef3  codex-resources/zsh/bin/zsh

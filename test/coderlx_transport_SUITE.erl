@@ -38,7 +38,7 @@ init_per_testcase(TestCase, Config) ->
         filename:join(?config(data_dir, Config), Script)
     ),
     Hnd = coderlx:start(ExtraOpts#{
-        codex_path => <<"/bin/sh">>,
+        app_server_path => <<"/tmp/app-server">>,
         bwrap => [
             {ro_bind, <<"/">>, <<"/">>},
             {tmpfs, <<"/tmp">>},
