@@ -6,6 +6,22 @@ CHECKSUM_DIR="${ROOT_DIR}/scripts/codex"
 RUNTIME_DIR="${ROOT_DIR}/priv/codex-runtime"
 PACKAGE_HELPER="${ROOT_DIR}/scripts/codex_package.escript"
 
+# Linux flock serializes verification and publication, including updated pins.
+# Keep the lock file in place: unlinking it could let waiters lock different files.
+lock_runtime() {
+    mkdir -p "${ROOT_DIR}/priv/.codex-lock"
+    exec {CODEX_RUNTIME_LOCK_FD}>"${ROOT_DIR}/priv/.codex-lock/install.lock"
+    flock -x "${CODEX_RUNTIME_LOCK_FD}"
+}
+
+cleanup_runtime_staging() {
+    if [ "${KEEP_RUNTIME_STAGING:-false}" = true ]; then
+        echo "preserving runtime recovery files in $1" >&2
+    else
+        rm -rf -- "$1"
+    fi
+}
+
 fetch_url() {
     curl -fL --retry 2 --connect-timeout 15 "$1" -o "$2"
 }
@@ -52,12 +68,21 @@ install_runtime() {
         echo "expected a package directory: ${RUNTIME_DIR}" >&2
         return 1
     fi
-    if [ -d "${RUNTIME_DIR}" ]; then
-        mv "${RUNTIME_DIR}" "${previous}"
+    if [ -e "${previous}" ] || [ -L "${previous}" ]; then
+        echo "expected an unused backup path: ${previous}" >&2
+        return 1
     fi
-    if ! mv "${staged}" "${RUNTIME_DIR}"; then
+    if [ -d "${RUNTIME_DIR}" ]; then
+        if ! mv -T -- "${RUNTIME_DIR}" "${previous}"; then
+            return 1
+        fi
+    fi
+    if ! mv -T -- "${staged}" "${RUNTIME_DIR}"; then
         if [ -d "${previous}" ]; then
-            mv "${previous}" "${RUNTIME_DIR}"
+            if ! mv -T -- "${previous}" "${RUNTIME_DIR}"; then
+                KEEP_RUNTIME_STAGING=true
+                echo "failed to restore previous runtime: ${previous}" >&2
+            fi
         fi
         return 1
     fi

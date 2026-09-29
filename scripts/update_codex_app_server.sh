@@ -16,9 +16,11 @@ cd "${ROOT_DIR}"
 # that may already reference the next version's generated aliases.
 rebar3 compile --deps_only
 
-mkdir -p "${ROOT_DIR}/priv"
+# Acquire after dependency compilation so a nested compile hook cannot deadlock.
+# Hold through publication of the runtime, pins, and generated rules.
+lock_runtime
 TMP_DIR="$(mktemp -d "${ROOT_DIR}/priv/.codex-update.XXXXXX")"
-trap 'rm -rf "${TMP_DIR}"' EXIT
+trap 'cleanup_runtime_staging "${TMP_DIR}"' EXIT
 PACKAGE_NAME="codex-app-server-package-${CODEX_TARGET}.tar.gz"
 CLI_NAME="codex-${CODEX_TARGET}.tar.gz"
 RELEASE_URL="https://github.com/openai/codex/releases/download/rust-v${CODEX_VERSION}"

@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${ROOT_DIR}/scripts/codex_package.sh"
 
+lock_runtime
 CODEX_VERSION="$(tr -d '[:space:]' < "${ROOT_DIR}/CODEX_VERSION")"
 validate_version "${CODEX_VERSION}"
 PACKAGE_SHA256="$(read_sha256 "${CHECKSUM_DIR}/CODEX_RUNTIME_TARBALL_SHA256")"
@@ -15,9 +16,8 @@ if [ -d "${RUNTIME_DIR}" ] &&
     exit 0
 fi
 
-mkdir -p "${ROOT_DIR}/priv"
 TMP_DIR="$(mktemp -d "${ROOT_DIR}/priv/.codex-install.XXXXXX")"
-trap 'rm -rf "${TMP_DIR}"' EXIT
+trap 'cleanup_runtime_staging "${TMP_DIR}"' EXIT
 PACKAGE_NAME="codex-app-server-package-${CODEX_TARGET}.tar.gz"
 fetch_url "https://github.com/openai/codex/releases/download/rust-v${CODEX_VERSION}/${PACKAGE_NAME}" "${TMP_DIR}/package.tar.gz"
 verify_sha256 "${TMP_DIR}/package.tar.gz" "${PACKAGE_SHA256}"
