@@ -119,6 +119,10 @@ schema_files() ->
       , {thread_attachment_add_response, from_json, "v2/ThreadAttachmentAddResponse.json"}
       , {thread_attachment_list_params, to_json, "v2/ThreadAttachmentListParams.json"}
       , {thread_attachment_list_response, from_json, "v2/ThreadAttachmentListResponse.json"}
+      , {thread_attachment_owner_list_params, to_json,
+            "v2/ThreadAttachmentOwnerListParams.json"}
+      , {thread_attachment_owner_list_response, from_json,
+            "v2/ThreadAttachmentOwnerListResponse.json"}
       , {thread_attachment_remove_params, to_json, "v2/ThreadAttachmentRemoveParams.json"}
       , {thread_attachment_remove_response, from_json, "v2/ThreadAttachmentRemoveResponse.json"}
       , {thread_section_move_params, to_json, "v2/ThreadSectionMoveParams.json"}
@@ -141,6 +145,8 @@ schema_files() ->
       , {thread_section_delete_response, from_json, "v2/ThreadSectionDeleteResponse.json"}
       , {review_start_params, to_json, "v2/ReviewStartParams.json"}
       , {review_start_response, from_json, "v2/ReviewStartResponse.json"}
+      , {feedback_save_params, to_json, "v2/FeedbackSaveParams.json"}
+      , {feedback_save_response, from_json, "v2/FeedbackSaveResponse.json"}
       , {command_exec_params, to_json, "v2/CommandExecParams.json"}
       , {command_exec_response, from_json, "v2/CommandExecResponse.json"}
       , {command_exec_write_params, to_json, "v2/CommandExecWriteParams.json"}
@@ -194,12 +200,16 @@ schema_files() ->
       , {account_gateway_oauth_login_response, from_json, "v2/GatewayOAuthLoginResponse.json"}
       , {account_gateway_oauth_cancel_response, from_json, "v2/GatewayOAuthCancelResponse.json"}
       , {account_logout_response, from_json, "v2/LogoutAccountResponse.json"}
+      , {account_rate_limits_read_params, to_json,
+            "v2/NullableGetAccountRateLimitsParams.json"}
       , {account_rate_limits_read_response, from_json,
             "v2/GetAccountRateLimitsResponse.json"}
       , {account_rate_limit_reset_credit_consume_params, to_json,
             "v2/ConsumeAccountRateLimitResetCreditParams.json"}
       , {account_rate_limit_reset_credit_consume_response, from_json,
             "v2/ConsumeAccountRateLimitResetCreditResponse.json"}
+      , {account_usage_read_params, to_json,
+            "v2/NullableGetAccountTokenUsageParams.json"}
       , {account_usage_read_response, from_json, "v2/GetAccountTokenUsageResponse.json"}
       , {account_workspace_messages_read_response, from_json,
             "v2/GetWorkspaceMessagesResponse.json"}
