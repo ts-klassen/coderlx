@@ -80,7 +80,7 @@ for version in 1.0.0 2.0.0; do
     directory="$ROOT/fixtures/$version"
     runtime="$directory/runtime"
     for name in bin/codex-app-server bin/codex-code-mode-host codex-path/rg \
-        codex-resources/bwrap codex-resources/zsh/bin/zsh; do
+        codex-resources/bwrap; do
         mkdir -p "$(dirname "$runtime/$name")"
         printf '#!/bin/sh\necho %s\n' "$version" > "$runtime/$name"
         chmod +x "$runtime/$name"

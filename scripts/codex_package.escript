@@ -81,7 +81,7 @@ validate_files(Dir) ->
             _ -> ok
         end
     end, ["bin/codex-app-server", "bin/codex-code-mode-host", "codex-path/rg",
-          "codex-resources/bwrap", "codex-resources/zsh/bin/zsh"]).
+          "codex-resources/bwrap"]).
 
 manifest(Dir, Version) ->
     iolist_to_binary(["# Codex ", Version, " x86_64-unknown-linux-musl\n", [[
