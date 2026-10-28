@@ -1,6 +1,6 @@
 {application, coderlx, [
     {description, "Erlang wrapper for Codex app-server JSON-RPC protocol"},
-    {vsn, "0.1.0"},
+    {vsn, "0.165.0"},
     {registered, []},
     {applications, [kernel, stdlib, klsn, jsone]},
     {env, []},
