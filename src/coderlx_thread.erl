@@ -25,6 +25,7 @@
       , metadata_update/2
       , attachment_add/2
       , attachment_list/2
+      , attachment_owner_list/2
       , attachment_remove/2
       , section_move/2
       , shell_command/2
@@ -313,6 +314,17 @@ attachment_add(Params, Coderlx) ->
     ]}).
 attachment_list(Params, Coderlx) ->
     coderlx:request('thread/attachment/list', Params, Coderlx).
+
+-klsn_input_rule([
+        {alias, {coderlx_app_server_rules, thread_attachment_owner_list_params}}
+      , {alias, {coderlx, coderlx}}
+    ]).
+-klsn_output_rule({tuple, [
+        ?JSONRPC_ERROR_OR(thread_attachment_owner_list_response)
+      , {alias, {coderlx, coderlx}}
+    ]}).
+attachment_owner_list(Params, Coderlx) ->
+    coderlx:request('thread/attachmentOwner/list', Params, Coderlx).
 
 -klsn_input_rule([
         {alias, {coderlx_app_server_rules, thread_attachment_remove_params}}

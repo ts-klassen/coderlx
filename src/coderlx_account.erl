@@ -63,7 +63,7 @@ logout(Params, Coderlx) ->
     coderlx:request('account/logout', Params, Coderlx).
 
 -klsn_input_rule([
-        {exact, null}
+        {alias, {coderlx_app_server_rules, account_rate_limits_read_params}}
       , {alias, {coderlx, coderlx}}
     ]).
 -klsn_output_rule({tuple, [
@@ -85,7 +85,7 @@ rate_limit_reset_credit_consume(Params, Coderlx) ->
     coderlx:request('account/rateLimitResetCredit/consume', Params, Coderlx).
 
 -klsn_input_rule([
-        {exact, null}
+        {alias, {coderlx_app_server_rules, account_usage_read_params}}
       , {alias, {coderlx, coderlx}}
     ]).
 -klsn_output_rule({tuple, [

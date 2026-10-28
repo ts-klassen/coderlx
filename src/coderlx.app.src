@@ -13,6 +13,7 @@
       , coderlx_config
       , coderlx_experimental_feature
       , coderlx_external_agent_config
+      , coderlx_feedback
       , coderlx_fs
       , coderlx_hooks
       , coderlx_marketplace

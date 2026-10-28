@@ -45,6 +45,27 @@ gateway_notification_test() ->
     Json = jsone:decode(jsone:encode(Notification)),
     ?assertEqual(Notification, normalize(Json, server_notification)).
 
+account_read_params_test_() ->
+    [
+        {atom_to_list(Method), fun() ->
+            lists:foreach(fun(Params) ->
+                ?assertEqual(Params, normalize(Params, Alias)),
+                Request = #{id => 1, method => Method, params => Params},
+                ?assertEqual(Request, normalize(Request, client_request))
+            end, [null, #{}, NewParams]),
+            ?assertMatch({reject, _}, klsn_rule:eval(
+                InvalidParams, {alias, {coderlx_app_server_rules, Alias}}, #{}))
+        end}
+        || {Method, Alias, NewParams, InvalidParams} <- [
+            {'account/rateLimits/read', account_rate_limits_read_params,
+                #{supportsLunaReserve => true,
+                  excludeResetCreditDetails => true},
+                #{supportsLunaReserve => #{}}},
+            {'account/usage/read', account_usage_read_params,
+                #{threadId => <<"thread">>}, #{threadId => #{}}}
+        ]
+    ].
+
 normalize(Value, Alias) ->
     klsn_rule:normalize(Value, {alias, {coderlx_app_server_rules, Alias}}).
 
