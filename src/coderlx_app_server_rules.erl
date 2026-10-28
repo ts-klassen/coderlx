@@ -97,6 +97,10 @@
                              disabledPluginIds =>
                               {optional,{any_of,[{list,binstr},{exact,null}]}},
                              outputSchema => {optional,term},
+                             parentTurnId =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
+                             rootTurnId =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
                              serviceTierForTurn =>
                               {optional,{any_of,[binstr,{exact,null}]}},
                              toolOutput =>
@@ -152,12 +156,21 @@
                           {any_of,
                            [{struct,
                              #{id => {optional,{any_of,[binstr,{exact,null}]}},
+                               type => {required,{enum,[additional_tools]}},
+                               tools => {required,{list,term}},
+                               role => {required,binstr}}},
+                            {struct,
+                             #{id => {optional,{any_of,[binstr,{exact,null}]}},
+                               status =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
                                type => {required,{enum,[message]}},
                                phase =>
                                 {optional,
                                  {any_of,
                                   [{ref,<<"MessagePhase">>},{exact,null}]}},
                                role => {required,binstr},
+                               encrypted_content =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
                                content =>
                                 {required,{list,{ref,<<"ContentItem">>}}},
                                internal_chat_message_metadata_passthrough =>
@@ -207,6 +220,8 @@
                                status =>
                                 {required,{ref,<<"LocalShellStatus">>}},
                                type => {required,{enum,[local_shell_call]}},
+                               encrypted_content =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
                                internal_chat_message_metadata_passthrough =>
                                 {optional,
                                  {any_of,
@@ -220,9 +235,13 @@
                             {struct,
                              #{id => {optional,{any_of,[binstr,{exact,null}]}},
                                name => {required,binstr},
+                               status =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
                                type => {required,{enum,[function_call]}},
                                arguments => {required,binstr},
                                namespace =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
+                               encrypted_content =>
                                 {optional,{any_of,[binstr,{exact,null}]}},
                                internal_chat_message_metadata_passthrough =>
                                 {optional,
@@ -240,6 +259,8 @@
                                 {optional,{any_of,[binstr,{exact,null}]}},
                                type => {required,{enum,[tool_search_call]}},
                                arguments => {required,term},
+                               encrypted_content =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
                                internal_chat_message_metadata_passthrough =>
                                 {optional,
                                  {any_of,
@@ -275,6 +296,8 @@
                                 {optional,{any_of,[binstr,{exact,null}]}},
                                type => {required,{enum,[custom_tool_call]}},
                                namespace =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
+                               encrypted_content =>
                                 {optional,{any_of,[binstr,{exact,null}]}},
                                internal_chat_message_metadata_passthrough =>
                                 {optional,
@@ -317,6 +340,8 @@
                                status =>
                                 {optional,{any_of,[binstr,{exact,null}]}},
                                type => {required,{enum,[web_search_call]}},
+                               encrypted_content =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
                                internal_chat_message_metadata_passthrough =>
                                 {optional,
                                  {any_of,
@@ -334,6 +359,8 @@
                                type =>
                                 {required,{enum,[image_generation_call]}},
                                result => {required,binstr},
+                               encrypted_content =>
+                                {optional,{any_of,[binstr,{exact,null}]}},
                                internal_chat_message_metadata_passthrough =>
                                 {optional,
                                  {any_of,
@@ -383,7 +410,26 @@
                            #{marketplaceName =>
                               {optional,{any_of,[binstr,{exact,null}]}}}},
                          <<"MessagePhase">> =>
-                          {any_of,[{enum,[commentary]},{enum,[final_answer]}]},
+                          {any_of,
+                           [{enum,[commentary]},
+                            {enum,[partial_answer]},
+                            {enum,[final_answer]}]},
+                         <<"FeedbackSaveParams">> =>
+                          {struct,
+                           #{reason =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
+                             threadId =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
+                             classification => {required,binstr},
+                             extraLogFiles =>
+                              {optional,{any_of,[{list,binstr},{exact,null}]}},
+                             includeLogs => {optional,boolean},
+                             tags =>
+                              {optional,
+                               {any_of,[{map,{binstr,term}},{exact,null}]}},
+                             savePath =>
+                              {required,
+                               {all_of,[{ref,<<"LegacyAppPathString">>}]}}}},
                          <<"PluginShareDiscoverability">> =>
                           {enum,['LISTED','UNLISTED','PRIVATE']},
                          <<"ThreadSearchSortKey">> =>
@@ -459,10 +505,12 @@
                               {optional,
                                {any_of,
                                 [{ref,<<"SortDirection">>},{exact,null}]}},
-                             sectionId =>
-                              {optional,{any_of,[binstr,{exact,null}]}},
                              archived =>
                               {optional,{any_of,[boolean,{exact,null}]}},
+                             sectionId =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
+                             excludedThreadIds =>
+                              {optional,{any_of,[{list,binstr},{exact,null}]}},
                              modelProviders =>
                               {optional,{any_of,[{list,binstr},{exact,null}]}},
                              originators =>
@@ -767,9 +815,11 @@
                             {list,{ref,<<"FunctionCallOutputContentItem">>}}]},
                          <<"RealtimeVoice">> =>
                           {enum,
-                           [alloy,arbor,ash,ballad,breeze,cedar,coral,cove,
-                            echo,ember,juniper,maple,marin,sage,shimmer,sol,
-                            spruce,vale,verse]},
+                           [alloy,arbor,ash,aube,ballad,breeze,bubbie,cedar,
+                            coral,cove,echo,ember,haetsal,hanul,himari,
+                            juniper,leher,maple,marin,miko,neer,porto,rindo,
+                            rio,rivage,sage,selva,shimmer,sol,sonna,spruce,
+                            tinta,vale,verse,viola]},
                          <<"PluginShareDeleteParams">> =>
                           {struct,#{remotePluginId => {required,binstr}}},
                          <<"ResponsesApiWebSearchAction">> =>
@@ -857,7 +907,13 @@
                            #{cwds => {optional,{list,binstr}},
                              forceReload => {optional,boolean}}},
                          <<"ThreadGoalClearParams">> =>
-                          {struct,#{threadId => {required,binstr}}},
+                          {struct,
+                           #{origin =>
+                              {optional,
+                               {any_of,
+                                [{ref,<<"ThreadGoalMutationOrigin">>},
+                                 {exact,null}]}},
+                             threadId => {required,binstr}}},
                          <<"SandboxMode">> =>
                           {enum,
                            ['read-only','workspace-write',
@@ -1083,6 +1139,10 @@
                           {struct,
                            #{threadId =>
                               {optional,{any_of,[binstr,{exact,null}]}}}},
+                         <<"ThreadReadStateOperation">> =>
+                          {any_of,
+                           [{struct,#{type => {required,{enum,[read]}}}},
+                            {struct,#{type => {required,{enum,[unread]}}}}]},
                          <<"FuzzyFileSearchParams">> =>
                           {struct,
                            #{query => {required,binstr},
@@ -1144,6 +1204,11 @@
                               {optional,
                                {any_of,
                                 [{ref,<<"ThreadGoalStatus">>},{exact,null}]}},
+                             origin =>
+                              {optional,
+                               {any_of,
+                                [{ref,<<"ThreadGoalMutationOrigin">>},
+                                 {exact,null}]}},
                              threadId => {required,binstr},
                              objective =>
                               {optional,{any_of,[binstr,{exact,null}]}},
@@ -1237,6 +1302,11 @@
                               {optional,
                                {any_of,
                                 [{ref,<<"AbsolutePathBuf">>},{exact,null}]}}}},
+                         <<"EnvironmentSkillsParams">> =>
+                          {struct,
+                           #{required =>
+                              {optional,
+                               {any_of,[{list,binstr},{exact,null}]}}}},
                          <<"FsRemoveParams">> =>
                           {struct,
                            #{force =>
@@ -1271,6 +1341,16 @@
                           {struct,
                            #{cwd => {optional,{any_of,[binstr,{exact,null}]}},
                              includeLayers => {optional,boolean}}},
+                         <<"ThreadAttachmentOwnerListParams">> =>
+                          {struct,
+                           #{limit =>
+                              {optional,{any_of,[integer,{exact,null}]}},
+                             cursor =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
+                             archived =>
+                              {optional,{any_of,[boolean,{exact,null}]}},
+                             attachmentType => {required,binstr},
+                             identityKey => {required,binstr}}},
                          <<"ThreadSectionCreateParams">> =>
                           {struct,
                            #{name => {required,binstr},
@@ -1352,6 +1432,8 @@
                                   [{ref,<<"ReviewDelivery">>},
                                    {exact,null}]}}}},
                              target => {required,{ref,<<"ReviewTarget">>}}}},
+                         <<"ThreadGoalMutationOrigin">> =>
+                          {enum,[user,automatic]},
                          <<"ThreadMemoryMode">> => {enum,[enabled,disabled]},
                          <<"ExternalAgentConfigImportHistoryRecordTypeResultParams">> =>
                           {struct,
@@ -1424,7 +1506,12 @@
                                audio_url => {required,binstr}}},
                             {struct,
                              #{type => {required,{enum,[output_text]}},
-                               text => {required,binstr}}}]},
+                               text => {required,binstr},
+                               annotations =>
+                                {optional,{any_of,[{list,term},{exact,null}]}},
+                               logprobs =>
+                                {optional,
+                                 {any_of,[{list,term},{exact,null}]}}}}]},
                          <<"ThreadApproveGuardianDeniedActionParams">> =>
                           {struct,
                            #{threadId => {required,binstr},
@@ -1586,7 +1673,8 @@
                              output =>
                               {required,{ref,<<"FunctionCallOutputBody">>}},
                              namespace =>
-                              {optional,{any_of,[binstr,{exact,null}]}}}},
+                              {optional,{any_of,[binstr,{exact,null}]}},
+                             retain => {optional,boolean}}},
                          <<"ThreadShellCommandParams">> =>
                           {struct,
                            #{command => {required,binstr},
@@ -1793,6 +1881,14 @@
                              {required,{ref,<<"ThreadAttachmentListParams">>}},
                             method =>
                              {required,{enum,['thread/attachment/list']}}}},
+                         {struct,
+                          #{id => {required,{ref,<<"RequestId">>}},
+                            params =>
+                             {required,
+                              {ref,<<"ThreadAttachmentOwnerListParams">>}},
+                            method =>
+                             {required,
+                              {enum,['thread/attachmentOwner/list']}}}},
                          {struct,
                           #{id => {required,{ref,<<"RequestId">>}},
                             params =>
@@ -2222,6 +2318,11 @@
                             params =>
                              {required,{ref,<<"FeedbackUploadParams">>}},
                             method => {required,{enum,['feedback/upload']}}}},
+                         {struct,
+                          #{id => {required,{ref,<<"RequestId">>}},
+                            params =>
+                             {required,{ref,<<"FeedbackSaveParams">>}},
+                            method => {required,{enum,['feedback/save']}}}},
                          {struct,
                           #{id => {required,{ref,<<"RequestId">>}},
                             params => {required,{ref,<<"CommandExecParams">>}},
@@ -3027,6 +3128,13 @@
                                 #{threadId => {required,binstr},
                                   turn => {required,{ref,<<"Turn">>}}}},
                               <<"ReasoningEffort">> => binstr,
+                              <<"ThreadUnreadPosition">> =>
+                               {any_of,
+                                [{struct,
+                                  #{type => {required,{enum,[threadStart]}}}},
+                                 {struct,
+                                  #{type => {required,{enum,[turn]}},
+                                    turnId => {required,binstr}}}]},
                               <<"AppScreenshot">> =>
                                {struct,
                                 #{url =>
@@ -3040,7 +3148,9 @@
                                   column => {required,integer}}},
                               <<"MessagePhase">> =>
                                {any_of,
-                                [{enum,[commentary]},{enum,[final_answer]}]},
+                                [{enum,[commentary]},
+                                 {enum,[partial_answer]},
+                                 {enum,[final_answer]}]},
                               <<"ReasoningSummaryTextDeltaNotification">> =>
                                {struct,
                                 #{threadId => {required,binstr},
@@ -3124,6 +3234,8 @@
                                   name => {required,binstr},
                                   success => {required,boolean},
                                   threadId =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  loginId =>
                                    {optional,{any_of,[binstr,{exact,null}]}}}},
                               <<"ModelVerificationNotification">> =>
                                {struct,
@@ -3134,10 +3246,11 @@
                                     {list,{ref,<<"ModelVerification">>}}}}},
                               <<"HookEventName">> =>
                                {enum,
-                                [preToolUse,permissionRequest,postToolUse,
-                                 preCompact,postCompact,sessionStart,
-                                 sessionEnd,userPromptSubmit,subagentStart,
-                                 subagentStop,stop,interrupt]},
+                                [preModelRequest,postModelRequest,preToolUse,
+                                 permissionRequest,postToolUse,preCompact,
+                                 postCompact,sessionStart,sessionEnd,
+                                 userPromptSubmit,subagentStart,subagentStop,
+                                 stop,interrupt]},
                               <<"ThreadSettings">> =>
                                {struct,
                                 #{cwd =>
@@ -3249,6 +3362,13 @@
                                      {optional,
                                       {any_of,[integer,{exact,null}]}},
                                     limitId => {required,binstr}}}]},
+                              <<"ThreadPredictionUpdatedNotification">> =>
+                               {struct,
+                                #{result =>
+                                   {required,
+                                    {ref,<<"ThreadPredictionResult">>}},
+                                  threadId => {required,binstr},
+                                  sourceTurnId => {required,binstr}}},
                               <<"StrictReviewRequiredNotification">> =>
                                {struct,
                                 #{threadId => {required,binstr},
@@ -3369,6 +3489,20 @@
                                   #{type =>
                                      {required,{enum,[encrypted_content]}},
                                     encrypted_content => {required,binstr}}}]},
+                              <<"ImageGenerationInputImage">> =>
+                               {struct,
+                                #{path =>
+                                   {required,{ref,<<"AbsolutePathBuf">>}},
+                                  sha256 => {required,binstr}}},
+                              <<"ThreadPredictionResult">> =>
+                               {any_of,
+                                [{struct,
+                                  #{type => {required,{enum,[completed]}},
+                                    text =>
+                                     {optional,
+                                      {any_of,[binstr,{exact,null}]}}}},
+                                 {struct,
+                                  #{type => {required,{enum,[failed]}}}}]},
                               <<"CommandExecOutputDeltaNotification">> =>
                                {struct,
                                 #{stream =>
@@ -3417,7 +3551,7 @@
                                  self_serve_business_usage_based,business,
                                  ent26,enterprise_cbp_automation,
                                  enterprise_cbp_usage_based,enterprise,edu,
-                                 edu_plus,edu_pro,unknown]},
+                                 edu_plus,edu_pro,sci,sci_plus,unknown]},
                               <<"ThreadRealtimeTranscriptRole">> =>
                                {enum,[user,assistant]},
                               <<"FuzzyFileSearchResult">> =>
@@ -3481,6 +3615,11 @@
                                   operation =>
                                    {required,
                                     {ref,<<"ThreadAttachmentOperation">>}}}},
+                              <<"ThreadReadStateChangedNotification">> =>
+                               {struct,
+                                #{threadId => {required,binstr},
+                                  readState =>
+                                   {required,{ref,<<"ThreadReadState">>}}}},
                               <<"ConfigWarningNotification">> =>
                                {struct,
                                 #{path =>
@@ -3657,11 +3796,21 @@
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   detailedExplanation =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
+                                  reviewTarget =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
                                   steer =>
                                    {optional,
                                     {any_of,
                                      [{ref,<<"MisalignmentSteer">>},
                                       {exact,null}]}}}},
+                              <<"ThreadReadState">> =>
+                               {struct,
+                                #{firstUnread =>
+                                   {optional,
+                                    {any_of,
+                                     [{ref,<<"ThreadUnreadPosition">>},
+                                      {exact,null}]}},
+                                  revision => {required,binstr}}},
                               <<"MemoryCitation">> =>
                                {struct,
                                 #{entries =>
@@ -4014,6 +4163,8 @@
                                     {default,
                                      {<<"full">>,
                                       {all_of,[{ref,<<"TurnItemsView">>}]}}}},
+                                  rootTurnId =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
                                   durationMs =>
                                    {optional,{any_of,[integer,{exact,null}]}},
                                   completedAt =>
@@ -4339,7 +4490,7 @@
                                   [contextWindowExceeded,
                                    sessionBudgetExceeded,usageLimitExceeded,
                                    rateLimitExceeded,flexUnavailable,
-                                   serverOverloaded,cyberPolicy,
+                                   serverOverloaded,modelNotFound,cyberPolicy,
                                    misalignmentPolicyViolation,tooManyDenials,
                                    internalServerError,unauthorized,
                                    badRequest,threadRollbackFailed,
@@ -4383,7 +4534,8 @@
                                        #{turnKind =>
                                           {required,
                                            {ref,
-                                            <<"NonSteerableTurnKind">>}}}}}}}]},
+                                            <<"NonSteerableTurnKind">>}}}}}}},
+                                 {any_of,[binstr,{map,{binstr,term}}]}]},
                               <<"EnvironmentConnectionNotification">> =>
                                {struct,
                                 #{threadId => {required,binstr},
@@ -4703,9 +4855,16 @@
                                   #{id => {required,binstr},
                                     type =>
                                      {required,{enum,[subAgentActivity]}},
+                                    model =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     kind =>
                                      {required,
                                       {ref,<<"SubAgentActivityKind">>}},
+                                    reasoningEffort =>
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"ReasoningEffort">>},
+                                        {exact,null}]}},
                                     agentPath => {required,binstr},
                                     agentThreadId => {required,binstr}}},
                                  {struct,
@@ -4733,31 +4892,70 @@
                                   #{id => {required,binstr},
                                     type => {required,{enum,[sleep]}},
                                     durationMs => {required,integer}}},
-                                 {struct,
-                                  #{id => {required,binstr},
-                                    status => {required,binstr},
-                                    type =>
-                                     {required,{enum,[imageGeneration]}},
-                                    failure =>
-                                     {optional,
-                                      {default,
-                                       {null,
+                                 {any_of,
+                                  [{struct,
+                                    #{id => {required,binstr},
+                                      status => {required,binstr},
+                                      type =>
+                                       {required,{enum,[imageGeneration]}},
+                                      failure =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [{ref,<<"ImageGenerationFailure">>},
+                                            {exact,null}]}}}},
+                                      fileId => {required,binstr},
+                                      inputImages =>
+                                       {optional,
+                                        {list,
+                                         {ref,
+                                          <<"ImageGenerationInputImage">>}}},
+                                      revisedPrompt =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
+                                      savedPath =>
+                                       {optional,
                                         {any_of,
-                                         [{ref,<<"ImageGenerationFailure">>},
-                                          {exact,null}]}}}},
-                                    result => {required,binstr},
-                                    revisedPrompt =>
-                                     {optional,{any_of,[binstr,{exact,null}]}},
-                                    savedPath =>
-                                     {optional,
-                                      {any_of,
-                                       [{ref,<<"AbsolutePathBuf">>},
-                                        {exact,null}]}},
-                                    transparentBackground =>
-                                     {optional,
-                                      {default,
-                                       {null,
-                                        {any_of,[boolean,{exact,null}]}}}}}},
+                                         [{ref,<<"AbsolutePathBuf">>},
+                                          {exact,null}]}},
+                                      transparentBackground =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[boolean,{exact,null}]}}}}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      status => {required,binstr},
+                                      type =>
+                                       {required,{enum,[imageGeneration]}},
+                                      failure =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [{ref,<<"ImageGenerationFailure">>},
+                                            {exact,null}]}}}},
+                                      result => {required,binstr},
+                                      inputImages =>
+                                       {optional,
+                                        {list,
+                                         {ref,
+                                          <<"ImageGenerationInputImage">>}}},
+                                      revisedPrompt =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
+                                      savedPath =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"AbsolutePathBuf">>},
+                                          {exact,null}]}},
+                                      transparentBackground =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [boolean,{exact,null}]}}}}}}]},
                                  {struct,
                                   #{id => {required,binstr},
                                     type =>
@@ -5024,6 +5222,15 @@
                               {struct,
                                #{params =>
                                   {required,
+                                   {ref,
+                                    <<"ThreadReadStateChangedNotification">>}},
+                                 method =>
+                                  {required,
+                                   {enum,['thread/readState/changed']}},
+                                 emittedAtMs => {optional,integer}}},
+                              {struct,
+                               #{params =>
+                                  {required,
                                    {ref,<<"ThreadArchivedNotification">>}},
                                  method =>
                                   {required,{enum,['thread/archived']}},
@@ -5084,6 +5291,15 @@
                                    {ref,<<"ThreadGoalUpdatedNotification">>}},
                                  method =>
                                   {required,{enum,['thread/goal/updated']}},
+                                 emittedAtMs => {optional,integer}}},
+                              {struct,
+                               #{params =>
+                                  {required,
+                                   {ref,
+                                    <<"ThreadPredictionUpdatedNotification">>}},
+                                 method =>
+                                  {required,
+                                   {enum,['thread/prediction/updated']}},
                                  emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
@@ -7024,7 +7240,9 @@
                                 <<"ReasoningEffort">> => binstr,
                                 <<"MessagePhase">> =>
                                  {any_of,
-                                  [{enum,[commentary]},{enum,[final_answer]}]},
+                                  [{enum,[commentary]},
+                                   {enum,[partial_answer]},
+                                   {enum,[final_answer]}]},
                                 <<"McpToolCallAppContext">> =>
                                  {struct,
                                   #{connectorId => {required,binstr},
@@ -7218,6 +7436,11 @@
                                        {required,{enum,[encrypted_content]}},
                                       encrypted_content =>
                                        {required,binstr}}}]},
+                                <<"ImageGenerationInputImage">> =>
+                                 {struct,
+                                  #{path =>
+                                     {required,{ref,<<"AbsolutePathBuf">>}},
+                                    sha256 => {required,binstr}}},
                                 <<"CommandAction">> =>
                                  {any_of,
                                   [{struct,
@@ -7302,6 +7525,8 @@
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     detailedExplanation =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
+                                    reviewTarget =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     steer =>
                                      {optional,
                                       {any_of,
@@ -7369,6 +7594,8 @@
                                        {<<"full">>,
                                         {all_of,
                                          [{ref,<<"TurnItemsView">>}]}}}},
+                                    rootTurnId =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     durationMs =>
                                      {optional,
                                       {any_of,[integer,{exact,null}]}},
@@ -7482,8 +7709,8 @@
                                     [contextWindowExceeded,
                                      sessionBudgetExceeded,usageLimitExceeded,
                                      rateLimitExceeded,flexUnavailable,
-                                     serverOverloaded,cyberPolicy,
-                                     misalignmentPolicyViolation,
+                                     serverOverloaded,modelNotFound,
+                                     cyberPolicy,misalignmentPolicyViolation,
                                      tooManyDenials,internalServerError,
                                      unauthorized,badRequest,
                                      threadRollbackFailed,sandboxError,other]},
@@ -7526,7 +7753,8 @@
                                          #{turnKind =>
                                             {required,
                                              {ref,
-                                              <<"NonSteerableTurnKind">>}}}}}}}]},
+                                              <<"NonSteerableTurnKind">>}}}}}}},
+                                   {any_of,[binstr,{map,{binstr,term}}]}]},
                                 <<"NetworkAccess">> =>
                                  {enum,[restricted,enabled]},
                                 <<"ThreadItem">> =>
@@ -7756,9 +7984,17 @@
                                     #{id => {required,binstr},
                                       type =>
                                        {required,{enum,[subAgentActivity]}},
+                                      model =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
                                       kind =>
                                        {required,
                                         {ref,<<"SubAgentActivityKind">>}},
+                                      reasoningEffort =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"ReasoningEffort">>},
+                                          {exact,null}]}},
                                       agentPath => {required,binstr},
                                       agentThreadId => {required,binstr}}},
                                    {struct,
@@ -7786,32 +8022,73 @@
                                     #{id => {required,binstr},
                                       type => {required,{enum,[sleep]}},
                                       durationMs => {required,integer}}},
-                                   {struct,
-                                    #{id => {required,binstr},
-                                      status => {required,binstr},
-                                      type =>
-                                       {required,{enum,[imageGeneration]}},
-                                      failure =>
-                                       {optional,
-                                        {default,
-                                         {null,
+                                   {any_of,
+                                    [{struct,
+                                      #{id => {required,binstr},
+                                        status => {required,binstr},
+                                        type =>
+                                         {required,{enum,[imageGeneration]}},
+                                        failure =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [{ref,
+                                               <<"ImageGenerationFailure">>},
+                                              {exact,null}]}}}},
+                                        fileId => {required,binstr},
+                                        inputImages =>
+                                         {optional,
+                                          {list,
+                                           {ref,
+                                            <<"ImageGenerationInputImage">>}}},
+                                        revisedPrompt =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        savedPath =>
+                                         {optional,
                                           {any_of,
-                                           [{ref,<<"ImageGenerationFailure">>},
-                                            {exact,null}]}}}},
-                                      result => {required,binstr},
-                                      revisedPrompt =>
-                                       {optional,
-                                        {any_of,[binstr,{exact,null}]}},
-                                      savedPath =>
-                                       {optional,
-                                        {any_of,
-                                         [{ref,<<"AbsolutePathBuf">>},
-                                          {exact,null}]}},
-                                      transparentBackground =>
-                                       {optional,
-                                        {default,
-                                         {null,
-                                          {any_of,[boolean,{exact,null}]}}}}}},
+                                           [{ref,<<"AbsolutePathBuf">>},
+                                            {exact,null}]}},
+                                        transparentBackground =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [boolean,{exact,null}]}}}}}},
+                                     {struct,
+                                      #{id => {required,binstr},
+                                        status => {required,binstr},
+                                        type =>
+                                         {required,{enum,[imageGeneration]}},
+                                        failure =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [{ref,
+                                               <<"ImageGenerationFailure">>},
+                                              {exact,null}]}}}},
+                                        result => {required,binstr},
+                                        inputImages =>
+                                         {optional,
+                                          {list,
+                                           {ref,
+                                            <<"ImageGenerationInputImage">>}}},
+                                        revisedPrompt =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        savedPath =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"AbsolutePathBuf">>},
+                                            {exact,null}]}},
+                                        transparentBackground =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [boolean,{exact,null}]}}}}}}]},
                                    {struct,
                                     #{id => {required,binstr},
                                       type =>
@@ -8113,7 +8390,8 @@
                                 output =>
                                  {required,{ref,<<"FunctionCallOutputBody">>}},
                                 namespace =>
-                                 {optional,{any_of,[binstr,{exact,null}]}}}},
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                retain => {optional,boolean}}},
                             <<"UserInput">> =>
                              {any_of,
                               [{struct,
@@ -8205,6 +8483,10 @@
                              disabledPluginIds =>
                               {optional,{any_of,[{list,binstr},{exact,null}]}},
                              outputSchema => {optional,term},
+                             parentTurnId =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
+                             rootTurnId =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
                              serviceTierForTurn =>
                               {optional,{any_of,[binstr,{exact,null}]}},
                              toolOutput =>
@@ -8227,7 +8509,9 @@
                               <<"ReasoningEffort">> => binstr,
                               <<"MessagePhase">> =>
                                {any_of,
-                                [{enum,[commentary]},{enum,[final_answer]}]},
+                                [{enum,[commentary]},
+                                 {enum,[partial_answer]},
+                                 {enum,[final_answer]}]},
                               <<"McpToolCallAppContext">> =>
                                {struct,
                                 #{connectorId => {required,binstr},
@@ -8345,6 +8629,11 @@
                                   #{type =>
                                      {required,{enum,[encrypted_content]}},
                                     encrypted_content => {required,binstr}}}]},
+                              <<"ImageGenerationInputImage">> =>
+                               {struct,
+                                #{path =>
+                                   {required,{ref,<<"AbsolutePathBuf">>}},
+                                  sha256 => {required,binstr}}},
                               <<"CommandAction">> =>
                                {any_of,
                                 [{struct,
@@ -8398,6 +8687,8 @@
                                 #{errorType =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   detailedExplanation =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
+                                  reviewTarget =>
                                    {optional,{any_of,[binstr,{exact,null}]}},
                                   steer =>
                                    {optional,
@@ -8457,6 +8748,8 @@
                                     {default,
                                      {<<"full">>,
                                       {all_of,[{ref,<<"TurnItemsView">>}]}}}},
+                                  rootTurnId =>
+                                   {optional,{any_of,[binstr,{exact,null}]}},
                                   durationMs =>
                                    {optional,{any_of,[integer,{exact,null}]}},
                                   completedAt =>
@@ -8543,7 +8836,7 @@
                                   [contextWindowExceeded,
                                    sessionBudgetExceeded,usageLimitExceeded,
                                    rateLimitExceeded,flexUnavailable,
-                                   serverOverloaded,cyberPolicy,
+                                   serverOverloaded,modelNotFound,cyberPolicy,
                                    misalignmentPolicyViolation,tooManyDenials,
                                    internalServerError,unauthorized,
                                    badRequest,threadRollbackFailed,
@@ -8587,7 +8880,8 @@
                                        #{turnKind =>
                                           {required,
                                            {ref,
-                                            <<"NonSteerableTurnKind">>}}}}}}}]},
+                                            <<"NonSteerableTurnKind">>}}}}}}},
+                                 {any_of,[binstr,{map,{binstr,term}}]}]},
                               <<"ThreadItem">> =>
                                {any_of,
                                 [{struct,
@@ -8801,9 +9095,16 @@
                                   #{id => {required,binstr},
                                     type =>
                                      {required,{enum,[subAgentActivity]}},
+                                    model =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     kind =>
                                      {required,
                                       {ref,<<"SubAgentActivityKind">>}},
+                                    reasoningEffort =>
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"ReasoningEffort">>},
+                                        {exact,null}]}},
                                     agentPath => {required,binstr},
                                     agentThreadId => {required,binstr}}},
                                  {struct,
@@ -8831,31 +9132,70 @@
                                   #{id => {required,binstr},
                                     type => {required,{enum,[sleep]}},
                                     durationMs => {required,integer}}},
-                                 {struct,
-                                  #{id => {required,binstr},
-                                    status => {required,binstr},
-                                    type =>
-                                     {required,{enum,[imageGeneration]}},
-                                    failure =>
-                                     {optional,
-                                      {default,
-                                       {null,
+                                 {any_of,
+                                  [{struct,
+                                    #{id => {required,binstr},
+                                      status => {required,binstr},
+                                      type =>
+                                       {required,{enum,[imageGeneration]}},
+                                      failure =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [{ref,<<"ImageGenerationFailure">>},
+                                            {exact,null}]}}}},
+                                      fileId => {required,binstr},
+                                      inputImages =>
+                                       {optional,
+                                        {list,
+                                         {ref,
+                                          <<"ImageGenerationInputImage">>}}},
+                                      revisedPrompt =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
+                                      savedPath =>
+                                       {optional,
                                         {any_of,
-                                         [{ref,<<"ImageGenerationFailure">>},
-                                          {exact,null}]}}}},
-                                    result => {required,binstr},
-                                    revisedPrompt =>
-                                     {optional,{any_of,[binstr,{exact,null}]}},
-                                    savedPath =>
-                                     {optional,
-                                      {any_of,
-                                       [{ref,<<"AbsolutePathBuf">>},
-                                        {exact,null}]}},
-                                    transparentBackground =>
-                                     {optional,
-                                      {default,
-                                       {null,
-                                        {any_of,[boolean,{exact,null}]}}}}}},
+                                         [{ref,<<"AbsolutePathBuf">>},
+                                          {exact,null}]}},
+                                      transparentBackground =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[boolean,{exact,null}]}}}}}},
+                                   {struct,
+                                    #{id => {required,binstr},
+                                      status => {required,binstr},
+                                      type =>
+                                       {required,{enum,[imageGeneration]}},
+                                      failure =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [{ref,<<"ImageGenerationFailure">>},
+                                            {exact,null}]}}}},
+                                      result => {required,binstr},
+                                      inputImages =>
+                                       {optional,
+                                        {list,
+                                         {ref,
+                                          <<"ImageGenerationInputImage">>}}},
+                                      revisedPrompt =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
+                                      savedPath =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"AbsolutePathBuf">>},
+                                          {exact,null}]}},
+                                      transparentBackground =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [boolean,{exact,null}]}}}}}}]},
                                  {struct,
                                   #{id => {required,binstr},
                                     type =>
@@ -9032,7 +9372,14 @@
                                      audio_url => {required,binstr}}},
                                   {struct,
                                    #{type => {required,{enum,[output_text]}},
-                                     text => {required,binstr}}}]},
+                                     text => {required,binstr},
+                                     annotations =>
+                                      {optional,
+                                       {any_of,[{list,term},{exact,null}]}},
+                                     logprobs =>
+                                      {optional,
+                                       {any_of,
+                                        [{list,term},{exact,null}]}}}}]},
                                <<"FunctionCallOutputBody">> =>
                                 {any_of,
                                  [binstr,
@@ -9098,7 +9445,9 @@
                                 {enum,[completed,in_progress,incomplete]},
                                <<"MessagePhase">> =>
                                 {any_of,
-                                 [{enum,[commentary]},{enum,[final_answer]}]},
+                                 [{enum,[commentary]},
+                                  {enum,[partial_answer]},
+                                  {enum,[final_answer]}]},
                                <<"Personality">> =>
                                 {enum,[none,friendly,pragmatic]},
                                <<"ReasoningEffort">> => binstr,
@@ -9122,6 +9471,17 @@
                                    #{id =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     type =>
+                                      {required,{enum,[additional_tools]}},
+                                     tools => {required,{list,term}},
+                                     role => {required,binstr}}},
+                                  {struct,
+                                   #{id =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     status =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      type => {required,{enum,[message]}},
                                      phase =>
                                       {optional,
@@ -9129,6 +9489,9 @@
                                         [{ref,<<"MessagePhase">>},
                                          {exact,null}]}},
                                      role => {required,binstr},
+                                     encrypted_content =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      content =>
                                       {required,
                                        {list,{ref,<<"ContentItem">>}}},
@@ -9190,6 +9553,9 @@
                                       {required,{ref,<<"LocalShellStatus">>}},
                                      type =>
                                       {required,{enum,[local_shell_call]}},
+                                     encrypted_content =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      internal_chat_message_metadata_passthrough =>
                                       {optional,
                                        {any_of,
@@ -9206,9 +9572,15 @@
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
                                      name => {required,binstr},
+                                     status =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      type => {required,{enum,[function_call]}},
                                      arguments => {required,binstr},
                                      namespace =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     encrypted_content =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
                                      internal_chat_message_metadata_passthrough =>
@@ -9232,6 +9604,9 @@
                                      type =>
                                       {required,{enum,[tool_search_call]}},
                                      arguments => {required,term},
+                                     encrypted_content =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      internal_chat_message_metadata_passthrough =>
                                       {optional,
                                        {any_of,
@@ -9278,6 +9653,9 @@
                                      type =>
                                       {required,{enum,[custom_tool_call]}},
                                      namespace =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
+                                     encrypted_content =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
                                      internal_chat_message_metadata_passthrough =>
@@ -9334,6 +9712,9 @@
                                        {any_of,[binstr,{exact,null}]}},
                                      type =>
                                       {required,{enum,[web_search_call]}},
+                                     encrypted_content =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      internal_chat_message_metadata_passthrough =>
                                       {optional,
                                        {any_of,
@@ -9355,6 +9736,9 @@
                                       {required,
                                        {enum,[image_generation_call]}},
                                      result => {required,binstr},
+                                     encrypted_content =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      internal_chat_message_metadata_passthrough =>
                                       {optional,
                                        {any_of,
@@ -9523,6 +9907,7 @@
                                  <<"MessagePhase">> =>
                                   {any_of,
                                    [{enum,[commentary]},
+                                    {enum,[partial_answer]},
                                     {enum,[final_answer]}]},
                                  <<"McpToolCallAppContext">> =>
                                   {struct,
@@ -9722,6 +10107,11 @@
                                         {required,{enum,[encrypted_content]}},
                                        encrypted_content =>
                                         {required,binstr}}}]},
+                                 <<"ImageGenerationInputImage">> =>
+                                  {struct,
+                                   #{path =>
+                                      {required,{ref,<<"AbsolutePathBuf">>}},
+                                     sha256 => {required,binstr}}},
                                  <<"CommandAction">> =>
                                   {any_of,
                                    [{struct,
@@ -9819,6 +10209,9 @@
                                      detailedExplanation =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     reviewTarget =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      steer =>
                                       {optional,
                                        {any_of,
@@ -9901,6 +10294,9 @@
                                         {<<"full">>,
                                          {all_of,
                                           [{ref,<<"TurnItemsView">>}]}}}},
+                                     rootTurnId =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      durationMs =>
                                       {optional,
                                        {any_of,[integer,{exact,null}]}},
@@ -10017,7 +10413,8 @@
                                       sessionBudgetExceeded,
                                       usageLimitExceeded,rateLimitExceeded,
                                       flexUnavailable,serverOverloaded,
-                                      cyberPolicy,misalignmentPolicyViolation,
+                                      modelNotFound,cyberPolicy,
+                                      misalignmentPolicyViolation,
                                       tooManyDenials,internalServerError,
                                       unauthorized,badRequest,
                                       threadRollbackFailed,sandboxError,
@@ -10061,7 +10458,8 @@
                                           #{turnKind =>
                                              {required,
                                               {ref,
-                                               <<"NonSteerableTurnKind">>}}}}}}}]},
+                                               <<"NonSteerableTurnKind">>}}}}}}},
+                                    {any_of,[binstr,{map,{binstr,term}}]}]},
                                  <<"NetworkAccess">> =>
                                   {enum,[restricted,enabled]},
                                  <<"ThreadItem">> =>
@@ -10298,9 +10696,17 @@
                                      #{id => {required,binstr},
                                        type =>
                                         {required,{enum,[subAgentActivity]}},
+                                       model =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
                                        kind =>
                                         {required,
                                          {ref,<<"SubAgentActivityKind">>}},
+                                       reasoningEffort =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ReasoningEffort">>},
+                                           {exact,null}]}},
                                        agentPath => {required,binstr},
                                        agentThreadId => {required,binstr}}},
                                     {struct,
@@ -10328,34 +10734,73 @@
                                      #{id => {required,binstr},
                                        type => {required,{enum,[sleep]}},
                                        durationMs => {required,integer}}},
-                                    {struct,
-                                     #{id => {required,binstr},
-                                       status => {required,binstr},
-                                       type =>
-                                        {required,{enum,[imageGeneration]}},
-                                       failure =>
-                                        {optional,
-                                         {default,
-                                          {null,
+                                    {any_of,
+                                     [{struct,
+                                       #{id => {required,binstr},
+                                         status => {required,binstr},
+                                         type =>
+                                          {required,{enum,[imageGeneration]}},
+                                         failure =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [{ref,
+                                                <<"ImageGenerationFailure">>},
+                                               {exact,null}]}}}},
+                                         fileId => {required,binstr},
+                                         inputImages =>
+                                          {optional,
+                                           {list,
+                                            {ref,
+                                             <<"ImageGenerationInputImage">>}}},
+                                         revisedPrompt =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         savedPath =>
+                                          {optional,
                                            {any_of,
-                                            [{ref,
-                                              <<"ImageGenerationFailure">>},
-                                             {exact,null}]}}}},
-                                       result => {required,binstr},
-                                       revisedPrompt =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       savedPath =>
-                                        {optional,
-                                         {any_of,
-                                          [{ref,<<"AbsolutePathBuf">>},
-                                           {exact,null}]}},
-                                       transparentBackground =>
-                                        {optional,
-                                         {default,
-                                          {null,
+                                            [{ref,<<"AbsolutePathBuf">>},
+                                             {exact,null}]}},
+                                         transparentBackground =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [boolean,{exact,null}]}}}}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         status => {required,binstr},
+                                         type =>
+                                          {required,{enum,[imageGeneration]}},
+                                         failure =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [{ref,
+                                                <<"ImageGenerationFailure">>},
+                                               {exact,null}]}}}},
+                                         result => {required,binstr},
+                                         inputImages =>
+                                          {optional,
+                                           {list,
+                                            {ref,
+                                             <<"ImageGenerationInputImage">>}}},
+                                         revisedPrompt =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         savedPath =>
+                                          {optional,
                                            {any_of,
-                                            [boolean,{exact,null}]}}}}}},
+                                            [{ref,<<"AbsolutePathBuf">>},
+                                             {exact,null}]}},
+                                         transparentBackground =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [boolean,{exact,null}]}}}}}}]},
                                     {struct,
                                      #{id => {required,binstr},
                                        type =>
@@ -10632,7 +11077,9 @@
                                <<"ReasoningEffort">> => binstr,
                                <<"MessagePhase">> =>
                                 {any_of,
-                                 [{enum,[commentary]},{enum,[final_answer]}]},
+                                 [{enum,[commentary]},
+                                  {enum,[partial_answer]},
+                                  {enum,[final_answer]}]},
                                <<"McpToolCallAppContext">> =>
                                 {struct,
                                  #{connectorId => {required,binstr},
@@ -10823,6 +11270,11 @@
                                       {required,{enum,[encrypted_content]}},
                                      encrypted_content =>
                                       {required,binstr}}}]},
+                               <<"ImageGenerationInputImage">> =>
+                                {struct,
+                                 #{path =>
+                                    {required,{ref,<<"AbsolutePathBuf">>}},
+                                   sha256 => {required,binstr}}},
                                <<"CommandAction">> =>
                                 {any_of,
                                  [{struct,
@@ -10905,6 +11357,8 @@
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    detailedExplanation =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                   reviewTarget =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    steer =>
                                     {optional,
                                      {any_of,
@@ -10970,6 +11424,8 @@
                                      {default,
                                       {<<"full">>,
                                        {all_of,[{ref,<<"TurnItemsView">>}]}}}},
+                                   rootTurnId =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    durationMs =>
                                     {optional,{any_of,[integer,{exact,null}]}},
                                    completedAt =>
@@ -11078,8 +11534,8 @@
                                    [contextWindowExceeded,
                                     sessionBudgetExceeded,usageLimitExceeded,
                                     rateLimitExceeded,flexUnavailable,
-                                    serverOverloaded,cyberPolicy,
-                                    misalignmentPolicyViolation,
+                                    serverOverloaded,modelNotFound,
+                                    cyberPolicy,misalignmentPolicyViolation,
                                     tooManyDenials,internalServerError,
                                     unauthorized,badRequest,
                                     threadRollbackFailed,sandboxError,other]},
@@ -11122,7 +11578,8 @@
                                         #{turnKind =>
                                            {required,
                                             {ref,
-                                             <<"NonSteerableTurnKind">>}}}}}}}]},
+                                             <<"NonSteerableTurnKind">>}}}}}}},
+                                  {any_of,[binstr,{map,{binstr,term}}]}]},
                                <<"NetworkAccess">> =>
                                 {enum,[restricted,enabled]},
                                <<"ThreadItem">> =>
@@ -11350,9 +11807,17 @@
                                    #{id => {required,binstr},
                                      type =>
                                       {required,{enum,[subAgentActivity]}},
+                                     model =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      kind =>
                                       {required,
                                        {ref,<<"SubAgentActivityKind">>}},
+                                     reasoningEffort =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"ReasoningEffort">>},
+                                         {exact,null}]}},
                                      agentPath => {required,binstr},
                                      agentThreadId => {required,binstr}}},
                                   {struct,
@@ -11380,32 +11845,73 @@
                                    #{id => {required,binstr},
                                      type => {required,{enum,[sleep]}},
                                      durationMs => {required,integer}}},
-                                  {struct,
-                                   #{id => {required,binstr},
-                                     status => {required,binstr},
-                                     type =>
-                                      {required,{enum,[imageGeneration]}},
-                                     failure =>
-                                      {optional,
-                                       {default,
-                                        {null,
+                                  {any_of,
+                                   [{struct,
+                                     #{id => {required,binstr},
+                                       status => {required,binstr},
+                                       type =>
+                                        {required,{enum,[imageGeneration]}},
+                                       failure =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,
+                                              <<"ImageGenerationFailure">>},
+                                             {exact,null}]}}}},
+                                       fileId => {required,binstr},
+                                       inputImages =>
+                                        {optional,
+                                         {list,
+                                          {ref,
+                                           <<"ImageGenerationInputImage">>}}},
+                                       revisedPrompt =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       savedPath =>
+                                        {optional,
                                          {any_of,
-                                          [{ref,<<"ImageGenerationFailure">>},
-                                           {exact,null}]}}}},
-                                     result => {required,binstr},
-                                     revisedPrompt =>
-                                      {optional,
-                                       {any_of,[binstr,{exact,null}]}},
-                                     savedPath =>
-                                      {optional,
-                                       {any_of,
-                                        [{ref,<<"AbsolutePathBuf">>},
-                                         {exact,null}]}},
-                                     transparentBackground =>
-                                      {optional,
-                                       {default,
-                                        {null,
-                                         {any_of,[boolean,{exact,null}]}}}}}},
+                                          [{ref,<<"AbsolutePathBuf">>},
+                                           {exact,null}]}},
+                                       transparentBackground =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [boolean,{exact,null}]}}}}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       status => {required,binstr},
+                                       type =>
+                                        {required,{enum,[imageGeneration]}},
+                                       failure =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,
+                                              <<"ImageGenerationFailure">>},
+                                             {exact,null}]}}}},
+                                       result => {required,binstr},
+                                       inputImages =>
+                                        {optional,
+                                         {list,
+                                          {ref,
+                                           <<"ImageGenerationInputImage">>}}},
+                                       revisedPrompt =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       savedPath =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"AbsolutePathBuf">>},
+                                           {exact,null}]}},
+                                       transparentBackground =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [boolean,{exact,null}]}}}}}}]},
                                   {struct,
                                    #{id => {required,binstr},
                                      type =>
@@ -11582,10 +12088,13 @@
                                {optional,
                                 {any_of,
                                  [{ref,<<"SortDirection">>},{exact,null}]}},
-                              sectionId =>
-                               {optional,{any_of,[binstr,{exact,null}]}},
                               archived =>
                                {optional,{any_of,[boolean,{exact,null}]}},
+                              sectionId =>
+                               {optional,{any_of,[binstr,{exact,null}]}},
+                              excludedThreadIds =>
+                               {optional,
+                                {any_of,[{list,binstr},{exact,null}]}},
                               modelProviders =>
                                {optional,
                                 {any_of,[{list,binstr},{exact,null}]}},
@@ -11616,9 +12125,18 @@
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}}}}]},
                                <<"ReasoningEffort">> => binstr,
+                               <<"ThreadUnreadPosition">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[threadStart]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[turn]}},
+                                     turnId => {required,binstr}}}]},
                                <<"MessagePhase">> =>
                                 {any_of,
-                                 [{enum,[commentary]},{enum,[final_answer]}]},
+                                 [{enum,[commentary]},
+                                  {enum,[partial_answer]},
+                                  {enum,[final_answer]}]},
                                <<"McpToolCallAppContext">> =>
                                 {struct,
                                  #{connectorId => {required,binstr},
@@ -11772,6 +12290,11 @@
                                       {required,{enum,[encrypted_content]}},
                                      encrypted_content =>
                                       {required,binstr}}}]},
+                               <<"ImageGenerationInputImage">> =>
+                                {struct,
+                                 #{path =>
+                                    {required,{ref,<<"AbsolutePathBuf">>}},
+                                   sha256 => {required,binstr}}},
                                <<"CommandAction">> =>
                                 {any_of,
                                  [{struct,
@@ -11854,11 +12377,21 @@
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    detailedExplanation =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                   reviewTarget =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    steer =>
                                     {optional,
                                      {any_of,
                                       [{ref,<<"MisalignmentSteer">>},
                                        {exact,null}]}}}},
+                               <<"ThreadReadState">> =>
+                                {struct,
+                                 #{firstUnread =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ThreadUnreadPosition">>},
+                                       {exact,null}]}},
+                                   revision => {required,binstr}}},
                                <<"MemoryCitation">> =>
                                 {struct,
                                  #{entries =>
@@ -11919,6 +12452,8 @@
                                      {default,
                                       {<<"full">>,
                                        {all_of,[{ref,<<"TurnItemsView">>}]}}}},
+                                   rootTurnId =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    durationMs =>
                                     {optional,{any_of,[integer,{exact,null}]}},
                                    completedAt =>
@@ -12019,8 +12554,8 @@
                                    [contextWindowExceeded,
                                     sessionBudgetExceeded,usageLimitExceeded,
                                     rateLimitExceeded,flexUnavailable,
-                                    serverOverloaded,cyberPolicy,
-                                    misalignmentPolicyViolation,
+                                    serverOverloaded,modelNotFound,
+                                    cyberPolicy,misalignmentPolicyViolation,
                                     tooManyDenials,internalServerError,
                                     unauthorized,badRequest,
                                     threadRollbackFailed,sandboxError,other]},
@@ -12063,7 +12598,8 @@
                                         #{turnKind =>
                                            {required,
                                             {ref,
-                                             <<"NonSteerableTurnKind">>}}}}}}}]},
+                                             <<"NonSteerableTurnKind">>}}}}}}},
+                                  {any_of,[binstr,{map,{binstr,term}}]}]},
                                <<"ThreadItem">> =>
                                 {any_of,
                                  [{struct,
@@ -12289,9 +12825,17 @@
                                    #{id => {required,binstr},
                                      type =>
                                       {required,{enum,[subAgentActivity]}},
+                                     model =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      kind =>
                                       {required,
                                        {ref,<<"SubAgentActivityKind">>}},
+                                     reasoningEffort =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"ReasoningEffort">>},
+                                         {exact,null}]}},
                                      agentPath => {required,binstr},
                                      agentThreadId => {required,binstr}}},
                                   {struct,
@@ -12319,32 +12863,73 @@
                                    #{id => {required,binstr},
                                      type => {required,{enum,[sleep]}},
                                      durationMs => {required,integer}}},
-                                  {struct,
-                                   #{id => {required,binstr},
-                                     status => {required,binstr},
-                                     type =>
-                                      {required,{enum,[imageGeneration]}},
-                                     failure =>
-                                      {optional,
-                                       {default,
-                                        {null,
+                                  {any_of,
+                                   [{struct,
+                                     #{id => {required,binstr},
+                                       status => {required,binstr},
+                                       type =>
+                                        {required,{enum,[imageGeneration]}},
+                                       failure =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,
+                                              <<"ImageGenerationFailure">>},
+                                             {exact,null}]}}}},
+                                       fileId => {required,binstr},
+                                       inputImages =>
+                                        {optional,
+                                         {list,
+                                          {ref,
+                                           <<"ImageGenerationInputImage">>}}},
+                                       revisedPrompt =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       savedPath =>
+                                        {optional,
                                          {any_of,
-                                          [{ref,<<"ImageGenerationFailure">>},
-                                           {exact,null}]}}}},
-                                     result => {required,binstr},
-                                     revisedPrompt =>
-                                      {optional,
-                                       {any_of,[binstr,{exact,null}]}},
-                                     savedPath =>
-                                      {optional,
-                                       {any_of,
-                                        [{ref,<<"AbsolutePathBuf">>},
-                                         {exact,null}]}},
-                                     transparentBackground =>
-                                      {optional,
-                                       {default,
-                                        {null,
-                                         {any_of,[boolean,{exact,null}]}}}}}},
+                                          [{ref,<<"AbsolutePathBuf">>},
+                                           {exact,null}]}},
+                                       transparentBackground =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [boolean,{exact,null}]}}}}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       status => {required,binstr},
+                                       type =>
+                                        {required,{enum,[imageGeneration]}},
+                                       failure =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,
+                                              <<"ImageGenerationFailure">>},
+                                             {exact,null}]}}}},
+                                       result => {required,binstr},
+                                       inputImages =>
+                                        {optional,
+                                         {list,
+                                          {ref,
+                                           <<"ImageGenerationInputImage">>}}},
+                                       revisedPrompt =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       savedPath =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"AbsolutePathBuf">>},
+                                           {exact,null}]}},
+                                       transparentBackground =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [boolean,{exact,null}]}}}}}}]},
                                   {struct,
                                    #{id => {required,binstr},
                                      type =>
@@ -12495,9 +13080,18 @@
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}}}}]},
                                <<"ReasoningEffort">> => binstr,
+                               <<"ThreadUnreadPosition">> =>
+                                {any_of,
+                                 [{struct,
+                                   #{type => {required,{enum,[threadStart]}}}},
+                                  {struct,
+                                   #{type => {required,{enum,[turn]}},
+                                     turnId => {required,binstr}}}]},
                                <<"MessagePhase">> =>
                                 {any_of,
-                                 [{enum,[commentary]},{enum,[final_answer]}]},
+                                 [{enum,[commentary]},
+                                  {enum,[partial_answer]},
+                                  {enum,[final_answer]}]},
                                <<"McpToolCallAppContext">> =>
                                 {struct,
                                  #{connectorId => {required,binstr},
@@ -12651,6 +13245,11 @@
                                       {required,{enum,[encrypted_content]}},
                                      encrypted_content =>
                                       {required,binstr}}}]},
+                               <<"ImageGenerationInputImage">> =>
+                                {struct,
+                                 #{path =>
+                                    {required,{ref,<<"AbsolutePathBuf">>}},
+                                   sha256 => {required,binstr}}},
                                <<"CommandAction">> =>
                                 {any_of,
                                  [{struct,
@@ -12733,11 +13332,21 @@
                                     {optional,{any_of,[binstr,{exact,null}]}},
                                    detailedExplanation =>
                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                   reviewTarget =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    steer =>
                                     {optional,
                                      {any_of,
                                       [{ref,<<"MisalignmentSteer">>},
                                        {exact,null}]}}}},
+                               <<"ThreadReadState">> =>
+                                {struct,
+                                 #{firstUnread =>
+                                    {optional,
+                                     {any_of,
+                                      [{ref,<<"ThreadUnreadPosition">>},
+                                       {exact,null}]}},
+                                   revision => {required,binstr}}},
                                <<"MemoryCitation">> =>
                                 {struct,
                                  #{entries =>
@@ -12798,6 +13407,8 @@
                                      {default,
                                       {<<"full">>,
                                        {all_of,[{ref,<<"TurnItemsView">>}]}}}},
+                                   rootTurnId =>
+                                    {optional,{any_of,[binstr,{exact,null}]}},
                                    durationMs =>
                                     {optional,{any_of,[integer,{exact,null}]}},
                                    completedAt =>
@@ -12898,8 +13509,8 @@
                                    [contextWindowExceeded,
                                     sessionBudgetExceeded,usageLimitExceeded,
                                     rateLimitExceeded,flexUnavailable,
-                                    serverOverloaded,cyberPolicy,
-                                    misalignmentPolicyViolation,
+                                    serverOverloaded,modelNotFound,
+                                    cyberPolicy,misalignmentPolicyViolation,
                                     tooManyDenials,internalServerError,
                                     unauthorized,badRequest,
                                     threadRollbackFailed,sandboxError,other]},
@@ -12942,7 +13553,8 @@
                                         #{turnKind =>
                                            {required,
                                             {ref,
-                                             <<"NonSteerableTurnKind">>}}}}}}}]},
+                                             <<"NonSteerableTurnKind">>}}}}}}},
+                                  {any_of,[binstr,{map,{binstr,term}}]}]},
                                <<"ThreadItem">> =>
                                 {any_of,
                                  [{struct,
@@ -13168,9 +13780,17 @@
                                    #{id => {required,binstr},
                                      type =>
                                       {required,{enum,[subAgentActivity]}},
+                                     model =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      kind =>
                                       {required,
                                        {ref,<<"SubAgentActivityKind">>}},
+                                     reasoningEffort =>
+                                      {optional,
+                                       {any_of,
+                                        [{ref,<<"ReasoningEffort">>},
+                                         {exact,null}]}},
                                      agentPath => {required,binstr},
                                      agentThreadId => {required,binstr}}},
                                   {struct,
@@ -13198,32 +13818,73 @@
                                    #{id => {required,binstr},
                                      type => {required,{enum,[sleep]}},
                                      durationMs => {required,integer}}},
-                                  {struct,
-                                   #{id => {required,binstr},
-                                     status => {required,binstr},
-                                     type =>
-                                      {required,{enum,[imageGeneration]}},
-                                     failure =>
-                                      {optional,
-                                       {default,
-                                        {null,
+                                  {any_of,
+                                   [{struct,
+                                     #{id => {required,binstr},
+                                       status => {required,binstr},
+                                       type =>
+                                        {required,{enum,[imageGeneration]}},
+                                       failure =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,
+                                              <<"ImageGenerationFailure">>},
+                                             {exact,null}]}}}},
+                                       fileId => {required,binstr},
+                                       inputImages =>
+                                        {optional,
+                                         {list,
+                                          {ref,
+                                           <<"ImageGenerationInputImage">>}}},
+                                       revisedPrompt =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       savedPath =>
+                                        {optional,
                                          {any_of,
-                                          [{ref,<<"ImageGenerationFailure">>},
-                                           {exact,null}]}}}},
-                                     result => {required,binstr},
-                                     revisedPrompt =>
-                                      {optional,
-                                       {any_of,[binstr,{exact,null}]}},
-                                     savedPath =>
-                                      {optional,
-                                       {any_of,
-                                        [{ref,<<"AbsolutePathBuf">>},
-                                         {exact,null}]}},
-                                     transparentBackground =>
-                                      {optional,
-                                       {default,
-                                        {null,
-                                         {any_of,[boolean,{exact,null}]}}}}}},
+                                          [{ref,<<"AbsolutePathBuf">>},
+                                           {exact,null}]}},
+                                       transparentBackground =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [boolean,{exact,null}]}}}}}},
+                                    {struct,
+                                     #{id => {required,binstr},
+                                       status => {required,binstr},
+                                       type =>
+                                        {required,{enum,[imageGeneration]}},
+                                       failure =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [{ref,
+                                              <<"ImageGenerationFailure">>},
+                                             {exact,null}]}}}},
+                                       result => {required,binstr},
+                                       inputImages =>
+                                        {optional,
+                                         {list,
+                                          {ref,
+                                           <<"ImageGenerationInputImage">>}}},
+                                       revisedPrompt =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
+                                       savedPath =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"AbsolutePathBuf">>},
+                                           {exact,null}]}},
+                                       transparentBackground =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [boolean,{exact,null}]}}}}}}]},
                                   {struct,
                                    #{id => {required,binstr},
                                      type =>
@@ -13387,6 +14048,7 @@
                                      <<"MessagePhase">> =>
                                       {any_of,
                                        [{enum,[commentary]},
+                                        {enum,[partial_answer]},
                                         {enum,[final_answer]}]},
                                      <<"McpToolCallAppContext">> =>
                                       {struct,
@@ -13524,6 +14186,12 @@
                                              {enum,[encrypted_content]}},
                                            encrypted_content =>
                                             {required,binstr}}}]},
+                                     <<"ImageGenerationInputImage">> =>
+                                      {struct,
+                                       #{path =>
+                                          {required,
+                                           {ref,<<"AbsolutePathBuf">>}},
+                                         sha256 => {required,binstr}}},
                                      <<"CommandAction">> =>
                                       {any_of,
                                        [{struct,
@@ -13584,6 +14252,9 @@
                                           {optional,
                                            {any_of,[binstr,{exact,null}]}},
                                          detailedExplanation =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         reviewTarget =>
                                           {optional,
                                            {any_of,[binstr,{exact,null}]}},
                                          steer =>
@@ -13655,6 +14326,9 @@
                                             {<<"full">>,
                                              {all_of,
                                               [{ref,<<"TurnItemsView">>}]}}}},
+                                         rootTurnId =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
                                          durationMs =>
                                           {optional,
                                            {any_of,[integer,{exact,null}]}},
@@ -13758,7 +14432,8 @@
                                           sessionBudgetExceeded,
                                           usageLimitExceeded,
                                           rateLimitExceeded,flexUnavailable,
-                                          serverOverloaded,cyberPolicy,
+                                          serverOverloaded,modelNotFound,
+                                          cyberPolicy,
                                           misalignmentPolicyViolation,
                                           tooManyDenials,internalServerError,
                                           unauthorized,badRequest,
@@ -13807,7 +14482,9 @@
                                               #{turnKind =>
                                                  {required,
                                                   {ref,
-                                                   <<"NonSteerableTurnKind">>}}}}}}}]},
+                                                   <<"NonSteerableTurnKind">>}}}}}}},
+                                        {any_of,
+                                         [binstr,{map,{binstr,term}}]}]},
                                      <<"ThreadItem">> =>
                                       {any_of,
                                        [{struct,
@@ -14062,9 +14739,17 @@
                                            type =>
                                             {required,
                                              {enum,[subAgentActivity]}},
+                                           model =>
+                                            {optional,
+                                             {any_of,[binstr,{exact,null}]}},
                                            kind =>
                                             {required,
                                              {ref,<<"SubAgentActivityKind">>}},
+                                           reasoningEffort =>
+                                            {optional,
+                                             {any_of,
+                                              [{ref,<<"ReasoningEffort">>},
+                                               {exact,null}]}},
                                            agentPath => {required,binstr},
                                            agentThreadId =>
                                             {required,binstr}}},
@@ -14097,35 +14782,76 @@
                                          #{id => {required,binstr},
                                            type => {required,{enum,[sleep]}},
                                            durationMs => {required,integer}}},
-                                        {struct,
-                                         #{id => {required,binstr},
-                                           status => {required,binstr},
-                                           type =>
-                                            {required,
-                                             {enum,[imageGeneration]}},
-                                           failure =>
-                                            {optional,
-                                             {default,
-                                              {null,
+                                        {any_of,
+                                         [{struct,
+                                           #{id => {required,binstr},
+                                             status => {required,binstr},
+                                             type =>
+                                              {required,
+                                               {enum,[imageGeneration]}},
+                                             failure =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [{ref,
+                                                    <<"ImageGenerationFailure">>},
+                                                   {exact,null}]}}}},
+                                             fileId => {required,binstr},
+                                             inputImages =>
+                                              {optional,
+                                               {list,
+                                                {ref,
+                                                 <<"ImageGenerationInputImage">>}}},
+                                             revisedPrompt =>
+                                              {optional,
+                                               {any_of,[binstr,{exact,null}]}},
+                                             savedPath =>
+                                              {optional,
                                                {any_of,
-                                                [{ref,
-                                                  <<"ImageGenerationFailure">>},
-                                                 {exact,null}]}}}},
-                                           result => {required,binstr},
-                                           revisedPrompt =>
-                                            {optional,
-                                             {any_of,[binstr,{exact,null}]}},
-                                           savedPath =>
-                                            {optional,
-                                             {any_of,
-                                              [{ref,<<"AbsolutePathBuf">>},
-                                               {exact,null}]}},
-                                           transparentBackground =>
-                                            {optional,
-                                             {default,
-                                              {null,
+                                                [{ref,<<"AbsolutePathBuf">>},
+                                                 {exact,null}]}},
+                                             transparentBackground =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [boolean,{exact,null}]}}}}}},
+                                          {struct,
+                                           #{id => {required,binstr},
+                                             status => {required,binstr},
+                                             type =>
+                                              {required,
+                                               {enum,[imageGeneration]}},
+                                             failure =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [{ref,
+                                                    <<"ImageGenerationFailure">>},
+                                                   {exact,null}]}}}},
+                                             result => {required,binstr},
+                                             inputImages =>
+                                              {optional,
+                                               {list,
+                                                {ref,
+                                                 <<"ImageGenerationInputImage">>}}},
+                                             revisedPrompt =>
+                                              {optional,
+                                               {any_of,[binstr,{exact,null}]}},
+                                             savedPath =>
+                                              {optional,
                                                {any_of,
-                                                [boolean,{exact,null}]}}}}}},
+                                                [{ref,<<"AbsolutePathBuf">>},
+                                                 {exact,null}]}},
+                                             transparentBackground =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [boolean,
+                                                   {exact,null}]}}}}}}]},
                                         {struct,
                                          #{id => {required,binstr},
                                            type =>
@@ -14212,6 +14938,7 @@
                                      <<"MessagePhase">> =>
                                       {any_of,
                                        [{enum,[commentary]},
+                                        {enum,[partial_answer]},
                                         {enum,[final_answer]}]},
                                      <<"McpToolCallAppContext">> =>
                                       {struct,
@@ -14349,6 +15076,12 @@
                                              {enum,[encrypted_content]}},
                                            encrypted_content =>
                                             {required,binstr}}}]},
+                                     <<"ImageGenerationInputImage">> =>
+                                      {struct,
+                                       #{path =>
+                                          {required,
+                                           {ref,<<"AbsolutePathBuf">>}},
+                                         sha256 => {required,binstr}}},
                                      <<"CommandAction">> =>
                                       {any_of,
                                        [{struct,
@@ -14768,9 +15501,17 @@
                                            type =>
                                             {required,
                                              {enum,[subAgentActivity]}},
+                                           model =>
+                                            {optional,
+                                             {any_of,[binstr,{exact,null}]}},
                                            kind =>
                                             {required,
                                              {ref,<<"SubAgentActivityKind">>}},
+                                           reasoningEffort =>
+                                            {optional,
+                                             {any_of,
+                                              [{ref,<<"ReasoningEffort">>},
+                                               {exact,null}]}},
                                            agentPath => {required,binstr},
                                            agentThreadId =>
                                             {required,binstr}}},
@@ -14803,35 +15544,76 @@
                                          #{id => {required,binstr},
                                            type => {required,{enum,[sleep]}},
                                            durationMs => {required,integer}}},
-                                        {struct,
-                                         #{id => {required,binstr},
-                                           status => {required,binstr},
-                                           type =>
-                                            {required,
-                                             {enum,[imageGeneration]}},
-                                           failure =>
-                                            {optional,
-                                             {default,
-                                              {null,
+                                        {any_of,
+                                         [{struct,
+                                           #{id => {required,binstr},
+                                             status => {required,binstr},
+                                             type =>
+                                              {required,
+                                               {enum,[imageGeneration]}},
+                                             failure =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [{ref,
+                                                    <<"ImageGenerationFailure">>},
+                                                   {exact,null}]}}}},
+                                             fileId => {required,binstr},
+                                             inputImages =>
+                                              {optional,
+                                               {list,
+                                                {ref,
+                                                 <<"ImageGenerationInputImage">>}}},
+                                             revisedPrompt =>
+                                              {optional,
+                                               {any_of,[binstr,{exact,null}]}},
+                                             savedPath =>
+                                              {optional,
                                                {any_of,
-                                                [{ref,
-                                                  <<"ImageGenerationFailure">>},
-                                                 {exact,null}]}}}},
-                                           result => {required,binstr},
-                                           revisedPrompt =>
-                                            {optional,
-                                             {any_of,[binstr,{exact,null}]}},
-                                           savedPath =>
-                                            {optional,
-                                             {any_of,
-                                              [{ref,<<"AbsolutePathBuf">>},
-                                               {exact,null}]}},
-                                           transparentBackground =>
-                                            {optional,
-                                             {default,
-                                              {null,
+                                                [{ref,<<"AbsolutePathBuf">>},
+                                                 {exact,null}]}},
+                                             transparentBackground =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [boolean,{exact,null}]}}}}}},
+                                          {struct,
+                                           #{id => {required,binstr},
+                                             status => {required,binstr},
+                                             type =>
+                                              {required,
+                                               {enum,[imageGeneration]}},
+                                             failure =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [{ref,
+                                                    <<"ImageGenerationFailure">>},
+                                                   {exact,null}]}}}},
+                                             result => {required,binstr},
+                                             inputImages =>
+                                              {optional,
+                                               {list,
+                                                {ref,
+                                                 <<"ImageGenerationInputImage">>}}},
+                                             revisedPrompt =>
+                                              {optional,
+                                               {any_of,[binstr,{exact,null}]}},
+                                             savedPath =>
+                                              {optional,
                                                {any_of,
-                                                [boolean,{exact,null}]}}}}}},
+                                                [{ref,<<"AbsolutePathBuf">>},
+                                                 {exact,null}]}},
+                                             transparentBackground =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [boolean,
+                                                   {exact,null}]}}}}}}]},
                                         {struct,
                                          #{id => {required,binstr},
                                            type =>
@@ -14894,6 +15676,7 @@
                                     <<"MessagePhase">> =>
                                      {any_of,
                                       [{enum,[commentary]},
+                                       {enum,[partial_answer]},
                                        {enum,[final_answer]}]},
                                     <<"McpToolCallAppContext">> =>
                                      {struct,
@@ -15064,6 +15847,12 @@
                                             {enum,[encrypted_content]}},
                                           encrypted_content =>
                                            {required,binstr}}}]},
+                                    <<"ImageGenerationInputImage">> =>
+                                     {struct,
+                                      #{path =>
+                                         {required,
+                                          {ref,<<"AbsolutePathBuf">>}},
+                                        sha256 => {required,binstr}}},
                                     <<"CommandAction">> =>
                                      {any_of,
                                       [{struct,
@@ -15156,6 +15945,9 @@
                                         detailedExplanation =>
                                          {optional,
                                           {any_of,[binstr,{exact,null}]}},
+                                        reviewTarget =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
                                         steer =>
                                          {optional,
                                           {any_of,
@@ -15233,6 +16025,9 @@
                                            {<<"full">>,
                                             {all_of,
                                              [{ref,<<"TurnItemsView">>}]}}}},
+                                        rootTurnId =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
                                         durationMs =>
                                          {optional,
                                           {any_of,[integer,{exact,null}]}},
@@ -15349,7 +16144,7 @@
                                          sessionBudgetExceeded,
                                          usageLimitExceeded,rateLimitExceeded,
                                          flexUnavailable,serverOverloaded,
-                                         cyberPolicy,
+                                         modelNotFound,cyberPolicy,
                                          misalignmentPolicyViolation,
                                          tooManyDenials,internalServerError,
                                          unauthorized,badRequest,
@@ -15398,7 +16193,8 @@
                                              #{turnKind =>
                                                 {required,
                                                  {ref,
-                                                  <<"NonSteerableTurnKind">>}}}}}}}]},
+                                                  <<"NonSteerableTurnKind">>}}}}}}},
+                                       {any_of,[binstr,{map,{binstr,term}}]}]},
                                     <<"ThreadItem">> =>
                                      {any_of,
                                       [{struct,
@@ -15650,9 +16446,17 @@
                                           type =>
                                            {required,
                                             {enum,[subAgentActivity]}},
+                                          model =>
+                                           {optional,
+                                            {any_of,[binstr,{exact,null}]}},
                                           kind =>
                                            {required,
                                             {ref,<<"SubAgentActivityKind">>}},
+                                          reasoningEffort =>
+                                           {optional,
+                                            {any_of,
+                                             [{ref,<<"ReasoningEffort">>},
+                                              {exact,null}]}},
                                           agentPath => {required,binstr},
                                           agentThreadId => {required,binstr}}},
                                        {struct,
@@ -15683,34 +16487,76 @@
                                         #{id => {required,binstr},
                                           type => {required,{enum,[sleep]}},
                                           durationMs => {required,integer}}},
-                                       {struct,
-                                        #{id => {required,binstr},
-                                          status => {required,binstr},
-                                          type =>
-                                           {required,{enum,[imageGeneration]}},
-                                          failure =>
-                                           {optional,
-                                            {default,
-                                             {null,
+                                       {any_of,
+                                        [{struct,
+                                          #{id => {required,binstr},
+                                            status => {required,binstr},
+                                            type =>
+                                             {required,
+                                              {enum,[imageGeneration]}},
+                                            failure =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [{ref,
+                                                   <<"ImageGenerationFailure">>},
+                                                  {exact,null}]}}}},
+                                            fileId => {required,binstr},
+                                            inputImages =>
+                                             {optional,
+                                              {list,
+                                               {ref,
+                                                <<"ImageGenerationInputImage">>}}},
+                                            revisedPrompt =>
+                                             {optional,
+                                              {any_of,[binstr,{exact,null}]}},
+                                            savedPath =>
+                                             {optional,
                                               {any_of,
-                                               [{ref,
-                                                 <<"ImageGenerationFailure">>},
-                                                {exact,null}]}}}},
-                                          result => {required,binstr},
-                                          revisedPrompt =>
-                                           {optional,
-                                            {any_of,[binstr,{exact,null}]}},
-                                          savedPath =>
-                                           {optional,
-                                            {any_of,
-                                             [{ref,<<"AbsolutePathBuf">>},
-                                              {exact,null}]}},
-                                          transparentBackground =>
-                                           {optional,
-                                            {default,
-                                             {null,
+                                               [{ref,<<"AbsolutePathBuf">>},
+                                                {exact,null}]}},
+                                            transparentBackground =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [boolean,{exact,null}]}}}}}},
+                                         {struct,
+                                          #{id => {required,binstr},
+                                            status => {required,binstr},
+                                            type =>
+                                             {required,
+                                              {enum,[imageGeneration]}},
+                                            failure =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [{ref,
+                                                   <<"ImageGenerationFailure">>},
+                                                  {exact,null}]}}}},
+                                            result => {required,binstr},
+                                            inputImages =>
+                                             {optional,
+                                              {list,
+                                               {ref,
+                                                <<"ImageGenerationInputImage">>}}},
+                                            revisedPrompt =>
+                                             {optional,
+                                              {any_of,[binstr,{exact,null}]}},
+                                            savedPath =>
+                                             {optional,
                                               {any_of,
-                                               [boolean,{exact,null}]}}}}}},
+                                               [{ref,<<"AbsolutePathBuf">>},
+                                                {exact,null}]}},
+                                            transparentBackground =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [boolean,
+                                                  {exact,null}]}}}}}}]},
                                        {struct,
                                         #{id => {required,binstr},
                                           type =>
@@ -15874,6 +16720,7 @@
                                  <<"MessagePhase">> =>
                                   {any_of,
                                    [{enum,[commentary]},
+                                    {enum,[partial_answer]},
                                     {enum,[final_answer]}]},
                                  <<"McpToolCallAppContext">> =>
                                   {struct,
@@ -16035,6 +16882,11 @@
                                         {required,{enum,[encrypted_content]}},
                                        encrypted_content =>
                                         {required,binstr}}}]},
+                                 <<"ImageGenerationInputImage">> =>
+                                  {struct,
+                                   #{path =>
+                                      {required,{ref,<<"AbsolutePathBuf">>}},
+                                     sha256 => {required,binstr}}},
                                  <<"CommandAction">> =>
                                   {any_of,
                                    [{struct,
@@ -16121,6 +16973,9 @@
                                      detailedExplanation =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     reviewTarget =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      steer =>
                                       {optional,
                                        {any_of,
@@ -16192,6 +17047,9 @@
                                         {<<"full">>,
                                          {all_of,
                                           [{ref,<<"TurnItemsView">>}]}}}},
+                                     rootTurnId =>
+                                      {optional,
+                                       {any_of,[binstr,{exact,null}]}},
                                      durationMs =>
                                       {optional,
                                        {any_of,[integer,{exact,null}]}},
@@ -16300,7 +17158,8 @@
                                       sessionBudgetExceeded,
                                       usageLimitExceeded,rateLimitExceeded,
                                       flexUnavailable,serverOverloaded,
-                                      cyberPolicy,misalignmentPolicyViolation,
+                                      modelNotFound,cyberPolicy,
+                                      misalignmentPolicyViolation,
                                       tooManyDenials,internalServerError,
                                       unauthorized,badRequest,
                                       threadRollbackFailed,sandboxError,
@@ -16344,7 +17203,8 @@
                                           #{turnKind =>
                                              {required,
                                               {ref,
-                                               <<"NonSteerableTurnKind">>}}}}}}}]},
+                                               <<"NonSteerableTurnKind">>}}}}}}},
+                                    {any_of,[binstr,{map,{binstr,term}}]}]},
                                  <<"ThreadItem">> =>
                                   {any_of,
                                    [{struct,
@@ -16579,9 +17439,17 @@
                                      #{id => {required,binstr},
                                        type =>
                                         {required,{enum,[subAgentActivity]}},
+                                       model =>
+                                        {optional,
+                                         {any_of,[binstr,{exact,null}]}},
                                        kind =>
                                         {required,
                                          {ref,<<"SubAgentActivityKind">>}},
+                                       reasoningEffort =>
+                                        {optional,
+                                         {any_of,
+                                          [{ref,<<"ReasoningEffort">>},
+                                           {exact,null}]}},
                                        agentPath => {required,binstr},
                                        agentThreadId => {required,binstr}}},
                                     {struct,
@@ -16609,34 +17477,73 @@
                                      #{id => {required,binstr},
                                        type => {required,{enum,[sleep]}},
                                        durationMs => {required,integer}}},
-                                    {struct,
-                                     #{id => {required,binstr},
-                                       status => {required,binstr},
-                                       type =>
-                                        {required,{enum,[imageGeneration]}},
-                                       failure =>
-                                        {optional,
-                                         {default,
-                                          {null,
+                                    {any_of,
+                                     [{struct,
+                                       #{id => {required,binstr},
+                                         status => {required,binstr},
+                                         type =>
+                                          {required,{enum,[imageGeneration]}},
+                                         failure =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [{ref,
+                                                <<"ImageGenerationFailure">>},
+                                               {exact,null}]}}}},
+                                         fileId => {required,binstr},
+                                         inputImages =>
+                                          {optional,
+                                           {list,
+                                            {ref,
+                                             <<"ImageGenerationInputImage">>}}},
+                                         revisedPrompt =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         savedPath =>
+                                          {optional,
                                            {any_of,
-                                            [{ref,
-                                              <<"ImageGenerationFailure">>},
-                                             {exact,null}]}}}},
-                                       result => {required,binstr},
-                                       revisedPrompt =>
-                                        {optional,
-                                         {any_of,[binstr,{exact,null}]}},
-                                       savedPath =>
-                                        {optional,
-                                         {any_of,
-                                          [{ref,<<"AbsolutePathBuf">>},
-                                           {exact,null}]}},
-                                       transparentBackground =>
-                                        {optional,
-                                         {default,
-                                          {null,
+                                            [{ref,<<"AbsolutePathBuf">>},
+                                             {exact,null}]}},
+                                         transparentBackground =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [boolean,{exact,null}]}}}}}},
+                                      {struct,
+                                       #{id => {required,binstr},
+                                         status => {required,binstr},
+                                         type =>
+                                          {required,{enum,[imageGeneration]}},
+                                         failure =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [{ref,
+                                                <<"ImageGenerationFailure">>},
+                                               {exact,null}]}}}},
+                                         result => {required,binstr},
+                                         inputImages =>
+                                          {optional,
+                                           {list,
+                                            {ref,
+                                             <<"ImageGenerationInputImage">>}}},
+                                         revisedPrompt =>
+                                          {optional,
+                                           {any_of,[binstr,{exact,null}]}},
+                                         savedPath =>
+                                          {optional,
                                            {any_of,
-                                            [boolean,{exact,null}]}}}}}},
+                                            [{ref,<<"AbsolutePathBuf">>},
+                                             {exact,null}]}},
+                                         transparentBackground =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [boolean,{exact,null}]}}}}}}]},
                                     {struct,
                                      #{id => {required,binstr},
                                        type =>
@@ -16792,7 +17699,9 @@
                                          {ref,
                                           <<"ThreadUnsubscribeStatus">>}}}}}}},
     {thread_goal_set_params, {with_defs,
-                              {#{<<"ThreadGoalStatus">> =>
+                              {#{<<"ThreadGoalMutationOrigin">> =>
+                                  {enum,[user,automatic]},
+                                 <<"ThreadGoalStatus">> =>
                                   {enum,
                                    [active,paused,blocked,usageLimited,
                                     budgetLimited,complete]}},
@@ -16801,6 +17710,11 @@
                                    {optional,
                                     {any_of,
                                      [{ref,<<"ThreadGoalStatus">>},
+                                      {exact,null}]}},
+                                  origin =>
+                                   {optional,
+                                    {any_of,
+                                     [{ref,<<"ThreadGoalMutationOrigin">>},
                                       {exact,null}]}},
                                   threadId => {required,binstr},
                                   objective =>
@@ -16856,7 +17770,16 @@
                                       {any_of,
                                        [{ref,<<"ThreadGoal">>},
                                         {exact,null}]}}}}}}},
-    {thread_goal_clear_params, {struct,#{threadId => {required,binstr}}}},
+    {thread_goal_clear_params, {with_defs,
+                                {#{<<"ThreadGoalMutationOrigin">> =>
+                                    {enum,[user,automatic]}},
+                                 {struct,
+                                  #{origin =>
+                                     {optional,
+                                      {any_of,
+                                       [{ref,<<"ThreadGoalMutationOrigin">>},
+                                        {exact,null}]}},
+                                    threadId => {required,binstr}}}}}},
     {thread_goal_clear_response, {struct,#{cleared => {required,boolean}}}},
     {thread_metadata_update_params, {with_defs,
                                      {#{<<"ThreadMetadataGitInfoUpdateParams">> =>
@@ -16899,6 +17822,7 @@
                                           <<"MessagePhase">> =>
                                            {any_of,
                                             [{enum,[commentary]},
+                                             {enum,[partial_answer]},
                                              {enum,[final_answer]}]},
                                           <<"McpToolCallAppContext">> =>
                                            {struct,
@@ -17104,6 +18028,12 @@
                                                   {enum,[encrypted_content]}},
                                                 encrypted_content =>
                                                  {required,binstr}}}]},
+                                          <<"ImageGenerationInputImage">> =>
+                                           {struct,
+                                            #{path =>
+                                               {required,
+                                                {ref,<<"AbsolutePathBuf">>}},
+                                              sha256 => {required,binstr}}},
                                           <<"CommandAction">> =>
                                            {any_of,
                                             [{struct,
@@ -17212,6 +18142,10 @@
                                                {optional,
                                                 {any_of,
                                                  [binstr,{exact,null}]}},
+                                              reviewTarget =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
                                               steer =>
                                                {optional,
                                                 {any_of,
@@ -17299,6 +18233,10 @@
                                                   {all_of,
                                                    [{ref,
                                                      <<"TurnItemsView">>}]}}}},
+                                              rootTurnId =>
+                                               {optional,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}},
                                               durationMs =>
                                                {optional,
                                                 {any_of,
@@ -17439,7 +18377,8 @@
                                                usageLimitExceeded,
                                                rateLimitExceeded,
                                                flexUnavailable,
-                                               serverOverloaded,cyberPolicy,
+                                               serverOverloaded,modelNotFound,
+                                               cyberPolicy,
                                                misalignmentPolicyViolation,
                                                tooManyDenials,
                                                internalServerError,
@@ -17489,7 +18428,9 @@
                                                    #{turnKind =>
                                                       {required,
                                                        {ref,
-                                                        <<"NonSteerableTurnKind">>}}}}}}}]},
+                                                        <<"NonSteerableTurnKind">>}}}}}}},
+                                             {any_of,
+                                              [binstr,{map,{binstr,term}}]}]},
                                           <<"ThreadItem">> =>
                                            {any_of,
                                             [{struct,
@@ -17779,10 +18720,20 @@
                                                 type =>
                                                  {required,
                                                   {enum,[subAgentActivity]}},
+                                                model =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
                                                 kind =>
                                                  {required,
                                                   {ref,
                                                    <<"SubAgentActivityKind">>}},
+                                                reasoningEffort =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"ReasoningEffort">>},
+                                                    {exact,null}]}},
                                                 agentPath => {required,binstr},
                                                 agentThreadId =>
                                                  {required,binstr}}},
@@ -17818,38 +18769,81 @@
                                                  {required,{enum,[sleep]}},
                                                 durationMs =>
                                                  {required,integer}}},
-                                             {struct,
-                                              #{id => {required,binstr},
-                                                status => {required,binstr},
-                                                type =>
-                                                 {required,
-                                                  {enum,[imageGeneration]}},
-                                                failure =>
-                                                 {optional,
-                                                  {default,
-                                                   {null,
+                                             {any_of,
+                                              [{struct,
+                                                #{id => {required,binstr},
+                                                  status => {required,binstr},
+                                                  type =>
+                                                   {required,
+                                                    {enum,[imageGeneration]}},
+                                                  failure =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [{ref,
+                                                         <<"ImageGenerationFailure">>},
+                                                        {exact,null}]}}}},
+                                                  fileId => {required,binstr},
+                                                  inputImages =>
+                                                   {optional,
+                                                    {list,
+                                                     {ref,
+                                                      <<"ImageGenerationInputImage">>}}},
+                                                  revisedPrompt =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [binstr,{exact,null}]}},
+                                                  savedPath =>
+                                                   {optional,
                                                     {any_of,
                                                      [{ref,
-                                                       <<"ImageGenerationFailure">>},
-                                                      {exact,null}]}}}},
-                                                result => {required,binstr},
-                                                revisedPrompt =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [binstr,{exact,null}]}},
-                                                savedPath =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{ref,
-                                                     <<"AbsolutePathBuf">>},
-                                                    {exact,null}]}},
-                                                transparentBackground =>
-                                                 {optional,
-                                                  {default,
-                                                   {null,
+                                                       <<"AbsolutePathBuf">>},
+                                                      {exact,null}]}},
+                                                  transparentBackground =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [boolean,
+                                                        {exact,null}]}}}}}},
+                                               {struct,
+                                                #{id => {required,binstr},
+                                                  status => {required,binstr},
+                                                  type =>
+                                                   {required,
+                                                    {enum,[imageGeneration]}},
+                                                  failure =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [{ref,
+                                                         <<"ImageGenerationFailure">>},
+                                                        {exact,null}]}}}},
+                                                  result => {required,binstr},
+                                                  inputImages =>
+                                                   {optional,
+                                                    {list,
+                                                     {ref,
+                                                      <<"ImageGenerationInputImage">>}}},
+                                                  revisedPrompt =>
+                                                   {optional,
                                                     {any_of,
-                                                     [boolean,
-                                                      {exact,null}]}}}}}},
+                                                     [binstr,{exact,null}]}},
+                                                  savedPath =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [{ref,
+                                                       <<"AbsolutePathBuf">>},
+                                                      {exact,null}]}},
+                                                  transparentBackground =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [boolean,
+                                                        {exact,null}]}}}}}}]},
                                              {struct,
                                               #{id => {required,binstr},
                                                 type =>
@@ -18071,6 +19065,40 @@
                                             {optional,
                                              {any_of,
                                               [binstr,{exact,null}]}}}}}}},
+    {thread_attachment_owner_list_params, {struct,
+                                           #{limit =>
+                                              {optional,
+                                               {any_of,
+                                                [integer,{exact,null}]}},
+                                             cursor =>
+                                              {optional,
+                                               {any_of,[binstr,{exact,null}]}},
+                                             archived =>
+                                              {optional,
+                                               {any_of,
+                                                [boolean,{exact,null}]}},
+                                             attachmentType =>
+                                              {required,binstr},
+                                             identityKey =>
+                                              {required,binstr}}}},
+    {thread_attachment_owner_list_response, {with_defs,
+                                             {#{<<"ThreadAttachmentOwner">> =>
+                                                 {struct,
+                                                  #{threadId =>
+                                                     {required,binstr},
+                                                    archived =>
+                                                     {required,boolean}}}},
+                                              {struct,
+                                               #{data =>
+                                                  {required,
+                                                   {list,
+                                                    {ref,
+                                                     <<"ThreadAttachmentOwner">>}}},
+                                                 nextCursor =>
+                                                  {optional,
+                                                   {any_of,
+                                                    [binstr,
+                                                     {exact,null}]}}}}}}},
     {thread_attachment_remove_params, {struct,
                                        #{threadId => {required,binstr},
                                          attachmentType => {required,binstr},
@@ -18273,7 +19301,9 @@
                                 <<"ReasoningEffort">> => binstr,
                                 <<"MessagePhase">> =>
                                  {any_of,
-                                  [{enum,[commentary]},{enum,[final_answer]}]},
+                                  [{enum,[commentary]},
+                                   {enum,[partial_answer]},
+                                   {enum,[final_answer]}]},
                                 <<"McpToolCallAppContext">> =>
                                  {struct,
                                   #{connectorId => {required,binstr},
@@ -18398,6 +19428,11 @@
                                        {required,{enum,[encrypted_content]}},
                                       encrypted_content =>
                                        {required,binstr}}}]},
+                                <<"ImageGenerationInputImage">> =>
+                                 {struct,
+                                  #{path =>
+                                     {required,{ref,<<"AbsolutePathBuf">>}},
+                                    sha256 => {required,binstr}}},
                                 <<"CommandAction">> =>
                                  {any_of,
                                   [{struct,
@@ -18453,6 +19488,8 @@
                                   #{errorType =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     detailedExplanation =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    reviewTarget =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     steer =>
                                      {optional,
@@ -18514,6 +19551,8 @@
                                        {<<"full">>,
                                         {all_of,
                                          [{ref,<<"TurnItemsView">>}]}}}},
+                                    rootTurnId =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     durationMs =>
                                      {optional,
                                       {any_of,[integer,{exact,null}]}},
@@ -18606,8 +19645,8 @@
                                     [contextWindowExceeded,
                                      sessionBudgetExceeded,usageLimitExceeded,
                                      rateLimitExceeded,flexUnavailable,
-                                     serverOverloaded,cyberPolicy,
-                                     misalignmentPolicyViolation,
+                                     serverOverloaded,modelNotFound,
+                                     cyberPolicy,misalignmentPolicyViolation,
                                      tooManyDenials,internalServerError,
                                      unauthorized,badRequest,
                                      threadRollbackFailed,sandboxError,other]},
@@ -18650,7 +19689,8 @@
                                          #{turnKind =>
                                             {required,
                                              {ref,
-                                              <<"NonSteerableTurnKind">>}}}}}}}]},
+                                              <<"NonSteerableTurnKind">>}}}}}}},
+                                   {any_of,[binstr,{map,{binstr,term}}]}]},
                                 <<"ThreadItem">> =>
                                  {any_of,
                                   [{struct,
@@ -18878,9 +19918,17 @@
                                     #{id => {required,binstr},
                                       type =>
                                        {required,{enum,[subAgentActivity]}},
+                                      model =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}},
                                       kind =>
                                        {required,
                                         {ref,<<"SubAgentActivityKind">>}},
+                                      reasoningEffort =>
+                                       {optional,
+                                        {any_of,
+                                         [{ref,<<"ReasoningEffort">>},
+                                          {exact,null}]}},
                                       agentPath => {required,binstr},
                                       agentThreadId => {required,binstr}}},
                                    {struct,
@@ -18908,32 +19956,73 @@
                                     #{id => {required,binstr},
                                       type => {required,{enum,[sleep]}},
                                       durationMs => {required,integer}}},
-                                   {struct,
-                                    #{id => {required,binstr},
-                                      status => {required,binstr},
-                                      type =>
-                                       {required,{enum,[imageGeneration]}},
-                                      failure =>
-                                       {optional,
-                                        {default,
-                                         {null,
+                                   {any_of,
+                                    [{struct,
+                                      #{id => {required,binstr},
+                                        status => {required,binstr},
+                                        type =>
+                                         {required,{enum,[imageGeneration]}},
+                                        failure =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [{ref,
+                                               <<"ImageGenerationFailure">>},
+                                              {exact,null}]}}}},
+                                        fileId => {required,binstr},
+                                        inputImages =>
+                                         {optional,
+                                          {list,
+                                           {ref,
+                                            <<"ImageGenerationInputImage">>}}},
+                                        revisedPrompt =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        savedPath =>
+                                         {optional,
                                           {any_of,
-                                           [{ref,<<"ImageGenerationFailure">>},
-                                            {exact,null}]}}}},
-                                      result => {required,binstr},
-                                      revisedPrompt =>
-                                       {optional,
-                                        {any_of,[binstr,{exact,null}]}},
-                                      savedPath =>
-                                       {optional,
-                                        {any_of,
-                                         [{ref,<<"AbsolutePathBuf">>},
-                                          {exact,null}]}},
-                                      transparentBackground =>
-                                       {optional,
-                                        {default,
-                                         {null,
-                                          {any_of,[boolean,{exact,null}]}}}}}},
+                                           [{ref,<<"AbsolutePathBuf">>},
+                                            {exact,null}]}},
+                                        transparentBackground =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [boolean,{exact,null}]}}}}}},
+                                     {struct,
+                                      #{id => {required,binstr},
+                                        status => {required,binstr},
+                                        type =>
+                                         {required,{enum,[imageGeneration]}},
+                                        failure =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [{ref,
+                                               <<"ImageGenerationFailure">>},
+                                              {exact,null}]}}}},
+                                        result => {required,binstr},
+                                        inputImages =>
+                                         {optional,
+                                          {list,
+                                           {ref,
+                                            <<"ImageGenerationInputImage">>}}},
+                                        revisedPrompt =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}},
+                                        savedPath =>
+                                         {optional,
+                                          {any_of,
+                                           [{ref,<<"AbsolutePathBuf">>},
+                                            {exact,null}]}},
+                                        transparentBackground =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,
+                                             [boolean,{exact,null}]}}}}}}]},
                                    {struct,
                                     #{id => {required,binstr},
                                       type =>
@@ -18965,6 +20054,34 @@
                               {struct,
                                #{turn => {required,{ref,<<"Turn">>}},
                                  reviewThreadId => {required,binstr}}}}}},
+    {feedback_save_params, {with_defs,
+                            {#{<<"LegacyAppPathString">> => binstr},
+                             {struct,
+                              #{reason =>
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                threadId =>
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                classification => {required,binstr},
+                                extraLogFiles =>
+                                 {optional,
+                                  {any_of,[{list,binstr},{exact,null}]}},
+                                includeLogs => {optional,boolean},
+                                tags =>
+                                 {optional,
+                                  {any_of,[{map,{binstr,term}},{exact,null}]}},
+                                savePath =>
+                                 {required,
+                                  {all_of,
+                                   [{ref,<<"LegacyAppPathString">>}]}}}}}}},
+    {feedback_save_response, {with_defs,
+                              {#{<<"LegacyAppPathString">> => binstr},
+                               {struct,
+                                #{threadId => {required,binstr},
+                                  savedPath =>
+                                   {required,{ref,<<"LegacyAppPathString">>}},
+                                  promptHash =>
+                                   {optional,
+                                    {any_of,[binstr,{exact,null}]}}}}}}},
     {command_exec_params, {with_defs,
                            {#{<<"AbsolutePathBuf">> => binstr,
                               <<"CommandExecTerminalSize">> =>
@@ -19168,13 +20285,12 @@
                                                  #{webSearch =>
                                                     {required,boolean},
                                                    imageGeneration =>
-                                                    {required,boolean},
-                                                   namespaceTools =>
                                                     {required,boolean}}}},
     {skills_list_params, {struct,#{cwds => {optional,{list,binstr}},
                                    forceReload => {optional,boolean}}}},
     {skills_list_response, {with_defs,
                             {#{<<"AbsolutePathBuf">> => binstr,
+                               <<"LegacyAppPathString">> => binstr,
                                <<"SkillDependencies">> =>
                                 {struct,
                                  #{tools =>
@@ -19215,7 +20331,7 @@
                                    name => {required,binstr},
                                    scope => {required,{ref,<<"SkillScope">>}},
                                    path =>
-                                    {required,{ref,<<"AbsolutePathBuf">>}},
+                                    {required,{ref,<<"LegacyAppPathString">>}},
                                    interface =>
                                     {optional,
                                      {any_of,
@@ -19470,7 +20586,12 @@
                                            {any_of,
                                             [integer,{exact,null}]}}}}}}},
     {mcp_server_oauth_login_response, {struct,
-                                       #{authorizationUrl =>
+                                       #{loginId =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,[binstr,{exact,null}]}}}},
+                                         authorizationUrl =>
                                           {required,binstr}}}},
     {mcp_server_status_list_params, {with_defs,
                                      {#{<<"McpServerStatusDetail">> =>
@@ -19562,6 +20683,7 @@
                                                 {any_of,
                                                  [{ref,<<"McpServerInfo">>},
                                                   {exact,null}]}},
+                                              toolListMeta => {optional,term},
                                               toolsError =>
                                                {optional,
                                                 {any_of,
@@ -19583,11 +20705,11 @@
                                                  [binstr,{exact,null}]}},
                                               uri => {required,binstr},
                                               '_meta' => {optional,term},
+                                              annotations => {optional,term},
                                               icons =>
                                                {optional,
                                                 {any_of,
                                                  [{list,term},{exact,null}]}},
-                                              annotations => {optional,term},
                                               mimeType =>
                                                {optional,
                                                 {any_of,
@@ -19623,13 +20745,13 @@
                                                  [binstr,{exact,null}]}},
                                               '_meta' => {optional,term},
                                               inputSchema => {required,term},
+                                              annotations => {optional,term},
                                               outputSchema => {optional,term},
                                               icons =>
                                                {optional,
                                                 {any_of,
-                                                 [{list,term},{exact,null}]}},
-                                              annotations =>
-                                               {optional,term}}}},
+                                                 [{list,term},
+                                                  {exact,null}]}}}}},
                                         {struct,
                                          #{data =>
                                             {required,
@@ -20267,30 +21389,7 @@
                                     [{ref,<<"OverriddenMetadata">>},
                                      {exact,null}]}}}}}}},
     {config_requirements_read_response, {with_defs,
-                                         {#{<<"AllowDenyRequirement">> =>
-                                             {enum,[allow,deny]},
-                                            <<"ApplicationNetworkRequirements">> =>
-                                             {struct,
-                                              #{enabled => {required,boolean},
-                                                domains =>
-                                                 {required,
-                                                  {map,
-                                                   {binstr,
-                                                    {ref,
-                                                     <<"NetworkDomainPermission">>}}}}}},
-                                            <<"ApplicationRequirements">> =>
-                                             {struct,
-                                              #{network =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{ref,
-                                                     <<"ApplicationNetworkRequirements">>},
-                                                    {exact,null}]}}}},
-                                            <<"ApprovalsReviewer">> =>
-                                             {enum,
-                                              [user,auto_review,
-                                               guardian_subagent]},
-                                            <<"AskForApproval">> =>
+                                         {#{<<"AskForApproval">> =>
                                              {any_of,
                                               [{enum,
                                                 [untrusted,'on-request',
@@ -20314,65 +21413,227 @@
                                                          {default,
                                                           {false,
                                                            boolean}}}}}}}}]},
-                                            <<"AutoReviewRequirements">> =>
+                                            <<"ReasoningEffort">> => binstr,
+                                            <<"ManagedHooksRequirements">> =>
                                              {struct,
-                                              #{ignoreRules =>
+                                              #{'Interrupt' =>
+                                                 {optional,
+                                                  {default,
+                                                   {[],
+                                                    {list,
+                                                     {ref,
+                                                      <<"ConfiguredHookMatcherGroup">>}}}}},
+                                                'PermissionRequest' =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ConfiguredHookMatcherGroup">>}}},
+                                                'PostCompact' =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ConfiguredHookMatcherGroup">>}}},
+                                                'PostModelRequest' =>
+                                                 {optional,
+                                                  {default,
+                                                   {[],
+                                                    {list,
+                                                     {ref,
+                                                      <<"ConfiguredHookMatcherGroup">>}}}}},
+                                                'PostToolUse' =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ConfiguredHookMatcherGroup">>}}},
+                                                'PreCompact' =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ConfiguredHookMatcherGroup">>}}},
+                                                'PreModelRequest' =>
+                                                 {optional,
+                                                  {default,
+                                                   {[],
+                                                    {list,
+                                                     {ref,
+                                                      <<"ConfiguredHookMatcherGroup">>}}}}},
+                                                'PreToolUse' =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ConfiguredHookMatcherGroup">>}}},
+                                                'SessionEnd' =>
+                                                 {optional,
+                                                  {default,
+                                                   {[],
+                                                    {list,
+                                                     {ref,
+                                                      <<"ConfiguredHookMatcherGroup">>}}}}},
+                                                'SessionStart' =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ConfiguredHookMatcherGroup">>}}},
+                                                'Stop' =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ConfiguredHookMatcherGroup">>}}},
+                                                'SubagentStart' =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ConfiguredHookMatcherGroup">>}}},
+                                                'SubagentStop' =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ConfiguredHookMatcherGroup">>}}},
+                                                'UserPromptSubmit' =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ConfiguredHookMatcherGroup">>}}},
+                                                managedDir =>
                                                  {optional,
                                                   {any_of,
-                                                   [{list,binstr},
-                                                    {exact,null}]}},
-                                                requiredOnModels =>
+                                                   [binstr,{exact,null}]}},
+                                                windowsManagedDir =>
                                                  {optional,
                                                   {any_of,
-                                                   [{list,binstr},
+                                                   [binstr,{exact,null}]}}}},
+                                            <<"NetworkUnixSocketPermission">> =>
+                                             {enum,[allow,deny]},
+                                            <<"BrowserUseExtensionRequirements">> =>
+                                             {struct,
+                                              #{requestHeaders =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{list,
+                                                     {ref,
+                                                      <<"RequestHeader">>}},
                                                     {exact,null}]}}}},
-                                            <<"BrowserUseAccessApprovalLifetime">> =>
-                                             {enum,[turn,thread]},
-                                            <<"BrowserUseOriginPolicy">> =>
+                                            <<"WebSearchMode">> =>
+                                             {enum,
+                                              [disabled,cached,indexed,live]},
+                                            <<"ComputerUseMacosRequirements">> =>
                                              {struct,
-                                              #{access =>
+                                              #{bundleIds =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{map,{binstr,term}},
+                                                    {exact,null}]}}}},
+                                            <<"LegacyAppPathString">> =>
+                                             binstr,
+                                            <<"NewThreadModelDefaults">> =>
+                                             {struct,
+                                              #{model =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                serviceTier =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                modelReasoningEffort =>
                                                  {optional,
                                                   {any_of,
                                                    [{ref,
-                                                     <<"AllowDenyRequirement">>},
-                                                    {exact,null}]}},
-                                                downloads =>
+                                                     <<"ReasoningEffort">>},
+                                                    {exact,null}]}}}},
+                                            <<"ModelsRequirements">> =>
+                                             {struct,
+                                              #{newThread =>
                                                  {optional,
                                                   {any_of,
                                                    [{ref,
-                                                     <<"AllowDenyRequirement">>},
-                                                    {exact,null}]}},
-                                                uploads =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{ref,
-                                                     <<"AllowDenyRequirement">>},
-                                                    {exact,null}]}},
-                                                accessApprovalLifetime =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{ref,
-                                                     <<"BrowserUseAccessApprovalLifetime">>},
-                                                    {exact,null}]}},
-                                                autoReview =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{ref,
-                                                     <<"AllowDenyRequirement">>},
-                                                    {exact,null}]}},
-                                                fullCdpAccess =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{ref,
-                                                     <<"AllowDenyRequirement">>},
-                                                    {exact,null}]}},
-                                                persistentApproval =>
+                                                     <<"NewThreadModelDefaults">>},
+                                                    {exact,null}]}}}},
+                                            <<"ApplicationNetworkRequirements">> =>
+                                             {struct,
+                                              #{enabled => {required,boolean},
+                                                domains =>
+                                                 {required,
+                                                  {map,
+                                                   {binstr,
+                                                    {ref,
+                                                     <<"NetworkDomainPermission">>}}}}}},
+                                            <<"ConfiguredHookHandler">> =>
+                                             {any_of,
+                                              [{struct,
+                                                #{async => {required,boolean},
+                                                  command => {required,binstr},
+                                                  type =>
+                                                   {required,{enum,[command]}},
+                                                  statusMessage =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [binstr,{exact,null}]}},
+                                                  additionalContextLimit =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [integer,{exact,null}]}},
+                                                  commandWindows =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [binstr,{exact,null}]}},
+                                                  timeoutSec =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                               {struct,
+                                                #{input =>
+                                                   {required,
+                                                    {map,{binstr,term}}},
+                                                  type =>
+                                                   {required,
+                                                    {enum,[mcp_tool]}},
+                                                  server => {required,binstr},
+                                                  tool => {required,binstr},
+                                                  statusMessage =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [binstr,{exact,null}]}},
+                                                  timeoutSec =>
+                                                   {optional,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                               {struct,
+                                                #{type =>
+                                                   {required,
+                                                    {enum,[prompt]}}}},
+                                               {struct,
+                                                #{type =>
+                                                   {required,
+                                                    {enum,[agent]}}}}]},
+                                            <<"InAppBrowserRequirements">> =>
+                                             {struct,
+                                              #{allowExternalBrowserSettingsImport =>
                                                  {optional,
                                                   {any_of,
                                                    [boolean,{exact,null}]}}}},
+                                            <<"ConfiguredHookMatcherGroup">> =>
+                                             {struct,
+                                              #{hooks =>
+                                                 {required,
+                                                  {list,
+                                                   {ref,
+                                                    <<"ConfiguredHookHandler">>}}},
+                                                matcher =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}}}},
                                             <<"BrowserUseRequirements">> =>
                                              {struct,
-                                              #{origins =>
+                                              #{extension =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"BrowserUseExtensionRequirements">>},
+                                                    {exact,null}]}},
+                                                origins =>
                                                  {optional,
                                                   {any_of,
                                                    [{map,{binstr,term}},
@@ -20399,72 +21660,21 @@
                                                  {optional,
                                                   {any_of,
                                                    [boolean,{exact,null}]}}}},
+                                            <<"SandboxMode">> =>
+                                             {enum,
+                                              ['read-only','workspace-write',
+                                               'danger-full-access']},
                                             <<"CliAuthCredentialsStoreMode">> =>
                                              {enum,
                                               [file,keyring,auto,ephemeral]},
-                                            <<"ComputerUseMacosRequirements">> =>
+                                            <<"WindowsSandboxImplementation">> =>
+                                             {enum,[elevated,unelevated,mxc]},
+                                            <<"ForcedLoginMethod">> =>
+                                             {enum,[chatgpt,api]},
+                                            <<"RequestHeader">> =>
                                              {struct,
-                                              #{bundleIds =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{map,{binstr,term}},
-                                                    {exact,null}]}}}},
-                                            <<"ComputerUseRequirements">> =>
-                                             {struct,
-                                              #{windows =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{ref,
-                                                     <<"ComputerUseWindowsRequirements">>},
-                                                    {exact,null}]}},
-                                                macos =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{ref,
-                                                     <<"ComputerUseMacosRequirements">>},
-                                                    {exact,null}]}},
-                                                allowLockedComputerUse =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [boolean,{exact,null}]}},
-                                                allowPersistentApproval =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [boolean,{exact,null}]}},
-                                                defaultAppAccess =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{ref,
-                                                     <<"AllowDenyRequirement">>},
-                                                    {exact,null}]}}}},
-                                            <<"ComputerUseWindowsExeRequirement">> =>
-                                             {struct,
-                                              #{access =>
-                                                 {required,
-                                                  {ref,
-                                                   <<"AllowDenyRequirement">>}},
-                                                binaryName =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [binstr,{exact,null}]}},
-                                                productName =>
-                                                 {required,binstr},
-                                                publisherName =>
-                                                 {required,binstr}}},
-                                            <<"ComputerUseWindowsRequirements">> =>
-                                             {struct,
-                                              #{aumids =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{map,{binstr,term}},
-                                                    {exact,null}]}},
-                                                exes =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{list,
-                                                     {ref,
-                                                      <<"ComputerUseWindowsExeRequirement">>}},
-                                                    {exact,null}]}}}},
+                                              #{name => {required,binstr},
+                                                value => {required,binstr}}},
                                             <<"ConfigRequirements">> =>
                                              {struct,
                                               #{modelProvider =>
@@ -20616,176 +21826,112 @@
                                                  {optional,
                                                   {any_of,
                                                    [binstr,{exact,null}]}}}},
-                                            <<"ConfiguredHookHandler">> =>
-                                             {any_of,
-                                              [{struct,
-                                                #{async => {required,boolean},
-                                                  command => {required,binstr},
-                                                  type =>
-                                                   {required,{enum,[command]}},
-                                                  statusMessage =>
-                                                   {optional,
-                                                    {any_of,
-                                                     [binstr,{exact,null}]}},
-                                                  additionalContextLimit =>
-                                                   {optional,
-                                                    {any_of,
-                                                     [integer,{exact,null}]}},
-                                                  commandWindows =>
-                                                   {optional,
-                                                    {any_of,
-                                                     [binstr,{exact,null}]}},
-                                                  timeoutSec =>
-                                                   {optional,
-                                                    {any_of,
-                                                     [integer,
-                                                      {exact,null}]}}}},
-                                               {struct,
-                                                #{input =>
-                                                   {required,
-                                                    {map,{binstr,term}}},
-                                                  type =>
-                                                   {required,
-                                                    {enum,[mcp_tool]}},
-                                                  server => {required,binstr},
-                                                  tool => {required,binstr},
-                                                  statusMessage =>
-                                                   {optional,
-                                                    {any_of,
-                                                     [binstr,{exact,null}]}},
-                                                  timeoutSec =>
-                                                   {optional,
-                                                    {any_of,
-                                                     [integer,
-                                                      {exact,null}]}}}},
-                                               {struct,
-                                                #{type =>
-                                                   {required,
-                                                    {enum,[prompt]}}}},
-                                               {struct,
-                                                #{type =>
-                                                   {required,
-                                                    {enum,[agent]}}}}]},
-                                            <<"ConfiguredHookMatcherGroup">> =>
+                                            <<"NetworkDomainPermission">> =>
+                                             {enum,[allow,deny]},
+                                            <<"ComputerUseWindowsExeRequirement">> =>
                                              {struct,
-                                              #{hooks =>
+                                              #{access =>
                                                  {required,
-                                                  {list,
-                                                   {ref,
-                                                    <<"ConfiguredHookHandler">>}}},
-                                                matcher =>
+                                                  {ref,
+                                                   <<"AllowDenyRequirement">>}},
+                                                binaryName =>
                                                  {optional,
                                                   {any_of,
-                                                   [binstr,{exact,null}]}}}},
+                                                   [binstr,{exact,null}]}},
+                                                productName =>
+                                                 {required,binstr},
+                                                publisherName =>
+                                                 {required,binstr}}},
+                                            <<"BrowserUseOriginPolicy">> =>
+                                             {struct,
+                                              #{access =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"AllowDenyRequirement">>},
+                                                    {exact,null}]}},
+                                                downloads =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"AllowDenyRequirement">>},
+                                                    {exact,null}]}},
+                                                uploads =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"AllowDenyRequirement">>},
+                                                    {exact,null}]}},
+                                                accessApprovalLifetime =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"BrowserUseAccessApprovalLifetime">>},
+                                                    {exact,null}]}},
+                                                autoReview =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"AllowDenyRequirement">>},
+                                                    {exact,null}]}},
+                                                fullCdpAccess =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"AllowDenyRequirement">>},
+                                                    {exact,null}]}},
+                                                persistentApproval =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [boolean,{exact,null}]}}}},
+                                            <<"ResidencyRequirement">> =>
+                                             {enum,[us]},
                                             <<"FeedbackRequirements">> =>
                                              {struct,
                                               #{enabled =>
                                                  {optional,
                                                   {any_of,
                                                    [boolean,{exact,null}]}}}},
-                                            <<"ForcedLoginMethod">> =>
-                                             {enum,[chatgpt,api]},
-                                            <<"InAppBrowserRequirements">> =>
+                                            <<"AutoReviewRequirements">> =>
                                              {struct,
-                                              #{allowExternalBrowserSettingsImport =>
+                                              #{ignoreRules =>
                                                  {optional,
                                                   {any_of,
-                                                   [boolean,{exact,null}]}}}},
-                                            <<"ManagedHooksRequirements">> =>
-                                             {struct,
-                                              #{'Interrupt' =>
-                                                 {optional,
-                                                  {default,
-                                                   {[],
-                                                    {list,
-                                                     {ref,
-                                                      <<"ConfiguredHookMatcherGroup">>}}}}},
-                                                'PermissionRequest' =>
-                                                 {required,
-                                                  {list,
-                                                   {ref,
-                                                    <<"ConfiguredHookMatcherGroup">>}}},
-                                                'PostCompact' =>
-                                                 {required,
-                                                  {list,
-                                                   {ref,
-                                                    <<"ConfiguredHookMatcherGroup">>}}},
-                                                'PostToolUse' =>
-                                                 {required,
-                                                  {list,
-                                                   {ref,
-                                                    <<"ConfiguredHookMatcherGroup">>}}},
-                                                'PreCompact' =>
-                                                 {required,
-                                                  {list,
-                                                   {ref,
-                                                    <<"ConfiguredHookMatcherGroup">>}}},
-                                                'PreToolUse' =>
-                                                 {required,
-                                                  {list,
-                                                   {ref,
-                                                    <<"ConfiguredHookMatcherGroup">>}}},
-                                                'SessionEnd' =>
-                                                 {optional,
-                                                  {default,
-                                                   {[],
-                                                    {list,
-                                                     {ref,
-                                                      <<"ConfiguredHookMatcherGroup">>}}}}},
-                                                'SessionStart' =>
-                                                 {required,
-                                                  {list,
-                                                   {ref,
-                                                    <<"ConfiguredHookMatcherGroup">>}}},
-                                                'Stop' =>
-                                                 {required,
-                                                  {list,
-                                                   {ref,
-                                                    <<"ConfiguredHookMatcherGroup">>}}},
-                                                'SubagentStart' =>
-                                                 {required,
-                                                  {list,
-                                                   {ref,
-                                                    <<"ConfiguredHookMatcherGroup">>}}},
-                                                'SubagentStop' =>
-                                                 {required,
-                                                  {list,
-                                                   {ref,
-                                                    <<"ConfiguredHookMatcherGroup">>}}},
-                                                'UserPromptSubmit' =>
-                                                 {required,
-                                                  {list,
-                                                   {ref,
-                                                    <<"ConfiguredHookMatcherGroup">>}}},
-                                                managedDir =>
+                                                   [{list,binstr},
+                                                    {exact,null}]}},
+                                                requiredOnModels =>
                                                  {optional,
                                                   {any_of,
-                                                   [binstr,{exact,null}]}},
-                                                windowsManagedDir =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [binstr,{exact,null}]}}}},
-                                            <<"ModelsRequirements">> =>
+                                                   [{list,binstr},
+                                                    {exact,null}]}}}},
+                                            <<"AllowDenyRequirement">> =>
+                                             {enum,[allow,deny]},
+                                            <<"ApplicationRequirements">> =>
                                              {struct,
-                                              #{newThread =>
+                                              #{network =>
                                                  {optional,
                                                   {any_of,
                                                    [{ref,
-                                                     <<"NewThreadModelDefaults">>},
+                                                     <<"ApplicationNetworkRequirements">>},
+                                                    {exact,null}]}},
+                                                storage =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"ApplicationStorageRequirements">>},
                                                     {exact,null}]}}}},
-                                            <<"NetworkDomainPermission">> =>
-                                             {enum,[allow,deny]},
+                                            <<"BrowserUseAccessApprovalLifetime">> =>
+                                             {enum,[turn,thread]},
+                                            <<"ApprovalsReviewer">> =>
+                                             {enum,
+                                              [user,auto_review,
+                                               guardian_subagent]},
                                             <<"NetworkRequirements">> =>
                                              {struct,
                                               #{enabled =>
                                                  {optional,
                                                   {any_of,
                                                    [boolean,{exact,null}]}},
-                                                domains =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [{map,{binstr,term}},
-                                                    {exact,null}]}},
                                                 allowLocalBinding =>
                                                  {optional,
                                                   {any_of,
@@ -20817,6 +21963,11 @@
                                                   {any_of,
                                                    [{list,binstr},
                                                     {exact,null}]}},
+                                                domains =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{map,{binstr,term}},
+                                                    {exact,null}]}},
                                                 httpPort =>
                                                  {optional,
                                                   {any_of,
@@ -20825,6 +21976,11 @@
                                                  {optional,
                                                   {any_of,
                                                    [boolean,{exact,null}]}},
+                                                reviewDomains =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{list,binstr},
+                                                    {exact,null}]}},
                                                 socksPort =>
                                                  {optional,
                                                   {any_of,
@@ -20834,43 +21990,76 @@
                                                   {any_of,
                                                    [{map,{binstr,term}},
                                                     {exact,null}]}}}},
-                                            <<"NetworkUnixSocketPermission">> =>
-                                             {enum,[allow,deny]},
-                                            <<"NewThreadModelDefaults">> =>
+                                            <<"ComputerUseRequirements">> =>
                                              {struct,
-                                              #{model =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [binstr,{exact,null}]}},
-                                                serviceTier =>
-                                                 {optional,
-                                                  {any_of,
-                                                   [binstr,{exact,null}]}},
-                                                modelReasoningEffort =>
+                                              #{windows =>
                                                  {optional,
                                                   {any_of,
                                                    [{ref,
-                                                     <<"ReasoningEffort">>},
+                                                     <<"ComputerUseWindowsRequirements">>},
+                                                    {exact,null}]}},
+                                                macos =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"ComputerUseMacosRequirements">>},
+                                                    {exact,null}]}},
+                                                allowLockedComputerUse =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [boolean,{exact,null}]}},
+                                                allowPersistentApproval =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [boolean,{exact,null}]}},
+                                                defaultAppAccess =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"AllowDenyRequirement">>},
                                                     {exact,null}]}}}},
-                                            <<"ReasoningEffort">> => binstr,
-                                            <<"ResidencyRequirement">> =>
-                                             {enum,[us]},
-                                            <<"SandboxMode">> =>
-                                             {enum,
-                                              ['read-only','workspace-write',
-                                               'danger-full-access']},
-                                            <<"WebSearchMode">> =>
-                                             {enum,
-                                              [disabled,cached,indexed,live]},
-                                            <<"WindowsSandboxImplementation">> =>
-                                             {enum,[elevated,unelevated,mxc]}},
+                                            <<"ComputerUseWindowsRequirements">> =>
+                                             {struct,
+                                              #{aumids =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{map,{binstr,term}},
+                                                    {exact,null}]}},
+                                                exes =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{list,
+                                                     {ref,
+                                                      <<"ComputerUseWindowsExeRequirement">>}},
+                                                    {exact,null}]}}}},
+                                            <<"ApplicationStorageRequirements">> =>
+                                             {struct,
+                                              #{defaultProjectParent =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"LegacyAppPathString">>},
+                                                    {exact,null}]}},
+                                                projectlessWorkspaceRoot =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"LegacyAppPathString">>},
+                                                    {exact,null}]}}}}},
                                           {struct,
                                            #{requirements =>
                                               {optional,
                                                {any_of,
                                                 [{ref,
                                                   <<"ConfigRequirements">>},
-                                                 {exact,null}]}}}}}}},
+                                                 {exact,null}]}},
+                                             supportsIndependentSpeedModes =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [boolean,
+                                                   {exact,null}]}}}}}}}}},
     {mcp_server_refresh_response, {map,{binstr,term}}},
     {account_read_params, {struct,#{refreshToken => {optional,boolean}}}},
     {account_read_response, {with_defs,
@@ -20889,8 +22078,9 @@
                                     #{type =>
                                        {required,{enum,[amazonBedrock]}},
                                       usesCodexManagedCredentials =>
-                                       {optional,
-                                        {default,{false,boolean}}}}}]},
+                                       {optional,{default,{false,boolean}}}}},
+                                   {struct,
+                                    #{type => {required,{enum,[gcp]}}}}]},
                                 <<"AccountRoutingOverride">> =>
                                  {enum,['NO_CONSTRAINT',us,us_cr]},
                                 <<"PlanType">> =>
@@ -20900,7 +22090,7 @@
                                    self_serve_business_usage_based,business,
                                    ent26,enterprise_cbp_automation,
                                    enterprise_cbp_usage_based,enterprise,edu,
-                                   edu_plus,edu_pro,unknown]},
+                                   edu_plus,edu_pro,sci,sci_plus,unknown]},
                                 <<"WorkspaceRouting">> =>
                                  {struct,
                                   #{chatgptAccountId => {required,binstr},
@@ -21014,6 +22204,17 @@
     {account_gateway_oauth_login_response, {map,{binstr,term}}},
     {account_gateway_oauth_cancel_response, {map,{binstr,term}}},
     {account_logout_response, {map,{binstr,term}}},
+    {account_rate_limits_read_params, {with_defs,
+                                       {#{<<"GetAccountRateLimitsParams">> =>
+                                           {struct,
+                                            #{excludeResetCreditDetails =>
+                                               {optional,boolean},
+                                              supportsLunaReserve =>
+                                               {optional,boolean}}}},
+                                        {any_of,
+                                         [{ref,
+                                           <<"GetAccountRateLimitsParams">>},
+                                          {exact,null}]}}}},
     {account_rate_limits_read_response, {with_defs,
                                          {#{<<"CreditsSnapshot">> =>
                                              {struct,
@@ -21035,7 +22236,7 @@
                                                enterprise_cbp_automation,
                                                enterprise_cbp_usage_based,
                                                enterprise,edu,edu_plus,
-                                               edu_pro,unknown]},
+                                               edu_pro,sci,sci_plus,unknown]},
                                             <<"RateLimitReachedType">> =>
                                              {enum,
                                               [rate_limit_reached,
@@ -21207,6 +22408,15 @@
                                                              {required,
                                                               {ref,
                                                                <<"ConsumeAccountRateLimitResetCreditOutcome">>}}}}}}},
+    {account_usage_read_params, {with_defs,
+                                 {#{<<"GetAccountTokenUsageParams">> =>
+                                     {struct,
+                                      #{threadId =>
+                                         {optional,
+                                          {any_of,[binstr,{exact,null}]}}}}},
+                                  {any_of,
+                                   [{ref,<<"GetAccountTokenUsageParams">>},
+                                    {exact,null}]}}}},
     {account_usage_read_response, {with_defs,
                                    {#{<<"AccountTokenUsageDailyBucket">> =>
                                        {struct,
@@ -21351,10 +22561,11 @@
                                   path => {required,binstr}}},
                               <<"HookEventName">> =>
                                {enum,
-                                [preToolUse,permissionRequest,postToolUse,
-                                 preCompact,postCompact,sessionStart,
-                                 sessionEnd,userPromptSubmit,subagentStart,
-                                 subagentStop,stop,interrupt]},
+                                [preModelRequest,postModelRequest,preToolUse,
+                                 permissionRequest,postToolUse,preCompact,
+                                 postCompact,sessionStart,sessionEnd,
+                                 userPromptSubmit,subagentStart,subagentStop,
+                                 stop,interrupt]},
                               <<"HookMetadata">> =>
                                {any_of,
                                 [{struct,
@@ -21375,12 +22586,12 @@
                                     handlerType => {required,{enum,[command]}},
                                     statusMessage =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
+                                    matcher =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     additionalContextLimit =>
                                      {optional,
                                       {any_of,[integer,{exact,null}]}},
                                     timeoutSec => {required,integer},
-                                    matcher =>
-                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     currentHash => {required,binstr},
                                     isManaged => {required,boolean},
                                     trustStatus =>
@@ -21402,12 +22613,12 @@
                                     handlerType => {required,{enum,[mcpTool]}},
                                     statusMessage =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
+                                    matcher =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     additionalContextLimit =>
                                      {optional,
                                       {any_of,[integer,{exact,null}]}},
                                     timeoutSec => {required,integer},
-                                    matcher =>
-                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     currentHash => {required,binstr},
                                     isManaged => {required,boolean},
                                     trustStatus =>
@@ -21427,12 +22638,12 @@
                                     handlerType => {required,{enum,[prompt]}},
                                     statusMessage =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
+                                    matcher =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     additionalContextLimit =>
                                      {optional,
                                       {any_of,[integer,{exact,null}]}},
                                     timeoutSec => {required,integer},
-                                    matcher =>
-                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     currentHash => {required,binstr},
                                     isManaged => {required,boolean},
                                     trustStatus =>
@@ -21452,12 +22663,12 @@
                                     handlerType => {required,{enum,[agent]}},
                                     statusMessage =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
+                                    matcher =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     additionalContextLimit =>
                                      {optional,
                                       {any_of,[integer,{exact,null}]}},
                                     timeoutSec => {required,integer},
-                                    matcher =>
-                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     currentHash => {required,binstr},
                                     isManaged => {required,boolean},
                                     trustStatus =>
@@ -22145,10 +23356,12 @@
                                   'NO_ACTIVE_WORKSPACE']},
                                <<"HookEventName">> =>
                                 {enum,
-                                 [preToolUse,permissionRequest,postToolUse,
-                                  preCompact,postCompact,sessionStart,
-                                  sessionEnd,userPromptSubmit,subagentStart,
-                                  subagentStop,stop,interrupt]},
+                                 [preModelRequest,postModelRequest,preToolUse,
+                                  permissionRequest,postToolUse,preCompact,
+                                  postCompact,sessionStart,sessionEnd,
+                                  userPromptSubmit,subagentStart,subagentStop,
+                                  stop,interrupt]},
+                               <<"LegacyAppPathString">> => binstr,
                                <<"PluginAuthPolicy">> =>
                                 {enum,['ON_INSTALL','ON_USE']},
                                <<"PluginAvailability">> =>
@@ -22464,7 +23677,7 @@
                                    path =>
                                     {optional,
                                      {any_of,
-                                      [{ref,<<"AbsolutePathBuf">>},
+                                      [{ref,<<"LegacyAppPathString">>},
                                        {exact,null}]}},
                                    interface =>
                                     {optional,
