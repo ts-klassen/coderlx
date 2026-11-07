@@ -18,6 +18,37 @@ image_reference_test_() ->
         ]
     ].
 
+audio_reference_test_() ->
+    [
+        {Name, fun() ->
+            Audio = Reference#{type => audio},
+            Params = #{threadId => <<"thread">>, input => [Audio]},
+            ?assertEqual(Params, normalize(Params, turn_start_params)),
+            Request = #{id => 1, method => 'turn/start', params => Params},
+            ?assertEqual(Request, normalize(Request, client_request)),
+            ?assertMatch({reject, _}, klsn_rule:eval(
+                Params#{input := [maps:remove(type, Audio)]},
+                {alias, {coderlx_app_server_rules, turn_start_params}}, #{}))
+        end}
+        || {Name, Reference} <- [
+            {"URL audio", #{url => <<"https://example.com/audio.wav">>}},
+            {"file ID audio", #{fileId => <<"file-audio">>}}
+        ]
+    ].
+
+human_command_approval_test() ->
+    Params = #{threadId => <<"thread">>, turnId => <<"turn">>,
+               itemId => <<"item">>, startedAtMs => 1,
+               kind => humanCommand},
+    Request = #{id => 1, method => 'item/commandExecution/requestApproval',
+                params => Params},
+    Json = jsone:decode(jsone:encode(Request)),
+    ?assertMatch(#{params := #{kind := humanCommand}},
+        normalize(Json, server_request)),
+    ?assertMatch(#{kind := humanCommand}, normalize(
+        maps:get(<<"params">>, Json),
+        command_execution_request_approval_params)).
+
 turn_disabled_plugins_test() ->
     Params = #{threadId => <<"thread">>, input => [],
                disabledPluginIds => [<<"plugin">>]},
