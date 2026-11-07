@@ -210,6 +210,17 @@ rebar3の依存更新は、`rebar.config`と`rebar.lock`をまとめ、
    一致することを確認する。
    この確認を終えた時点で、アップデートのリリース完了とする。
 
+6. リリース完了後、`master`に戻り、`origin/master`まで
+   fast-forwardで更新する。
+
+   ```bash
+   git switch master
+   git pull --ff-only origin master
+   ```
+
+   `master`と`origin/master`のコミットが一致し、
+   作業ツリーがクリーンであることを確認する。
+
 ## 完了条件
 
 - 更新内容とアプリのバージョン更新が、指定された粒度でコミットされている。
@@ -229,3 +240,5 @@ rebar3の依存更新は、`rebar.config`と`rebar.lock`をまとめ、
 - `qrexec-client-vm github user.Push+coderlx`によるpushが成功している。
 - GitHub側に同じ軽量タグが存在し、
   Gerrit側とコミットハッシュが一致している。
+- `master`に戻り、`origin/master`までfast-forwardで更新され、
+  作業ツリーがクリーンである。
