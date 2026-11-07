@@ -13,6 +13,7 @@ Codex バージョンを更新する場合は、
 バイナリだけでなく schema 生成物も必ず更新する。
 
 具体的なバージョンを与えられていない場合は、最新安定版を選ぶ。
+この手順で扱うGitタグはすべて軽量タグとする。
 
 codex について言及されていたとしても、
 それはこのリポジトリが使っている codex の話である場合は
@@ -43,7 +44,8 @@ openai-docs スキルを使うべきではない。むやみにスキルを使�
 - `LICENSE-CODEX`
 - `NOTICE-CODEX`
 - 必要な場合のみ `src/*.erl`
-- `klsn` の tag 更新だけで済む場合のみ `rebar.config` と `rebar.lock`
+- `rebar.config`
+- `rebar.lock`
 
 ## 更新手順
 
@@ -57,7 +59,23 @@ openai-docs スキルを使うべきではない。むやみにスキルを使�
    git status --short
    ```
 
-3. 更新スクリプトを実行する。
+3. 毎回、更新スクリプトを実行する前にrebar3の依存を更新する。
+   - `klsn`のリモートで最新版のタグを確認し、
+     `rebar.config`の`klsn`をそのタグに更新する。
+   - 更新先の`klsn`のタグにある`rebar.config`を読み、
+     `klsn`が指定する`jsone`のバージョンを確認する。
+   - このリポジトリの`rebar.config`の`jsone`を
+     `klsn`が指定するバージョンに揃える。
+   - 設定を揃えてから、ロックファイルを更新する。
+
+   ```bash
+   rebar3 upgrade --all
+   ```
+
+   `rebar.lock`で、`klsn`と`jsone`が
+   それぞれ指定したタグのコミットに固定されていることを確認する。
+
+4. 更新スクリプトを実行する。
    ```bash
    bash scripts/update_codex_app_server.sh <version>
    ```
@@ -73,7 +91,7 @@ openai-docs スキルを使うべきではない。むやみにスキルを使�
      `src/coderlx_app_server_rules.erl` を再生成する。
    - `LICENSE-CODEX` と `NOTICE-CODEX` を更新する。
 
-4. schema 生成で失敗した場合は原因を分類する。
+5. schema 生成で失敗した場合は原因を分類する。
    - `scripts/generate_app_server_rules.escript` の `schema_files()` に
      足りない schema があるだけなら、このリポジトリ内で
      alias の追加・削除・名前変更に追従してよい。
@@ -84,7 +102,7 @@ openai-docs スキルを使うべきではない。むやみにスキルを使�
    - 報告には、失敗した schema ファイル名、エラー全文、
      該当する JSON Schema の構造、必要そうな `klsn` 側対応を含める。
 
-5. schema の追加・削除・変更に合わせ、
+6. schema の追加・削除・変更に合わせ、
    関連する手書き型・`-spec`・rule alias・wrapper・dispatch を更新する。
    - `src/coderlx.erl` の `client_request_method()`,
      `server_request_method()`, `server_request_param()`,
@@ -95,7 +113,7 @@ openai-docs スキルを使うべきではない。むやみにスキルを使�
      method と生成 alias が一致するか確認する。
    - Codex 側で method 名が変わっている場合は wrapper も修正する。
 
-6. 検証する。
+7. 検証する。
    ```bash
    rebar3 compile
    rebar3 eunit
@@ -105,7 +123,7 @@ openai-docs スキルを使うべきではない。むやみにスキルを使�
    認証、ネットワーク、サンドボックス状態に依存するテストで失敗した場合は、
    compile 結果と失敗理由を分けて報告する。
 
-7. 差分を確認する。
+8. 差分を確認する。
    ```bash
    git diff --stat
    git diff
@@ -116,7 +134,9 @@ openai-docs スキルを使うべきではない。むやみにスキルを使�
 ## 新しい client request method が追加された場合
 
 `fca1f4a`, `29d9487`, `4e47bbd`, `17766f7` と同じように、
-次の 4 つに分けてコミットする。
+Codex本体の更新は次の4つに分けてコミットする。
+rebar3の依存更新は、`rebar.config`と`rebar.lock`をまとめ、
+これらとは別のコミットにする。
 この後、下記のリリース手順でアプリのバージョン更新を別途コミットする。
 
 1. `fca1f4a`: バージョン固定とライセンス情報の更新をコミットする。
@@ -151,21 +171,20 @@ openai-docs スキルを使うべきではない。むやみにスキルを使�
 
 2. バージョン更新を含むすべてのChangeSetがマージされたことを確認する。
    マージ済みのバージョン更新コミットのハッシュを記録し、
-   ts-klassenに、そのコミットへGerrit画面上からタグを付けるよう依頼する。
+   ts-klassenに、そのコミットへGerrit画面上から
+   軽量タグを付けるよう依頼する。
    依頼にはタグ名とコミットハッシュを含める。
    タグ名は`0.165.0`のようにバージョン番号だけとし、`v`を付けない。
    `v0.165.0`になっていたら、ts-klassenに付け直すよう依頼する。
 
-3. Gerritのタグが正しいコミットを指していることを確認する。
+3. Gerritの軽量タグが正しいコミットを指していることを確認する。
 
    ```bash
-   git ls-remote --tags origin \
-     'refs/tags/0.165.0' 'refs/tags/0.165.0^{}'
+   git ls-remote --tags origin 'refs/tags/0.165.0'
    ```
 
-   注釈付きタグで`^{}`の行がある場合は、そのコミットハッシュを使う。
-   軽量タグの場合はタグの行のハッシュを使う。
-   手順2で記録したハッシュと一致することを確認する。
+   タグの行のハッシュが手順2で記録したコミットハッシュと
+   一致することを確認する。
    一致しなければ、ts-klassenにGerrit画面上での修正を依頼し、再確認する。
 
 4. 正しい位置にタグが付いたことを確認したら、次を実行する。
@@ -183,16 +202,20 @@ openai-docs スキルを使うべきではない。むやみにスキルを使�
 
    ```bash
    git ls-remote --tags https://github.com/ts-klassen/coderlx.git \
-     'refs/tags/0.165.0' 'refs/tags/0.165.0^{}'
+     'refs/tags/0.165.0'
    ```
 
    `github.com/ts-klassen/coderlx`に目的のタグが反映され、
-   手順3と同じ方法で得たコミットハッシュがGerrit側と一致することを確認する。
+   タグの行のハッシュがGerrit側のコミットハッシュと
+   一致することを確認する。
    この確認を終えた時点で、アップデートのリリース完了とする。
 
 ## 完了条件
 
 - 更新内容とアプリのバージョン更新が、指定された粒度でコミットされている。
+- `klsn`が最新版のタグに更新され、`jsone`のバージョンが
+  更新先の`klsn`の指定と一致している。
+- `rebar.lock`が更新後の依存を固定している。
 - `rebar3 compile` が成功している。
 - `src/coderlx_app_server_rules.erl` が
   新 Codex の JSON Schema から再生成されている。
@@ -202,6 +225,7 @@ openai-docs スキルを使うべきではない。むやみにスキルを使�
 - `src/coderlx.app.src`の`vsn`が`CODEX_VERSION`と一致している。
 - バージョン更新を含むすべてのChangeSetがGerritでマージされている。
 - ts-klassenがGerrit画面上で、マージ済みのバージョン更新コミットに
-  `v`のないタグを付け、その位置を確認できている。
+  `v`のない軽量タグを付け、その位置を確認できている。
 - `qrexec-client-vm github user.Push+coderlx`によるpushが成功している。
-- GitHub側に同じタグが存在し、Gerrit側とコミットハッシュが一致している。
+- GitHub側に同じ軽量タグが存在し、
+  Gerrit側とコミットハッシュが一致している。
