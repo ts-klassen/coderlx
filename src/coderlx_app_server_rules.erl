@@ -567,9 +567,13 @@
                                    {any_of,
                                     [{ref,<<"ImageDetail">>},
                                      {exact,null}]}}}}}},
-                            {struct,
-                             #{type => {required,{enum,[audio]}},
-                               url => {required,binstr}}},
+                            {any_of,
+                             [{struct,
+                               #{type => {required,{enum,[audio]}},
+                                 url => {required,binstr}}},
+                              {struct,
+                               #{type => {required,{enum,[audio]}},
+                                 fileId => {required,binstr}}}]},
                             {struct,
                              #{type => {required,{enum,[localAudio]}},
                                path => {required,binstr}}},
@@ -595,7 +599,10 @@
                              migrationSource =>
                               {optional,{any_of,[binstr,{exact,null}]}}}},
                          <<"HooksListParams">> =>
-                          {struct,#{cwds => {optional,{list,binstr}}}},
+                          {struct,
+                           #{threadId =>
+                              {optional,{any_of,[binstr,{exact,null}]}},
+                             cwds => {optional,{list,binstr}}}},
                          <<"ModelListParams">> =>
                           {struct,
                            #{limit =>
@@ -674,7 +681,7 @@
                             {struct,
                              #{type => {required,{enum,[encrypted_content]}},
                                encrypted_content => {required,binstr}}}]},
-                         <<"ReviewDelivery">> => {enum,[inline,detached]},
+                         <<"ReviewDelivery">> => {enum,[inline]},
                          <<"PluginShareUpdateDiscoverability">> =>
                           {enum,['UNLISTED','PRIVATE','LISTED']},
                          <<"PluginSharePrincipalType">> =>
@@ -786,7 +793,8 @@
                                callId => {required,binstr}}}]},
                          <<"AdditionalContextEntry">> =>
                           {struct,
-                           #{value => {required,binstr},
+                           #{name => {optional,{any_of,[binstr,{exact,null}]}},
+                             value => {required,binstr},
                              kind =>
                               {required,{ref,<<"AdditionalContextKind">>}}}},
                          <<"ExternalAgentConfigImportHistoryRecordSuccessParams">> =>
@@ -1501,9 +1509,13 @@
                                    {any_of,
                                     [{ref,<<"ImageDetail">>},{exact,null}]}},
                                  file_id => {required,binstr}}}]},
-                            {struct,
-                             #{type => {required,{enum,[input_audio]}},
-                               audio_url => {required,binstr}}},
+                            {any_of,
+                             [{struct,
+                               #{type => {required,{enum,[input_audio]}},
+                                 audio_url => {required,binstr}}},
+                              {struct,
+                               #{type => {required,{enum,[input_audio]}},
+                                 file_id => {required,binstr}}}]},
                             {struct,
                              #{type => {required,{enum,[output_text]}},
                                text => {required,binstr},
@@ -1739,7 +1751,8 @@
                              optOutNotificationMethods =>
                               {optional,{any_of,[{list,binstr},{exact,null}]}},
                              requestAttestation =>
-                              {optional,{default,{false,boolean}}}}},
+                              {optional,{default,{false,boolean}}},
+                             requiredHumanApproval => {optional,boolean}}},
                          <<"FsCopyParams">> =>
                           {struct,
                            #{destinationPath =>
@@ -2759,7 +2772,9 @@
                          <<"ChatgptAuthTokensRefreshReason">> =>
                           {any_of,[{enum,[unauthorized]}]},
                          <<"CommandExecutionApprovalKind">> =>
-                          {enum,[command,writeStdin]},
+                          {any_of,
+                           [{enum,[command,writeStdin]},
+                            {enum,[humanCommand]}]},
                          <<"FileChange">> =>
                           {any_of,
                            [{struct,
@@ -3049,7 +3064,7 @@
                                      {<<"unknown">>,
                                       {all_of,[{ref,<<"HookSource">>}]}}}},
                                   sourcePath =>
-                                   {required,{ref,<<"AbsolutePathBuf">>}},
+                                   {required,{ref,<<"LegacyAppPathString">>}},
                                   entries =>
                                    {required,
                                     {list,{ref,<<"HookOutputEntry">>}}},
@@ -3425,9 +3440,13 @@
                                         {any_of,
                                          [{ref,<<"ImageDetail">>},
                                           {exact,null}]}}}}}},
-                                 {struct,
-                                  #{type => {required,{enum,[audio]}},
-                                    url => {required,binstr}}},
+                                 {any_of,
+                                  [{struct,
+                                    #{type => {required,{enum,[audio]}},
+                                      url => {required,binstr}}},
+                                   {struct,
+                                    #{type => {required,{enum,[audio]}},
+                                      fileId => {required,binstr}}}]},
                                  {struct,
                                   #{type => {required,{enum,[localAudio]}},
                                     path => {required,binstr}}},
@@ -4219,11 +4238,18 @@
                                 #{item =>
                                    {required,{ref,<<"ThreadRealtimeItem">>}},
                                   threadId => {required,binstr}}},
+                              <<"ThreadSectionChangedNotification">> =>
+                               {struct,
+                                #{threadId => {required,binstr},
+                                  sectionId =>
+                                   {required,{any_of,[binstr,{exact,null}]}}}},
                               <<"ProcessExitedNotification">> =>
                                {struct,
                                 #{stdout => {required,binstr},
                                   stderr => {required,binstr},
                                   exitCode => {required,integer},
+                                  outputDrainTimedOut =>
+                                   {optional,{any_of,[boolean,{exact,null}]}},
                                   processHandle => {required,binstr},
                                   stderrCapReached => {required,boolean},
                                   stdoutCapReached => {required,boolean}}},
@@ -4490,7 +4516,8 @@
                                   [contextWindowExceeded,
                                    sessionBudgetExceeded,usageLimitExceeded,
                                    rateLimitExceeded,flexUnavailable,
-                                   serverOverloaded,modelNotFound,cyberPolicy,
+                                   serverOverloaded,modelNotFound,
+                                   policyCapacityUnavailable,cyberPolicy,
                                    misalignmentPolicyViolation,tooManyDenials,
                                    internalServerError,unauthorized,
                                    badRequest,threadRollbackFailed,
@@ -4649,12 +4676,32 @@
                                     type => {required,{enum,[userMessage]}},
                                     content =>
                                      {required,{list,{ref,<<"UserInput">>}}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     clientId =>
                                      {optional,
                                       {any_of,[binstr,{exact,null}]}}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type => {required,{enum,[hookPrompt]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     fragments =>
                                      {required,
                                       {list,{ref,<<"HookPromptFragment">>}}}}},
@@ -4684,6 +4731,16 @@
                                          [{list,
                                            {ref,<<"AsyncUserInputQuestion">>}},
                                           {exact,null}]}}}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     memoryCitation =>
                                      {optional,
                                       {default,
@@ -4700,19 +4757,48 @@
                                     type =>
                                      {required,{enum,[functionCallOutput]}},
                                     namespace =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    startedAtMs =>
                                      {optional,
-                                      {any_of,[binstr,{exact,null}]}}}},
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type => {required,{enum,[plan]}},
-                                    text => {required,binstr}}},
+                                    text => {required,binstr},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type => {required,{enum,[reasoning]}},
                                     summary =>
                                      {optional,{default,{[],{list,binstr}}}},
                                     content =>
-                                     {optional,{default,{[],{list,binstr}}}}}},
+                                     {optional,{default,{[],{list,binstr}}}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}}}},
                                  {struct,
                                   #{command => {required,binstr},
                                     id => {required,binstr},
@@ -4738,9 +4824,19 @@
                                      {optional,
                                       {default,
                                        {null,{any_of,[binstr,{exact,null}]}}}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     commandActions =>
                                      {required,
                                       {list,{ref,<<"CommandAction">>}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     aggregatedOutput =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     durationMs =>
@@ -4759,6 +4855,16 @@
                                     status =>
                                      {required,{ref,<<"PatchApplyStatus">>}},
                                     type => {required,{enum,[fileChange]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     changes =>
                                      {required,
                                       {list,{ref,<<"FileUpdateChange">>}}}}},
@@ -4782,6 +4888,16 @@
                                     tool => {required,binstr},
                                     pluginId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     durationMs =>
                                      {optional,
                                       {any_of,[integer,{exact,null}]}},
@@ -4806,13 +4922,23 @@
                                       {ref,<<"DynamicToolCallStatus">>}},
                                     type =>
                                      {required,{enum,[dynamicToolCall]}},
+                                    arguments => {required,term},
                                     success =>
                                      {optional,
                                       {any_of,[boolean,{exact,null}]}},
-                                    arguments => {required,term},
                                     namespace =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     tool => {required,binstr},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     durationMs =>
                                      {optional,
                                       {any_of,[integer,{exact,null}]}},
@@ -4839,11 +4965,21 @@
                                       {all_of,[{ref,<<"CollabAgentTool">>}]}},
                                     model =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     reasoningEffort =>
                                      {optional,
                                       {any_of,
                                        [{ref,<<"ReasoningEffort">>},
                                         {exact,null}]}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     agentsStates =>
                                      {required,
                                       {map,
@@ -4860,11 +4996,21 @@
                                     kind =>
                                      {required,
                                       {ref,<<"SubAgentActivityKind">>}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     reasoningEffort =>
                                      {optional,
                                       {any_of,
                                        [{ref,<<"ReasoningEffort">>},
                                         {exact,null}]}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     agentPath => {required,binstr},
                                     agentThreadId => {required,binstr}}},
                                  {struct,
@@ -4876,6 +5022,16 @@
                                       {any_of,
                                        [{ref,<<"WebSearchAction">>},
                                         {exact,null}]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     results =>
                                      {optional,
                                       {default,
@@ -4887,10 +5043,30 @@
                                     type => {required,{enum,[imageView]}},
                                     path =>
                                      {required,
-                                      {ref,<<"LegacyAppPathString">>}}}},
+                                      {ref,<<"LegacyAppPathString">>}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type => {required,{enum,[sleep]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     durationMs => {required,integer}}},
                                  {any_of,
                                   [{struct,
@@ -4906,6 +5082,21 @@
                                            [{ref,<<"ImageGenerationFailure">>},
                                             {exact,null}]}}}},
                                       fileId => {required,binstr},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      generationId =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[binstr,{exact,null}]}}}},
                                       inputImages =>
                                        {optional,
                                         {list,
@@ -4937,6 +5128,21 @@
                                            [{ref,<<"ImageGenerationFailure">>},
                                             {exact,null}]}}}},
                                       result => {required,binstr},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      generationId =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[binstr,{exact,null}]}}}},
                                       inputImages =>
                                        {optional,
                                         {list,
@@ -4960,16 +5166,46 @@
                                   #{id => {required,binstr},
                                     type =>
                                      {required,{enum,[enteredReviewMode]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     review => {required,binstr}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type =>
                                      {required,{enum,[exitedReviewMode]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     review => {required,binstr}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type =>
-                                     {required,{enum,[contextCompaction]}}}}]},
+                                     {required,{enum,[contextCompaction]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}}}}]},
                               <<"PlanDeltaNotification">> =>
                                {struct,
                                 #{threadId => {required,binstr},
@@ -5275,6 +5511,14 @@
                                    {ref,<<"ThreadNameUpdatedNotification">>}},
                                  method =>
                                   {required,{enum,['thread/name/updated']}},
+                                 emittedAtMs => {optional,integer}}},
+                              {struct,
+                               #{params =>
+                                  {required,
+                                   {ref,
+                                    <<"ThreadSectionChangedNotification">>}},
+                                 method =>
+                                  {required,{enum,['thread/section/changed']}},
                                  emittedAtMs => {optional,integer}}},
                               {struct,
                                #{params =>
@@ -6010,8 +6254,10 @@
                                                        {enum,[decline]},
                                                        {enum,[cancel]}]},
                                                     <<"CommandExecutionApprovalKind">> =>
-                                                     {enum,
-                                                      [command,writeStdin]},
+                                                     {any_of,
+                                                      [{enum,
+                                                        [command,writeStdin]},
+                                                       {enum,[humanCommand]}]},
                                                     <<"FileSystemAccessMode">> =>
                                                      {enum,[read,write,deny]},
                                                     <<"FileSystemPath">> =>
@@ -7059,7 +7305,8 @@
                                  {optional,
                                   {any_of,[{list,binstr},{exact,null}]}},
                                 requestAttestation =>
-                                 {optional,{default,{false,boolean}}}}}},
+                                 {optional,{default,{false,boolean}}},
+                                requiredHumanApproval => {optional,boolean}}}},
                           {struct,
                            #{capabilities =>
                               {optional,
@@ -7387,9 +7634,13 @@
                                           {any_of,
                                            [{ref,<<"ImageDetail">>},
                                             {exact,null}]}}}}}},
-                                   {struct,
-                                    #{type => {required,{enum,[audio]}},
-                                      url => {required,binstr}}},
+                                   {any_of,
+                                    [{struct,
+                                      #{type => {required,{enum,[audio]}},
+                                        url => {required,binstr}}},
+                                     {struct,
+                                      #{type => {required,{enum,[audio]}},
+                                        fileId => {required,binstr}}}]},
                                    {struct,
                                     #{type => {required,{enum,[localAudio]}},
                                       path => {required,binstr}}},
@@ -7710,7 +7961,8 @@
                                      sessionBudgetExceeded,usageLimitExceeded,
                                      rateLimitExceeded,flexUnavailable,
                                      serverOverloaded,modelNotFound,
-                                     cyberPolicy,misalignmentPolicyViolation,
+                                     policyCapacityUnavailable,cyberPolicy,
+                                     misalignmentPolicyViolation,
                                      tooManyDenials,internalServerError,
                                      unauthorized,badRequest,
                                      threadRollbackFailed,sandboxError,other]},
@@ -7764,12 +8016,32 @@
                                       type => {required,{enum,[userMessage]}},
                                       content =>
                                        {required,{list,{ref,<<"UserInput">>}}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       clientId =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type => {required,{enum,[hookPrompt]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       fragments =>
                                        {required,
                                         {list,
@@ -7801,6 +8073,16 @@
                                              {ref,
                                               <<"AsyncUserInputQuestion">>}},
                                             {exact,null}]}}}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       memoryCitation =>
                                        {optional,
                                         {default,
@@ -7818,19 +8100,48 @@
                                        {required,{enum,[functionCallOutput]}},
                                       namespace =>
                                        {optional,
-                                        {any_of,[binstr,{exact,null}]}}}},
+                                        {any_of,[binstr,{exact,null}]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type => {required,{enum,[plan]}},
-                                      text => {required,binstr}}},
+                                      text => {required,binstr},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type => {required,{enum,[reasoning]}},
                                       summary =>
                                        {optional,{default,{[],{list,binstr}}}},
                                       content =>
+                                       {optional,{default,{[],{list,binstr}}}},
+                                      startedAtMs =>
                                        {optional,
-                                        {default,{[],{list,binstr}}}}}},
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}}}},
                                    {struct,
                                     #{command => {required,binstr},
                                       id => {required,binstr},
@@ -7858,9 +8169,19 @@
                                         {default,
                                          {null,
                                           {any_of,[binstr,{exact,null}]}}}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       commandActions =>
                                        {required,
                                         {list,{ref,<<"CommandAction">>}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       aggregatedOutput =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
@@ -7880,6 +8201,16 @@
                                       status =>
                                        {required,{ref,<<"PatchApplyStatus">>}},
                                       type => {required,{enum,[fileChange]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       changes =>
                                        {required,
                                         {list,{ref,<<"FileUpdateChange">>}}}}},
@@ -7905,6 +8236,16 @@
                                       pluginId =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       durationMs =>
                                        {optional,
                                         {any_of,[integer,{exact,null}]}},
@@ -7930,14 +8271,24 @@
                                         {ref,<<"DynamicToolCallStatus">>}},
                                       type =>
                                        {required,{enum,[dynamicToolCall]}},
+                                      arguments => {required,term},
                                       success =>
                                        {optional,
                                         {any_of,[boolean,{exact,null}]}},
-                                      arguments => {required,term},
                                       namespace =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
                                       tool => {required,binstr},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       durationMs =>
                                        {optional,
                                         {any_of,[integer,{exact,null}]}},
@@ -7967,11 +8318,21 @@
                                       model =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       reasoningEffort =>
                                        {optional,
                                         {any_of,
                                          [{ref,<<"ReasoningEffort">>},
                                           {exact,null}]}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       agentsStates =>
                                        {required,
                                         {map,
@@ -7990,11 +8351,21 @@
                                       kind =>
                                        {required,
                                         {ref,<<"SubAgentActivityKind">>}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       reasoningEffort =>
                                        {optional,
                                         {any_of,
                                          [{ref,<<"ReasoningEffort">>},
                                           {exact,null}]}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       agentPath => {required,binstr},
                                       agentThreadId => {required,binstr}}},
                                    {struct,
@@ -8006,6 +8377,16 @@
                                         {any_of,
                                          [{ref,<<"WebSearchAction">>},
                                           {exact,null}]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       results =>
                                        {optional,
                                         {default,
@@ -8017,10 +8398,30 @@
                                       type => {required,{enum,[imageView]}},
                                       path =>
                                        {required,
-                                        {ref,<<"LegacyAppPathString">>}}}},
+                                        {ref,<<"LegacyAppPathString">>}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type => {required,{enum,[sleep]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       durationMs => {required,integer}}},
                                    {any_of,
                                     [{struct,
@@ -8037,6 +8438,21 @@
                                                <<"ImageGenerationFailure">>},
                                               {exact,null}]}}}},
                                         fileId => {required,binstr},
+                                        startedAtMs =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[integer,{exact,null}]}}}},
+                                        completedAtMs =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[integer,{exact,null}]}}}},
+                                        generationId =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[binstr,{exact,null}]}}}},
                                         inputImages =>
                                          {optional,
                                           {list,
@@ -8070,6 +8486,21 @@
                                                <<"ImageGenerationFailure">>},
                                               {exact,null}]}}}},
                                         result => {required,binstr},
+                                        startedAtMs =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[integer,{exact,null}]}}}},
+                                        completedAtMs =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[integer,{exact,null}]}}}},
+                                        generationId =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[binstr,{exact,null}]}}}},
                                         inputImages =>
                                          {optional,
                                           {list,
@@ -8093,17 +8524,47 @@
                                     #{id => {required,binstr},
                                       type =>
                                        {required,{enum,[enteredReviewMode]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       review => {required,binstr}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type =>
                                        {required,{enum,[exitedReviewMode]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       review => {required,binstr}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type =>
-                                       {required,
-                                        {enum,[contextCompaction]}}}}]},
+                                       {required,{enum,[contextCompaction]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [integer,{exact,null}]}}}}}}]},
                                 <<"McpToolCallResult">> =>
                                  {struct,
                                   #{'_meta' => {optional,term},
@@ -8245,7 +8706,9 @@
                          {#{<<"AbsolutePathBuf">> => binstr,
                             <<"AdditionalContextEntry">> =>
                              {struct,
-                              #{value => {required,binstr},
+                              #{name =>
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                value => {required,binstr},
                                 kind =>
                                  {required,
                                   {ref,<<"AdditionalContextKind">>}}}},
@@ -8432,9 +8895,13 @@
                                       {any_of,
                                        [{ref,<<"ImageDetail">>},
                                         {exact,null}]}}}}}},
-                               {struct,
-                                #{type => {required,{enum,[audio]}},
-                                  url => {required,binstr}}},
+                               {any_of,
+                                [{struct,
+                                  #{type => {required,{enum,[audio]}},
+                                    url => {required,binstr}}},
+                                 {struct,
+                                  #{type => {required,{enum,[audio]}},
+                                    fileId => {required,binstr}}}]},
                                {struct,
                                 #{type => {required,{enum,[localAudio]}},
                                   path => {required,binstr}}},
@@ -8583,9 +9050,13 @@
                                         {any_of,
                                          [{ref,<<"ImageDetail">>},
                                           {exact,null}]}}}}}},
-                                 {struct,
-                                  #{type => {required,{enum,[audio]}},
-                                    url => {required,binstr}}},
+                                 {any_of,
+                                  [{struct,
+                                    #{type => {required,{enum,[audio]}},
+                                      url => {required,binstr}}},
+                                   {struct,
+                                    #{type => {required,{enum,[audio]}},
+                                      fileId => {required,binstr}}}]},
                                  {struct,
                                   #{type => {required,{enum,[localAudio]}},
                                     path => {required,binstr}}},
@@ -8836,7 +9307,8 @@
                                   [contextWindowExceeded,
                                    sessionBudgetExceeded,usageLimitExceeded,
                                    rateLimitExceeded,flexUnavailable,
-                                   serverOverloaded,modelNotFound,cyberPolicy,
+                                   serverOverloaded,modelNotFound,
+                                   policyCapacityUnavailable,cyberPolicy,
                                    misalignmentPolicyViolation,tooManyDenials,
                                    internalServerError,unauthorized,
                                    badRequest,threadRollbackFailed,
@@ -8889,12 +9361,32 @@
                                     type => {required,{enum,[userMessage]}},
                                     content =>
                                      {required,{list,{ref,<<"UserInput">>}}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     clientId =>
                                      {optional,
                                       {any_of,[binstr,{exact,null}]}}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type => {required,{enum,[hookPrompt]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     fragments =>
                                      {required,
                                       {list,{ref,<<"HookPromptFragment">>}}}}},
@@ -8924,6 +9416,16 @@
                                          [{list,
                                            {ref,<<"AsyncUserInputQuestion">>}},
                                           {exact,null}]}}}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     memoryCitation =>
                                      {optional,
                                       {default,
@@ -8940,19 +9442,48 @@
                                     type =>
                                      {required,{enum,[functionCallOutput]}},
                                     namespace =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
+                                    startedAtMs =>
                                      {optional,
-                                      {any_of,[binstr,{exact,null}]}}}},
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type => {required,{enum,[plan]}},
-                                    text => {required,binstr}}},
+                                    text => {required,binstr},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type => {required,{enum,[reasoning]}},
                                     summary =>
                                      {optional,{default,{[],{list,binstr}}}},
                                     content =>
-                                     {optional,{default,{[],{list,binstr}}}}}},
+                                     {optional,{default,{[],{list,binstr}}}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}}}},
                                  {struct,
                                   #{command => {required,binstr},
                                     id => {required,binstr},
@@ -8978,9 +9509,19 @@
                                      {optional,
                                       {default,
                                        {null,{any_of,[binstr,{exact,null}]}}}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     commandActions =>
                                      {required,
                                       {list,{ref,<<"CommandAction">>}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     aggregatedOutput =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     durationMs =>
@@ -8999,6 +9540,16 @@
                                     status =>
                                      {required,{ref,<<"PatchApplyStatus">>}},
                                     type => {required,{enum,[fileChange]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     changes =>
                                      {required,
                                       {list,{ref,<<"FileUpdateChange">>}}}}},
@@ -9022,6 +9573,16 @@
                                     tool => {required,binstr},
                                     pluginId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     durationMs =>
                                      {optional,
                                       {any_of,[integer,{exact,null}]}},
@@ -9046,13 +9607,23 @@
                                       {ref,<<"DynamicToolCallStatus">>}},
                                     type =>
                                      {required,{enum,[dynamicToolCall]}},
+                                    arguments => {required,term},
                                     success =>
                                      {optional,
                                       {any_of,[boolean,{exact,null}]}},
-                                    arguments => {required,term},
                                     namespace =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     tool => {required,binstr},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     durationMs =>
                                      {optional,
                                       {any_of,[integer,{exact,null}]}},
@@ -9079,11 +9650,21 @@
                                       {all_of,[{ref,<<"CollabAgentTool">>}]}},
                                     model =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     reasoningEffort =>
                                      {optional,
                                       {any_of,
                                        [{ref,<<"ReasoningEffort">>},
                                         {exact,null}]}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     agentsStates =>
                                      {required,
                                       {map,
@@ -9100,11 +9681,21 @@
                                     kind =>
                                      {required,
                                       {ref,<<"SubAgentActivityKind">>}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     reasoningEffort =>
                                      {optional,
                                       {any_of,
                                        [{ref,<<"ReasoningEffort">>},
                                         {exact,null}]}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     agentPath => {required,binstr},
                                     agentThreadId => {required,binstr}}},
                                  {struct,
@@ -9116,6 +9707,16 @@
                                       {any_of,
                                        [{ref,<<"WebSearchAction">>},
                                         {exact,null}]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     results =>
                                      {optional,
                                       {default,
@@ -9127,10 +9728,30 @@
                                     type => {required,{enum,[imageView]}},
                                     path =>
                                      {required,
-                                      {ref,<<"LegacyAppPathString">>}}}},
+                                      {ref,<<"LegacyAppPathString">>}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type => {required,{enum,[sleep]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     durationMs => {required,integer}}},
                                  {any_of,
                                   [{struct,
@@ -9146,6 +9767,21 @@
                                            [{ref,<<"ImageGenerationFailure">>},
                                             {exact,null}]}}}},
                                       fileId => {required,binstr},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      generationId =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[binstr,{exact,null}]}}}},
                                       inputImages =>
                                        {optional,
                                         {list,
@@ -9177,6 +9813,21 @@
                                            [{ref,<<"ImageGenerationFailure">>},
                                             {exact,null}]}}}},
                                       result => {required,binstr},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      generationId =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[binstr,{exact,null}]}}}},
                                       inputImages =>
                                        {optional,
                                         {list,
@@ -9200,16 +9851,46 @@
                                   #{id => {required,binstr},
                                     type =>
                                      {required,{enum,[enteredReviewMode]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     review => {required,binstr}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type =>
                                      {required,{enum,[exitedReviewMode]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
                                     review => {required,binstr}}},
                                  {struct,
                                   #{id => {required,binstr},
                                     type =>
-                                     {required,{enum,[contextCompaction]}}}}]},
+                                     {required,{enum,[contextCompaction]}},
+                                    startedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}},
+                                    completedAtMs =>
+                                     {optional,
+                                      {default,
+                                       {null,
+                                        {any_of,[integer,{exact,null}]}}}}}}]},
                               <<"McpToolCallResult">> =>
                                {struct,
                                 #{'_meta' => {optional,term},
@@ -9227,7 +9908,9 @@
     {turn_steer_params, {with_defs,
                          {#{<<"AdditionalContextEntry">> =>
                              {struct,
-                              #{value => {required,binstr},
+                              #{name =>
+                                 {optional,{any_of,[binstr,{exact,null}]}},
+                                value => {required,binstr},
                                 kind =>
                                  {required,
                                   {ref,<<"AdditionalContextKind">>}}}},
@@ -9285,9 +9968,13 @@
                                       {any_of,
                                        [{ref,<<"ImageDetail">>},
                                         {exact,null}]}}}}}},
-                               {struct,
-                                #{type => {required,{enum,[audio]}},
-                                  url => {required,binstr}}},
+                               {any_of,
+                                [{struct,
+                                  #{type => {required,{enum,[audio]}},
+                                    url => {required,binstr}}},
+                                 {struct,
+                                  #{type => {required,{enum,[audio]}},
+                                    fileId => {required,binstr}}}]},
                                {struct,
                                 #{type => {required,{enum,[localAudio]}},
                                   path => {required,binstr}}},
@@ -9367,9 +10054,13 @@
                                           [{ref,<<"ImageDetail">>},
                                            {exact,null}]}},
                                        file_id => {required,binstr}}}]},
-                                  {struct,
-                                   #{type => {required,{enum,[input_audio]}},
-                                     audio_url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[input_audio]}},
+                                       audio_url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[input_audio]}},
+                                       file_id => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[output_text]}},
                                      text => {required,binstr},
@@ -10057,9 +10748,13 @@
                                            {any_of,
                                             [{ref,<<"ImageDetail">>},
                                              {exact,null}]}}}}}},
-                                    {struct,
-                                     #{type => {required,{enum,[audio]}},
-                                       url => {required,binstr}}},
+                                    {any_of,
+                                     [{struct,
+                                       #{type => {required,{enum,[audio]}},
+                                         url => {required,binstr}}},
+                                      {struct,
+                                       #{type => {required,{enum,[audio]}},
+                                         fileId => {required,binstr}}}]},
                                     {struct,
                                      #{type => {required,{enum,[localAudio]}},
                                        path => {required,binstr}}},
@@ -10413,8 +11108,8 @@
                                       sessionBudgetExceeded,
                                       usageLimitExceeded,rateLimitExceeded,
                                       flexUnavailable,serverOverloaded,
-                                      modelNotFound,cyberPolicy,
-                                      misalignmentPolicyViolation,
+                                      modelNotFound,policyCapacityUnavailable,
+                                      cyberPolicy,misalignmentPolicyViolation,
                                       tooManyDenials,internalServerError,
                                       unauthorized,badRequest,
                                       threadRollbackFailed,sandboxError,
@@ -10470,12 +11165,32 @@
                                        content =>
                                         {required,
                                          {list,{ref,<<"UserInput">>}}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        clientId =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type => {required,{enum,[hookPrompt]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        fragments =>
                                         {required,
                                          {list,
@@ -10508,6 +11223,16 @@
                                               {ref,
                                                <<"AsyncUserInputQuestion">>}},
                                              {exact,null}]}}}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        memoryCitation =>
                                         {optional,
                                          {default,
@@ -10525,11 +11250,33 @@
                                         {required,{enum,[functionCallOutput]}},
                                        namespace =>
                                         {optional,
-                                         {any_of,[binstr,{exact,null}]}}}},
+                                         {any_of,[binstr,{exact,null}]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [integer,{exact,null}]}}}}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type => {required,{enum,[plan]}},
-                                       text => {required,binstr}}},
+                                       text => {required,binstr},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [integer,{exact,null}]}}}}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type => {required,{enum,[reasoning]}},
@@ -10538,7 +11285,18 @@
                                          {default,{[],{list,binstr}}}},
                                        content =>
                                         {optional,
-                                         {default,{[],{list,binstr}}}}}},
+                                         {default,{[],{list,binstr}}}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [integer,{exact,null}]}}}}}},
                                     {struct,
                                      #{command => {required,binstr},
                                        id => {required,binstr},
@@ -10566,9 +11324,19 @@
                                          {default,
                                           {null,
                                            {any_of,[binstr,{exact,null}]}}}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        commandActions =>
                                         {required,
                                          {list,{ref,<<"CommandAction">>}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        aggregatedOutput =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
@@ -10589,6 +11357,16 @@
                                         {required,
                                          {ref,<<"PatchApplyStatus">>}},
                                        type => {required,{enum,[fileChange]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        changes =>
                                         {required,
                                          {list,
@@ -10615,6 +11393,16 @@
                                        pluginId =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        durationMs =>
                                         {optional,
                                          {any_of,[integer,{exact,null}]}},
@@ -10641,14 +11429,24 @@
                                          {ref,<<"DynamicToolCallStatus">>}},
                                        type =>
                                         {required,{enum,[dynamicToolCall]}},
+                                       arguments => {required,term},
                                        success =>
                                         {optional,
                                          {any_of,[boolean,{exact,null}]}},
-                                       arguments => {required,term},
                                        namespace =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
                                        tool => {required,binstr},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        durationMs =>
                                         {optional,
                                          {any_of,[integer,{exact,null}]}},
@@ -10679,11 +11477,21 @@
                                        model =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        reasoningEffort =>
                                         {optional,
                                          {any_of,
                                           [{ref,<<"ReasoningEffort">>},
                                            {exact,null}]}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        agentsStates =>
                                         {required,
                                          {map,
@@ -10702,11 +11510,21 @@
                                        kind =>
                                         {required,
                                          {ref,<<"SubAgentActivityKind">>}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        reasoningEffort =>
                                         {optional,
                                          {any_of,
                                           [{ref,<<"ReasoningEffort">>},
                                            {exact,null}]}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        agentPath => {required,binstr},
                                        agentThreadId => {required,binstr}}},
                                     {struct,
@@ -10718,6 +11536,16 @@
                                          {any_of,
                                           [{ref,<<"WebSearchAction">>},
                                            {exact,null}]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        results =>
                                         {optional,
                                          {default,
@@ -10729,10 +11557,31 @@
                                        type => {required,{enum,[imageView]}},
                                        path =>
                                         {required,
-                                         {ref,<<"LegacyAppPathString">>}}}},
+                                         {ref,<<"LegacyAppPathString">>}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [integer,{exact,null}]}}}}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type => {required,{enum,[sleep]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        durationMs => {required,integer}}},
                                     {any_of,
                                      [{struct,
@@ -10749,6 +11598,23 @@
                                                 <<"ImageGenerationFailure">>},
                                                {exact,null}]}}}},
                                          fileId => {required,binstr},
+                                         startedAtMs =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}},
+                                         completedAtMs =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}},
+                                         generationId =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,[binstr,{exact,null}]}}}},
                                          inputImages =>
                                           {optional,
                                            {list,
@@ -10782,6 +11648,23 @@
                                                 <<"ImageGenerationFailure">>},
                                                {exact,null}]}}}},
                                          result => {required,binstr},
+                                         startedAtMs =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}},
+                                         completedAtMs =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}},
+                                         generationId =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,[binstr,{exact,null}]}}}},
                                          inputImages =>
                                           {optional,
                                            {list,
@@ -10805,17 +11688,47 @@
                                      #{id => {required,binstr},
                                        type =>
                                         {required,{enum,[enteredReviewMode]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        review => {required,binstr}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type =>
                                         {required,{enum,[exitedReviewMode]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        review => {required,binstr}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type =>
-                                        {required,
-                                         {enum,[contextCompaction]}}}}]},
+                                        {required,{enum,[contextCompaction]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [integer,{exact,null}]}}}}}}]},
                                  <<"CollaborationMode">> =>
                                   {struct,
                                    #{mode => {required,{ref,<<"ModeKind">>}},
@@ -11223,9 +12136,13 @@
                                          {any_of,
                                           [{ref,<<"ImageDetail">>},
                                            {exact,null}]}}}}}},
-                                  {struct,
-                                   #{type => {required,{enum,[audio]}},
-                                     url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[audio]}},
+                                       url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[audio]}},
+                                       fileId => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[localAudio]}},
                                      path => {required,binstr}}},
@@ -11535,7 +12452,8 @@
                                     sessionBudgetExceeded,usageLimitExceeded,
                                     rateLimitExceeded,flexUnavailable,
                                     serverOverloaded,modelNotFound,
-                                    cyberPolicy,misalignmentPolicyViolation,
+                                    policyCapacityUnavailable,cyberPolicy,
+                                    misalignmentPolicyViolation,
                                     tooManyDenials,internalServerError,
                                     unauthorized,badRequest,
                                     threadRollbackFailed,sandboxError,other]},
@@ -11589,12 +12507,32 @@
                                      type => {required,{enum,[userMessage]}},
                                      content =>
                                       {required,{list,{ref,<<"UserInput">>}}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      clientId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[hookPrompt]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      fragments =>
                                       {required,
                                        {list,
@@ -11626,6 +12564,16 @@
                                             {ref,
                                              <<"AsyncUserInputQuestion">>}},
                                            {exact,null}]}}}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      memoryCitation =>
                                       {optional,
                                        {default,
@@ -11643,19 +12591,48 @@
                                       {required,{enum,[functionCallOutput]}},
                                      namespace =>
                                       {optional,
-                                       {any_of,[binstr,{exact,null}]}}}},
+                                       {any_of,[binstr,{exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[plan]}},
-                                     text => {required,binstr}}},
+                                     text => {required,binstr},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[reasoning]}},
                                      summary =>
                                       {optional,{default,{[],{list,binstr}}}},
                                      content =>
+                                      {optional,{default,{[],{list,binstr}}}},
+                                     startedAtMs =>
                                       {optional,
-                                       {default,{[],{list,binstr}}}}}},
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{command => {required,binstr},
                                      id => {required,binstr},
@@ -11683,9 +12660,19 @@
                                        {default,
                                         {null,
                                          {any_of,[binstr,{exact,null}]}}}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      commandActions =>
                                       {required,
                                        {list,{ref,<<"CommandAction">>}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      aggregatedOutput =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
@@ -11705,6 +12692,16 @@
                                      status =>
                                       {required,{ref,<<"PatchApplyStatus">>}},
                                      type => {required,{enum,[fileChange]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      changes =>
                                       {required,
                                        {list,{ref,<<"FileUpdateChange">>}}}}},
@@ -11729,6 +12726,16 @@
                                      pluginId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      durationMs =>
                                       {optional,
                                        {any_of,[integer,{exact,null}]}},
@@ -11754,14 +12761,24 @@
                                        {ref,<<"DynamicToolCallStatus">>}},
                                      type =>
                                       {required,{enum,[dynamicToolCall]}},
+                                     arguments => {required,term},
                                      success =>
                                       {optional,
                                        {any_of,[boolean,{exact,null}]}},
-                                     arguments => {required,term},
                                      namespace =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
                                      tool => {required,binstr},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      durationMs =>
                                       {optional,
                                        {any_of,[integer,{exact,null}]}},
@@ -11790,11 +12807,21 @@
                                      model =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      reasoningEffort =>
                                       {optional,
                                        {any_of,
                                         [{ref,<<"ReasoningEffort">>},
                                          {exact,null}]}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      agentsStates =>
                                       {required,
                                        {map,
@@ -11813,11 +12840,21 @@
                                      kind =>
                                       {required,
                                        {ref,<<"SubAgentActivityKind">>}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      reasoningEffort =>
                                       {optional,
                                        {any_of,
                                         [{ref,<<"ReasoningEffort">>},
                                          {exact,null}]}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      agentPath => {required,binstr},
                                      agentThreadId => {required,binstr}}},
                                   {struct,
@@ -11829,6 +12866,16 @@
                                        {any_of,
                                         [{ref,<<"WebSearchAction">>},
                                          {exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      results =>
                                       {optional,
                                        {default,
@@ -11840,10 +12887,30 @@
                                      type => {required,{enum,[imageView]}},
                                      path =>
                                       {required,
-                                       {ref,<<"LegacyAppPathString">>}}}},
+                                       {ref,<<"LegacyAppPathString">>}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[sleep]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      durationMs => {required,integer}}},
                                   {any_of,
                                    [{struct,
@@ -11860,6 +12927,21 @@
                                               <<"ImageGenerationFailure">>},
                                              {exact,null}]}}}},
                                        fileId => {required,binstr},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       generationId =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[binstr,{exact,null}]}}}},
                                        inputImages =>
                                         {optional,
                                          {list,
@@ -11893,6 +12975,21 @@
                                               <<"ImageGenerationFailure">>},
                                              {exact,null}]}}}},
                                        result => {required,binstr},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       generationId =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[binstr,{exact,null}]}}}},
                                        inputImages =>
                                         {optional,
                                          {list,
@@ -11916,17 +13013,47 @@
                                    #{id => {required,binstr},
                                      type =>
                                       {required,{enum,[enteredReviewMode]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      review => {required,binstr}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type =>
                                       {required,{enum,[exitedReviewMode]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      review => {required,binstr}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type =>
-                                      {required,
-                                       {enum,[contextCompaction]}}}}]},
+                                      {required,{enum,[contextCompaction]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,
+                                          [integer,{exact,null}]}}}}}}]},
                                <<"McpToolCallResult">> =>
                                 {struct,
                                  #{'_meta' => {optional,term},
@@ -12243,9 +13370,13 @@
                                          {any_of,
                                           [{ref,<<"ImageDetail">>},
                                            {exact,null}]}}}}}},
-                                  {struct,
-                                   #{type => {required,{enum,[audio]}},
-                                     url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[audio]}},
+                                       url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[audio]}},
+                                       fileId => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[localAudio]}},
                                      path => {required,binstr}}},
@@ -12555,7 +13686,8 @@
                                     sessionBudgetExceeded,usageLimitExceeded,
                                     rateLimitExceeded,flexUnavailable,
                                     serverOverloaded,modelNotFound,
-                                    cyberPolicy,misalignmentPolicyViolation,
+                                    policyCapacityUnavailable,cyberPolicy,
+                                    misalignmentPolicyViolation,
                                     tooManyDenials,internalServerError,
                                     unauthorized,badRequest,
                                     threadRollbackFailed,sandboxError,other]},
@@ -12607,12 +13739,32 @@
                                      type => {required,{enum,[userMessage]}},
                                      content =>
                                       {required,{list,{ref,<<"UserInput">>}}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      clientId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[hookPrompt]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      fragments =>
                                       {required,
                                        {list,
@@ -12644,6 +13796,16 @@
                                             {ref,
                                              <<"AsyncUserInputQuestion">>}},
                                            {exact,null}]}}}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      memoryCitation =>
                                       {optional,
                                        {default,
@@ -12661,19 +13823,48 @@
                                       {required,{enum,[functionCallOutput]}},
                                      namespace =>
                                       {optional,
-                                       {any_of,[binstr,{exact,null}]}}}},
+                                       {any_of,[binstr,{exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[plan]}},
-                                     text => {required,binstr}}},
+                                     text => {required,binstr},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[reasoning]}},
                                      summary =>
                                       {optional,{default,{[],{list,binstr}}}},
                                      content =>
+                                      {optional,{default,{[],{list,binstr}}}},
+                                     startedAtMs =>
                                       {optional,
-                                       {default,{[],{list,binstr}}}}}},
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{command => {required,binstr},
                                      id => {required,binstr},
@@ -12701,9 +13892,19 @@
                                        {default,
                                         {null,
                                          {any_of,[binstr,{exact,null}]}}}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      commandActions =>
                                       {required,
                                        {list,{ref,<<"CommandAction">>}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      aggregatedOutput =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
@@ -12723,6 +13924,16 @@
                                      status =>
                                       {required,{ref,<<"PatchApplyStatus">>}},
                                      type => {required,{enum,[fileChange]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      changes =>
                                       {required,
                                        {list,{ref,<<"FileUpdateChange">>}}}}},
@@ -12747,6 +13958,16 @@
                                      pluginId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      durationMs =>
                                       {optional,
                                        {any_of,[integer,{exact,null}]}},
@@ -12772,14 +13993,24 @@
                                        {ref,<<"DynamicToolCallStatus">>}},
                                      type =>
                                       {required,{enum,[dynamicToolCall]}},
+                                     arguments => {required,term},
                                      success =>
                                       {optional,
                                        {any_of,[boolean,{exact,null}]}},
-                                     arguments => {required,term},
                                      namespace =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
                                      tool => {required,binstr},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      durationMs =>
                                       {optional,
                                        {any_of,[integer,{exact,null}]}},
@@ -12808,11 +14039,21 @@
                                      model =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      reasoningEffort =>
                                       {optional,
                                        {any_of,
                                         [{ref,<<"ReasoningEffort">>},
                                          {exact,null}]}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      agentsStates =>
                                       {required,
                                        {map,
@@ -12831,11 +14072,21 @@
                                      kind =>
                                       {required,
                                        {ref,<<"SubAgentActivityKind">>}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      reasoningEffort =>
                                       {optional,
                                        {any_of,
                                         [{ref,<<"ReasoningEffort">>},
                                          {exact,null}]}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      agentPath => {required,binstr},
                                      agentThreadId => {required,binstr}}},
                                   {struct,
@@ -12847,6 +14098,16 @@
                                        {any_of,
                                         [{ref,<<"WebSearchAction">>},
                                          {exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      results =>
                                       {optional,
                                        {default,
@@ -12858,10 +14119,30 @@
                                      type => {required,{enum,[imageView]}},
                                      path =>
                                       {required,
-                                       {ref,<<"LegacyAppPathString">>}}}},
+                                       {ref,<<"LegacyAppPathString">>}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[sleep]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      durationMs => {required,integer}}},
                                   {any_of,
                                    [{struct,
@@ -12878,6 +14159,21 @@
                                               <<"ImageGenerationFailure">>},
                                              {exact,null}]}}}},
                                        fileId => {required,binstr},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       generationId =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[binstr,{exact,null}]}}}},
                                        inputImages =>
                                         {optional,
                                          {list,
@@ -12911,6 +14207,21 @@
                                               <<"ImageGenerationFailure">>},
                                              {exact,null}]}}}},
                                        result => {required,binstr},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       generationId =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[binstr,{exact,null}]}}}},
                                        inputImages =>
                                         {optional,
                                          {list,
@@ -12934,17 +14245,47 @@
                                    #{id => {required,binstr},
                                      type =>
                                       {required,{enum,[enteredReviewMode]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      review => {required,binstr}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type =>
                                       {required,{enum,[exitedReviewMode]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      review => {required,binstr}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type =>
-                                      {required,
-                                       {enum,[contextCompaction]}}}}]},
+                                      {required,{enum,[contextCompaction]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,
+                                          [integer,{exact,null}]}}}}}}]},
                                <<"McpToolCallResult">> =>
                                 {struct,
                                  #{'_meta' => {optional,term},
@@ -13198,9 +14539,13 @@
                                          {any_of,
                                           [{ref,<<"ImageDetail">>},
                                            {exact,null}]}}}}}},
-                                  {struct,
-                                   #{type => {required,{enum,[audio]}},
-                                     url => {required,binstr}}},
+                                  {any_of,
+                                   [{struct,
+                                     #{type => {required,{enum,[audio]}},
+                                       url => {required,binstr}}},
+                                    {struct,
+                                     #{type => {required,{enum,[audio]}},
+                                       fileId => {required,binstr}}}]},
                                   {struct,
                                    #{type => {required,{enum,[localAudio]}},
                                      path => {required,binstr}}},
@@ -13510,7 +14855,8 @@
                                     sessionBudgetExceeded,usageLimitExceeded,
                                     rateLimitExceeded,flexUnavailable,
                                     serverOverloaded,modelNotFound,
-                                    cyberPolicy,misalignmentPolicyViolation,
+                                    policyCapacityUnavailable,cyberPolicy,
+                                    misalignmentPolicyViolation,
                                     tooManyDenials,internalServerError,
                                     unauthorized,badRequest,
                                     threadRollbackFailed,sandboxError,other]},
@@ -13562,12 +14908,32 @@
                                      type => {required,{enum,[userMessage]}},
                                      content =>
                                       {required,{list,{ref,<<"UserInput">>}}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      clientId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[hookPrompt]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      fragments =>
                                       {required,
                                        {list,
@@ -13599,6 +14965,16 @@
                                             {ref,
                                              <<"AsyncUserInputQuestion">>}},
                                            {exact,null}]}}}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      memoryCitation =>
                                       {optional,
                                        {default,
@@ -13616,19 +14992,48 @@
                                       {required,{enum,[functionCallOutput]}},
                                      namespace =>
                                       {optional,
-                                       {any_of,[binstr,{exact,null}]}}}},
+                                       {any_of,[binstr,{exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[plan]}},
-                                     text => {required,binstr}}},
+                                     text => {required,binstr},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[reasoning]}},
                                      summary =>
                                       {optional,{default,{[],{list,binstr}}}},
                                      content =>
+                                      {optional,{default,{[],{list,binstr}}}},
+                                     startedAtMs =>
                                       {optional,
-                                       {default,{[],{list,binstr}}}}}},
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{command => {required,binstr},
                                      id => {required,binstr},
@@ -13656,9 +15061,19 @@
                                        {default,
                                         {null,
                                          {any_of,[binstr,{exact,null}]}}}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      commandActions =>
                                       {required,
                                        {list,{ref,<<"CommandAction">>}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      aggregatedOutput =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
@@ -13678,6 +15093,16 @@
                                      status =>
                                       {required,{ref,<<"PatchApplyStatus">>}},
                                      type => {required,{enum,[fileChange]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      changes =>
                                       {required,
                                        {list,{ref,<<"FileUpdateChange">>}}}}},
@@ -13702,6 +15127,16 @@
                                      pluginId =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      durationMs =>
                                       {optional,
                                        {any_of,[integer,{exact,null}]}},
@@ -13727,14 +15162,24 @@
                                        {ref,<<"DynamicToolCallStatus">>}},
                                      type =>
                                       {required,{enum,[dynamicToolCall]}},
+                                     arguments => {required,term},
                                      success =>
                                       {optional,
                                        {any_of,[boolean,{exact,null}]}},
-                                     arguments => {required,term},
                                      namespace =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
                                      tool => {required,binstr},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      durationMs =>
                                       {optional,
                                        {any_of,[integer,{exact,null}]}},
@@ -13763,11 +15208,21 @@
                                      model =>
                                       {optional,
                                        {any_of,[binstr,{exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      reasoningEffort =>
                                       {optional,
                                        {any_of,
                                         [{ref,<<"ReasoningEffort">>},
                                          {exact,null}]}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      agentsStates =>
                                       {required,
                                        {map,
@@ -13786,11 +15241,21 @@
                                      kind =>
                                       {required,
                                        {ref,<<"SubAgentActivityKind">>}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      reasoningEffort =>
                                       {optional,
                                        {any_of,
                                         [{ref,<<"ReasoningEffort">>},
                                          {exact,null}]}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      agentPath => {required,binstr},
                                      agentThreadId => {required,binstr}}},
                                   {struct,
@@ -13802,6 +15267,16 @@
                                        {any_of,
                                         [{ref,<<"WebSearchAction">>},
                                          {exact,null}]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      results =>
                                       {optional,
                                        {default,
@@ -13813,10 +15288,30 @@
                                      type => {required,{enum,[imageView]}},
                                      path =>
                                       {required,
-                                       {ref,<<"LegacyAppPathString">>}}}},
+                                       {ref,<<"LegacyAppPathString">>}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type => {required,{enum,[sleep]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      durationMs => {required,integer}}},
                                   {any_of,
                                    [{struct,
@@ -13833,6 +15328,21 @@
                                               <<"ImageGenerationFailure">>},
                                              {exact,null}]}}}},
                                        fileId => {required,binstr},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       generationId =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[binstr,{exact,null}]}}}},
                                        inputImages =>
                                         {optional,
                                          {list,
@@ -13866,6 +15376,21 @@
                                               <<"ImageGenerationFailure">>},
                                              {exact,null}]}}}},
                                        result => {required,binstr},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       generationId =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[binstr,{exact,null}]}}}},
                                        inputImages =>
                                         {optional,
                                          {list,
@@ -13889,17 +15414,47 @@
                                    #{id => {required,binstr},
                                      type =>
                                       {required,{enum,[enteredReviewMode]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      review => {required,binstr}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type =>
                                       {required,{enum,[exitedReviewMode]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
                                      review => {required,binstr}}},
                                   {struct,
                                    #{id => {required,binstr},
                                      type =>
-                                      {required,
-                                       {enum,[contextCompaction]}}}}]},
+                                      {required,{enum,[contextCompaction]}},
+                                     startedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,[integer,{exact,null}]}}}},
+                                     completedAtMs =>
+                                      {optional,
+                                       {default,
+                                        {null,
+                                         {any_of,
+                                          [integer,{exact,null}]}}}}}}]},
                                <<"McpToolCallResult">> =>
                                 {struct,
                                  #{'_meta' => {optional,term},
@@ -14132,9 +15687,13 @@
                                                {any_of,
                                                 [{ref,<<"ImageDetail">>},
                                                  {exact,null}]}}}}}},
-                                        {struct,
-                                         #{type => {required,{enum,[audio]}},
-                                           url => {required,binstr}}},
+                                        {any_of,
+                                         [{struct,
+                                           #{type => {required,{enum,[audio]}},
+                                             url => {required,binstr}}},
+                                          {struct,
+                                           #{type => {required,{enum,[audio]}},
+                                             fileId => {required,binstr}}}]},
                                         {struct,
                                          #{type =>
                                             {required,{enum,[localAudio]}},
@@ -14433,6 +15992,7 @@
                                           usageLimitExceeded,
                                           rateLimitExceeded,flexUnavailable,
                                           serverOverloaded,modelNotFound,
+                                          policyCapacityUnavailable,
                                           cyberPolicy,
                                           misalignmentPolicyViolation,
                                           tooManyDenials,internalServerError,
@@ -14494,6 +16054,18 @@
                                            content =>
                                             {required,
                                              {list,{ref,<<"UserInput">>}}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            clientId =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}}}},
@@ -14501,6 +16073,18 @@
                                          #{id => {required,binstr},
                                            type =>
                                             {required,{enum,[hookPrompt]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            fragments =>
                                             {required,
                                              {list,
@@ -14535,6 +16119,18 @@
                                                   {ref,
                                                    <<"AsyncUserInputQuestion">>}},
                                                  {exact,null}]}}}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            memoryCitation =>
                                             {optional,
                                              {default,
@@ -14554,11 +16150,35 @@
                                              {enum,[functionCallOutput]}},
                                            namespace =>
                                             {optional,
-                                             {any_of,[binstr,{exact,null}]}}}},
+                                             {any_of,[binstr,{exact,null}]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}}}},
                                         {struct,
                                          #{id => {required,binstr},
                                            type => {required,{enum,[plan]}},
-                                           text => {required,binstr}}},
+                                           text => {required,binstr},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}}}},
                                         {struct,
                                          #{id => {required,binstr},
                                            type =>
@@ -14568,7 +16188,19 @@
                                              {default,{[],{list,binstr}}}},
                                            content =>
                                             {optional,
-                                             {default,{[],{list,binstr}}}}}},
+                                             {default,{[],{list,binstr}}}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}}}},
                                         {struct,
                                          #{command => {required,binstr},
                                            id => {required,binstr},
@@ -14600,9 +16232,21 @@
                                               {null,
                                                {any_of,
                                                 [binstr,{exact,null}]}}}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            commandActions =>
                                             {required,
                                              {list,{ref,<<"CommandAction">>}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            aggregatedOutput =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
@@ -14625,6 +16269,18 @@
                                              {ref,<<"PatchApplyStatus">>}},
                                            type =>
                                             {required,{enum,[fileChange]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            changes =>
                                             {required,
                                              {list,
@@ -14652,6 +16308,18 @@
                                            pluginId =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            durationMs =>
                                             {optional,
                                              {any_of,[integer,{exact,null}]}},
@@ -14682,14 +16350,26 @@
                                            type =>
                                             {required,
                                              {enum,[dynamicToolCall]}},
+                                           arguments => {required,term},
                                            success =>
                                             {optional,
                                              {any_of,[boolean,{exact,null}]}},
-                                           arguments => {required,term},
                                            namespace =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
                                            tool => {required,binstr},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            durationMs =>
                                             {optional,
                                              {any_of,[integer,{exact,null}]}},
@@ -14720,11 +16400,23 @@
                                            model =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            reasoningEffort =>
                                             {optional,
                                              {any_of,
                                               [{ref,<<"ReasoningEffort">>},
                                                {exact,null}]}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            agentsStates =>
                                             {required,
                                              {map,
@@ -14745,11 +16437,23 @@
                                            kind =>
                                             {required,
                                              {ref,<<"SubAgentActivityKind">>}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            reasoningEffort =>
                                             {optional,
                                              {any_of,
                                               [{ref,<<"ReasoningEffort">>},
                                                {exact,null}]}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            agentPath => {required,binstr},
                                            agentThreadId =>
                                             {required,binstr}}},
@@ -14763,6 +16467,18 @@
                                              {any_of,
                                               [{ref,<<"WebSearchAction">>},
                                                {exact,null}]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            results =>
                                             {optional,
                                              {default,
@@ -14776,11 +16492,34 @@
                                             {required,{enum,[imageView]}},
                                            path =>
                                             {required,
-                                             {ref,
-                                              <<"LegacyAppPathString">>}}}},
+                                             {ref,<<"LegacyAppPathString">>}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}}}},
                                         {struct,
                                          #{id => {required,binstr},
                                            type => {required,{enum,[sleep]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            durationMs => {required,integer}}},
                                         {any_of,
                                          [{struct,
@@ -14798,6 +16537,24 @@
                                                     <<"ImageGenerationFailure">>},
                                                    {exact,null}]}}}},
                                              fileId => {required,binstr},
+                                             startedAtMs =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [integer,{exact,null}]}}}},
+                                             completedAtMs =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [integer,{exact,null}]}}}},
+                                             generationId =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [binstr,{exact,null}]}}}},
                                              inputImages =>
                                               {optional,
                                                {list,
@@ -14832,6 +16589,24 @@
                                                     <<"ImageGenerationFailure">>},
                                                    {exact,null}]}}}},
                                              result => {required,binstr},
+                                             startedAtMs =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [integer,{exact,null}]}}}},
+                                             completedAtMs =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [integer,{exact,null}]}}}},
+                                             generationId =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [binstr,{exact,null}]}}}},
                                              inputImages =>
                                               {optional,
                                                {list,
@@ -14857,18 +16632,54 @@
                                            type =>
                                             {required,
                                              {enum,[enteredReviewMode]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            review => {required,binstr}}},
                                         {struct,
                                          #{id => {required,binstr},
                                            type =>
                                             {required,
                                              {enum,[exitedReviewMode]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            review => {required,binstr}}},
                                         {struct,
                                          #{id => {required,binstr},
                                            type =>
                                             {required,
-                                             {enum,[contextCompaction]}}}}]},
+                                             {enum,[contextCompaction]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}}}}]},
                                      <<"McpToolCallResult">> =>
                                       {struct,
                                        #{'_meta' => {optional,term},
@@ -15022,9 +16833,13 @@
                                                {any_of,
                                                 [{ref,<<"ImageDetail">>},
                                                  {exact,null}]}}}}}},
-                                        {struct,
-                                         #{type => {required,{enum,[audio]}},
-                                           url => {required,binstr}}},
+                                        {any_of,
+                                         [{struct,
+                                           #{type => {required,{enum,[audio]}},
+                                             url => {required,binstr}}},
+                                          {struct,
+                                           #{type => {required,{enum,[audio]}},
+                                             fileId => {required,binstr}}}]},
                                         {struct,
                                          #{type =>
                                             {required,{enum,[localAudio]}},
@@ -15256,6 +17071,18 @@
                                            content =>
                                             {required,
                                              {list,{ref,<<"UserInput">>}}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            clientId =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}}}},
@@ -15263,6 +17090,18 @@
                                          #{id => {required,binstr},
                                            type =>
                                             {required,{enum,[hookPrompt]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            fragments =>
                                             {required,
                                              {list,
@@ -15297,6 +17136,18 @@
                                                   {ref,
                                                    <<"AsyncUserInputQuestion">>}},
                                                  {exact,null}]}}}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            memoryCitation =>
                                             {optional,
                                              {default,
@@ -15316,11 +17167,35 @@
                                              {enum,[functionCallOutput]}},
                                            namespace =>
                                             {optional,
-                                             {any_of,[binstr,{exact,null}]}}}},
+                                             {any_of,[binstr,{exact,null}]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}}}},
                                         {struct,
                                          #{id => {required,binstr},
                                            type => {required,{enum,[plan]}},
-                                           text => {required,binstr}}},
+                                           text => {required,binstr},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}}}},
                                         {struct,
                                          #{id => {required,binstr},
                                            type =>
@@ -15330,7 +17205,19 @@
                                              {default,{[],{list,binstr}}}},
                                            content =>
                                             {optional,
-                                             {default,{[],{list,binstr}}}}}},
+                                             {default,{[],{list,binstr}}}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}}}},
                                         {struct,
                                          #{command => {required,binstr},
                                            id => {required,binstr},
@@ -15362,9 +17249,21 @@
                                               {null,
                                                {any_of,
                                                 [binstr,{exact,null}]}}}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            commandActions =>
                                             {required,
                                              {list,{ref,<<"CommandAction">>}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            aggregatedOutput =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
@@ -15387,6 +17286,18 @@
                                              {ref,<<"PatchApplyStatus">>}},
                                            type =>
                                             {required,{enum,[fileChange]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            changes =>
                                             {required,
                                              {list,
@@ -15414,6 +17325,18 @@
                                            pluginId =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            durationMs =>
                                             {optional,
                                              {any_of,[integer,{exact,null}]}},
@@ -15444,14 +17367,26 @@
                                            type =>
                                             {required,
                                              {enum,[dynamicToolCall]}},
+                                           arguments => {required,term},
                                            success =>
                                             {optional,
                                              {any_of,[boolean,{exact,null}]}},
-                                           arguments => {required,term},
                                            namespace =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
                                            tool => {required,binstr},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            durationMs =>
                                             {optional,
                                              {any_of,[integer,{exact,null}]}},
@@ -15482,11 +17417,23 @@
                                            model =>
                                             {optional,
                                              {any_of,[binstr,{exact,null}]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            reasoningEffort =>
                                             {optional,
                                              {any_of,
                                               [{ref,<<"ReasoningEffort">>},
                                                {exact,null}]}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            agentsStates =>
                                             {required,
                                              {map,
@@ -15507,11 +17454,23 @@
                                            kind =>
                                             {required,
                                              {ref,<<"SubAgentActivityKind">>}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            reasoningEffort =>
                                             {optional,
                                              {any_of,
                                               [{ref,<<"ReasoningEffort">>},
                                                {exact,null}]}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            agentPath => {required,binstr},
                                            agentThreadId =>
                                             {required,binstr}}},
@@ -15525,6 +17484,18 @@
                                              {any_of,
                                               [{ref,<<"WebSearchAction">>},
                                                {exact,null}]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            results =>
                                             {optional,
                                              {default,
@@ -15538,11 +17509,34 @@
                                             {required,{enum,[imageView]}},
                                            path =>
                                             {required,
-                                             {ref,
-                                              <<"LegacyAppPathString">>}}}},
+                                             {ref,<<"LegacyAppPathString">>}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}}}},
                                         {struct,
                                          #{id => {required,binstr},
                                            type => {required,{enum,[sleep]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            durationMs => {required,integer}}},
                                         {any_of,
                                          [{struct,
@@ -15560,6 +17554,24 @@
                                                     <<"ImageGenerationFailure">>},
                                                    {exact,null}]}}}},
                                              fileId => {required,binstr},
+                                             startedAtMs =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [integer,{exact,null}]}}}},
+                                             completedAtMs =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [integer,{exact,null}]}}}},
+                                             generationId =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [binstr,{exact,null}]}}}},
                                              inputImages =>
                                               {optional,
                                                {list,
@@ -15594,6 +17606,24 @@
                                                     <<"ImageGenerationFailure">>},
                                                    {exact,null}]}}}},
                                              result => {required,binstr},
+                                             startedAtMs =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [integer,{exact,null}]}}}},
+                                             completedAtMs =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [integer,{exact,null}]}}}},
+                                             generationId =>
+                                              {optional,
+                                               {default,
+                                                {null,
+                                                 {any_of,
+                                                  [binstr,{exact,null}]}}}},
                                              inputImages =>
                                               {optional,
                                                {list,
@@ -15619,18 +17649,54 @@
                                            type =>
                                             {required,
                                              {enum,[enteredReviewMode]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            review => {required,binstr}}},
                                         {struct,
                                          #{id => {required,binstr},
                                            type =>
                                             {required,
                                              {enum,[exitedReviewMode]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
                                            review => {required,binstr}}},
                                         {struct,
                                          #{id => {required,binstr},
                                            type =>
                                             {required,
-                                             {enum,[contextCompaction]}}}}]},
+                                             {enum,[contextCompaction]}},
+                                           startedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}},
+                                           completedAtMs =>
+                                            {optional,
+                                             {default,
+                                              {null,
+                                               {any_of,
+                                                [integer,{exact,null}]}}}}}}]},
                                      <<"McpToolCallResult">> =>
                                       {struct,
                                        #{'_meta' => {optional,term},
@@ -15793,9 +17859,13 @@
                                               {any_of,
                                                [{ref,<<"ImageDetail">>},
                                                 {exact,null}]}}}}}},
-                                       {struct,
-                                        #{type => {required,{enum,[audio]}},
-                                          url => {required,binstr}}},
+                                       {any_of,
+                                        [{struct,
+                                          #{type => {required,{enum,[audio]}},
+                                            url => {required,binstr}}},
+                                         {struct,
+                                          #{type => {required,{enum,[audio]}},
+                                            fileId => {required,binstr}}}]},
                                        {struct,
                                         #{type =>
                                            {required,{enum,[localAudio]}},
@@ -16144,7 +18214,9 @@
                                          sessionBudgetExceeded,
                                          usageLimitExceeded,rateLimitExceeded,
                                          flexUnavailable,serverOverloaded,
-                                         modelNotFound,cyberPolicy,
+                                         modelNotFound,
+                                         policyCapacityUnavailable,
+                                         cyberPolicy,
                                          misalignmentPolicyViolation,
                                          tooManyDenials,internalServerError,
                                          unauthorized,badRequest,
@@ -16204,6 +18276,18 @@
                                           content =>
                                            {required,
                                             {list,{ref,<<"UserInput">>}}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           clientId =>
                                            {optional,
                                             {any_of,[binstr,{exact,null}]}}}},
@@ -16211,6 +18295,18 @@
                                         #{id => {required,binstr},
                                           type =>
                                            {required,{enum,[hookPrompt]}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           fragments =>
                                            {required,
                                             {list,
@@ -16245,6 +18341,18 @@
                                                  {ref,
                                                   <<"AsyncUserInputQuestion">>}},
                                                 {exact,null}]}}}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           memoryCitation =>
                                            {optional,
                                             {default,
@@ -16264,11 +18372,35 @@
                                             {enum,[functionCallOutput]}},
                                           namespace =>
                                            {optional,
-                                            {any_of,[binstr,{exact,null}]}}}},
+                                            {any_of,[binstr,{exact,null}]}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}}}},
                                        {struct,
                                         #{id => {required,binstr},
                                           type => {required,{enum,[plan]}},
-                                          text => {required,binstr}}},
+                                          text => {required,binstr},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}}}},
                                        {struct,
                                         #{id => {required,binstr},
                                           type =>
@@ -16278,7 +18410,19 @@
                                             {default,{[],{list,binstr}}}},
                                           content =>
                                            {optional,
-                                            {default,{[],{list,binstr}}}}}},
+                                            {default,{[],{list,binstr}}}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}}}},
                                        {struct,
                                         #{command => {required,binstr},
                                           id => {required,binstr},
@@ -16310,9 +18454,21 @@
                                              {null,
                                               {any_of,
                                                [binstr,{exact,null}]}}}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           commandActions =>
                                            {required,
                                             {list,{ref,<<"CommandAction">>}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           aggregatedOutput =>
                                            {optional,
                                             {any_of,[binstr,{exact,null}]}},
@@ -16335,6 +18491,18 @@
                                             {ref,<<"PatchApplyStatus">>}},
                                           type =>
                                            {required,{enum,[fileChange]}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           changes =>
                                            {required,
                                             {list,
@@ -16362,6 +18530,18 @@
                                           pluginId =>
                                            {optional,
                                             {any_of,[binstr,{exact,null}]}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           durationMs =>
                                            {optional,
                                             {any_of,[integer,{exact,null}]}},
@@ -16389,14 +18569,26 @@
                                             {ref,<<"DynamicToolCallStatus">>}},
                                           type =>
                                            {required,{enum,[dynamicToolCall]}},
+                                          arguments => {required,term},
                                           success =>
                                            {optional,
                                             {any_of,[boolean,{exact,null}]}},
-                                          arguments => {required,term},
                                           namespace =>
                                            {optional,
                                             {any_of,[binstr,{exact,null}]}},
                                           tool => {required,binstr},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           durationMs =>
                                            {optional,
                                             {any_of,[integer,{exact,null}]}},
@@ -16427,11 +18619,23 @@
                                           model =>
                                            {optional,
                                             {any_of,[binstr,{exact,null}]}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           reasoningEffort =>
                                            {optional,
                                             {any_of,
                                              [{ref,<<"ReasoningEffort">>},
                                               {exact,null}]}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           agentsStates =>
                                            {required,
                                             {map,
@@ -16452,11 +18656,23 @@
                                           kind =>
                                            {required,
                                             {ref,<<"SubAgentActivityKind">>}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           reasoningEffort =>
                                            {optional,
                                             {any_of,
                                              [{ref,<<"ReasoningEffort">>},
                                               {exact,null}]}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           agentPath => {required,binstr},
                                           agentThreadId => {required,binstr}}},
                                        {struct,
@@ -16469,6 +18685,18 @@
                                             {any_of,
                                              [{ref,<<"WebSearchAction">>},
                                               {exact,null}]}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           results =>
                                            {optional,
                                             {default,
@@ -16482,10 +18710,34 @@
                                            {required,{enum,[imageView]}},
                                           path =>
                                            {required,
-                                            {ref,<<"LegacyAppPathString">>}}}},
+                                            {ref,<<"LegacyAppPathString">>}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}}}},
                                        {struct,
                                         #{id => {required,binstr},
                                           type => {required,{enum,[sleep]}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           durationMs => {required,integer}}},
                                        {any_of,
                                         [{struct,
@@ -16503,6 +18755,24 @@
                                                    <<"ImageGenerationFailure">>},
                                                   {exact,null}]}}}},
                                             fileId => {required,binstr},
+                                            startedAtMs =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [integer,{exact,null}]}}}},
+                                            completedAtMs =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [integer,{exact,null}]}}}},
+                                            generationId =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}}}},
                                             inputImages =>
                                              {optional,
                                               {list,
@@ -16537,6 +18807,24 @@
                                                    <<"ImageGenerationFailure">>},
                                                   {exact,null}]}}}},
                                             result => {required,binstr},
+                                            startedAtMs =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [integer,{exact,null}]}}}},
+                                            completedAtMs =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [integer,{exact,null}]}}}},
+                                            generationId =>
+                                             {optional,
+                                              {default,
+                                               {null,
+                                                {any_of,
+                                                 [binstr,{exact,null}]}}}},
                                             inputImages =>
                                              {optional,
                                               {list,
@@ -16562,18 +18850,54 @@
                                           type =>
                                            {required,
                                             {enum,[enteredReviewMode]}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           review => {required,binstr}}},
                                        {struct,
                                         #{id => {required,binstr},
                                           type =>
                                            {required,
                                             {enum,[exitedReviewMode]}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
                                           review => {required,binstr}}},
                                        {struct,
                                         #{id => {required,binstr},
                                           type =>
                                            {required,
-                                            {enum,[contextCompaction]}}}}]},
+                                            {enum,[contextCompaction]}},
+                                          startedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}},
+                                          completedAtMs =>
+                                           {optional,
+                                            {default,
+                                             {null,
+                                              {any_of,
+                                               [integer,{exact,null}]}}}}}}]},
                                     <<"McpToolCallResult">> =>
                                      {struct,
                                       #{'_meta' => {optional,term},
@@ -16832,9 +19156,13 @@
                                            {any_of,
                                             [{ref,<<"ImageDetail">>},
                                              {exact,null}]}}}}}},
-                                    {struct,
-                                     #{type => {required,{enum,[audio]}},
-                                       url => {required,binstr}}},
+                                    {any_of,
+                                     [{struct,
+                                       #{type => {required,{enum,[audio]}},
+                                         url => {required,binstr}}},
+                                      {struct,
+                                       #{type => {required,{enum,[audio]}},
+                                         fileId => {required,binstr}}}]},
                                     {struct,
                                      #{type => {required,{enum,[localAudio]}},
                                        path => {required,binstr}}},
@@ -17158,8 +19486,8 @@
                                       sessionBudgetExceeded,
                                       usageLimitExceeded,rateLimitExceeded,
                                       flexUnavailable,serverOverloaded,
-                                      modelNotFound,cyberPolicy,
-                                      misalignmentPolicyViolation,
+                                      modelNotFound,policyCapacityUnavailable,
+                                      cyberPolicy,misalignmentPolicyViolation,
                                       tooManyDenials,internalServerError,
                                       unauthorized,badRequest,
                                       threadRollbackFailed,sandboxError,
@@ -17213,12 +19541,32 @@
                                        content =>
                                         {required,
                                          {list,{ref,<<"UserInput">>}}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        clientId =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type => {required,{enum,[hookPrompt]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        fragments =>
                                         {required,
                                          {list,
@@ -17251,6 +19599,16 @@
                                               {ref,
                                                <<"AsyncUserInputQuestion">>}},
                                              {exact,null}]}}}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        memoryCitation =>
                                         {optional,
                                          {default,
@@ -17268,11 +19626,33 @@
                                         {required,{enum,[functionCallOutput]}},
                                        namespace =>
                                         {optional,
-                                         {any_of,[binstr,{exact,null}]}}}},
+                                         {any_of,[binstr,{exact,null}]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [integer,{exact,null}]}}}}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type => {required,{enum,[plan]}},
-                                       text => {required,binstr}}},
+                                       text => {required,binstr},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [integer,{exact,null}]}}}}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type => {required,{enum,[reasoning]}},
@@ -17281,7 +19661,18 @@
                                          {default,{[],{list,binstr}}}},
                                        content =>
                                         {optional,
-                                         {default,{[],{list,binstr}}}}}},
+                                         {default,{[],{list,binstr}}}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [integer,{exact,null}]}}}}}},
                                     {struct,
                                      #{command => {required,binstr},
                                        id => {required,binstr},
@@ -17309,9 +19700,19 @@
                                          {default,
                                           {null,
                                            {any_of,[binstr,{exact,null}]}}}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        commandActions =>
                                         {required,
                                          {list,{ref,<<"CommandAction">>}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        aggregatedOutput =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
@@ -17332,6 +19733,16 @@
                                         {required,
                                          {ref,<<"PatchApplyStatus">>}},
                                        type => {required,{enum,[fileChange]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        changes =>
                                         {required,
                                          {list,
@@ -17358,6 +19769,16 @@
                                        pluginId =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        durationMs =>
                                         {optional,
                                          {any_of,[integer,{exact,null}]}},
@@ -17384,14 +19805,24 @@
                                          {ref,<<"DynamicToolCallStatus">>}},
                                        type =>
                                         {required,{enum,[dynamicToolCall]}},
+                                       arguments => {required,term},
                                        success =>
                                         {optional,
                                          {any_of,[boolean,{exact,null}]}},
-                                       arguments => {required,term},
                                        namespace =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
                                        tool => {required,binstr},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        durationMs =>
                                         {optional,
                                          {any_of,[integer,{exact,null}]}},
@@ -17422,11 +19853,21 @@
                                        model =>
                                         {optional,
                                          {any_of,[binstr,{exact,null}]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        reasoningEffort =>
                                         {optional,
                                          {any_of,
                                           [{ref,<<"ReasoningEffort">>},
                                            {exact,null}]}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        agentsStates =>
                                         {required,
                                          {map,
@@ -17445,11 +19886,21 @@
                                        kind =>
                                         {required,
                                          {ref,<<"SubAgentActivityKind">>}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        reasoningEffort =>
                                         {optional,
                                          {any_of,
                                           [{ref,<<"ReasoningEffort">>},
                                            {exact,null}]}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        agentPath => {required,binstr},
                                        agentThreadId => {required,binstr}}},
                                     {struct,
@@ -17461,6 +19912,16 @@
                                          {any_of,
                                           [{ref,<<"WebSearchAction">>},
                                            {exact,null}]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        results =>
                                         {optional,
                                          {default,
@@ -17472,10 +19933,31 @@
                                        type => {required,{enum,[imageView]}},
                                        path =>
                                         {required,
-                                         {ref,<<"LegacyAppPathString">>}}}},
+                                         {ref,<<"LegacyAppPathString">>}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [integer,{exact,null}]}}}}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type => {required,{enum,[sleep]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        durationMs => {required,integer}}},
                                     {any_of,
                                      [{struct,
@@ -17492,6 +19974,23 @@
                                                 <<"ImageGenerationFailure">>},
                                                {exact,null}]}}}},
                                          fileId => {required,binstr},
+                                         startedAtMs =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}},
+                                         completedAtMs =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}},
+                                         generationId =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,[binstr,{exact,null}]}}}},
                                          inputImages =>
                                           {optional,
                                            {list,
@@ -17525,6 +20024,23 @@
                                                 <<"ImageGenerationFailure">>},
                                                {exact,null}]}}}},
                                          result => {required,binstr},
+                                         startedAtMs =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}},
+                                         completedAtMs =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,
+                                              [integer,{exact,null}]}}}},
+                                         generationId =>
+                                          {optional,
+                                           {default,
+                                            {null,
+                                             {any_of,[binstr,{exact,null}]}}}},
                                          inputImages =>
                                           {optional,
                                            {list,
@@ -17548,17 +20064,47 @@
                                      #{id => {required,binstr},
                                        type =>
                                         {required,{enum,[enteredReviewMode]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        review => {required,binstr}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type =>
                                         {required,{enum,[exitedReviewMode]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
                                        review => {required,binstr}}},
                                     {struct,
                                      #{id => {required,binstr},
                                        type =>
-                                        {required,
-                                         {enum,[contextCompaction]}}}}]},
+                                        {required,{enum,[contextCompaction]}},
+                                       startedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,[integer,{exact,null}]}}}},
+                                       completedAtMs =>
+                                        {optional,
+                                         {default,
+                                          {null,
+                                           {any_of,
+                                            [integer,{exact,null}]}}}}}}]},
                                  <<"McpToolCallResult">> =>
                                   {struct,
                                    #{'_meta' => {optional,term},
@@ -17962,10 +20508,16 @@
                                                     {any_of,
                                                      [{ref,<<"ImageDetail">>},
                                                       {exact,null}]}}}}}},
-                                             {struct,
-                                              #{type =>
-                                                 {required,{enum,[audio]}},
-                                                url => {required,binstr}}},
+                                             {any_of,
+                                              [{struct,
+                                                #{type =>
+                                                   {required,{enum,[audio]}},
+                                                  url => {required,binstr}}},
+                                               {struct,
+                                                #{type =>
+                                                   {required,{enum,[audio]}},
+                                                  fileId =>
+                                                   {required,binstr}}}]},
                                              {struct,
                                               #{type =>
                                                  {required,
@@ -18378,6 +20930,7 @@
                                                rateLimitExceeded,
                                                flexUnavailable,
                                                serverOverloaded,modelNotFound,
+                                               policyCapacityUnavailable,
                                                cyberPolicy,
                                                misalignmentPolicyViolation,
                                                tooManyDenials,
@@ -18442,6 +20995,20 @@
                                                  {required,
                                                   {list,
                                                    {ref,<<"UserInput">>}}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 clientId =>
                                                  {optional,
                                                   {any_of,
@@ -18451,6 +21018,20 @@
                                                 type =>
                                                  {required,
                                                   {enum,[hookPrompt]}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 fragments =>
                                                  {required,
                                                   {list,
@@ -18486,6 +21067,20 @@
                                                        {ref,
                                                         <<"AsyncUserInputQuestion">>}},
                                                       {exact,null}]}}}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 memoryCitation =>
                                                  {optional,
                                                   {default,
@@ -18507,12 +21102,40 @@
                                                 namespace =>
                                                  {optional,
                                                   {any_of,
-                                                   [binstr,{exact,null}]}}}},
+                                                   [binstr,{exact,null}]}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}}}},
                                              {struct,
                                               #{id => {required,binstr},
                                                 type =>
                                                  {required,{enum,[plan]}},
-                                                text => {required,binstr}}},
+                                                text => {required,binstr},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}}}},
                                              {struct,
                                               #{id => {required,binstr},
                                                 type =>
@@ -18524,7 +21147,21 @@
                                                 content =>
                                                  {optional,
                                                   {default,
-                                                   {[],{list,binstr}}}}}},
+                                                   {[],{list,binstr}}}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}}}},
                                              {struct,
                                               #{command => {required,binstr},
                                                 id => {required,binstr},
@@ -18557,10 +21194,24 @@
                                                    {null,
                                                     {any_of,
                                                      [binstr,{exact,null}]}}}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 commandActions =>
                                                  {required,
                                                   {list,
                                                    {ref,<<"CommandAction">>}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 aggregatedOutput =>
                                                  {optional,
                                                   {any_of,
@@ -18589,6 +21240,20 @@
                                                 type =>
                                                  {required,
                                                   {enum,[fileChange]}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 changes =>
                                                  {required,
                                                   {list,
@@ -18622,6 +21287,20 @@
                                                  {optional,
                                                   {any_of,
                                                    [binstr,{exact,null}]}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 durationMs =>
                                                  {optional,
                                                   {any_of,
@@ -18654,16 +21333,30 @@
                                                 type =>
                                                  {required,
                                                   {enum,[dynamicToolCall]}},
+                                                arguments => {required,term},
                                                 success =>
                                                  {optional,
                                                   {any_of,
                                                    [boolean,{exact,null}]}},
-                                                arguments => {required,term},
                                                 namespace =>
                                                  {optional,
                                                   {any_of,
                                                    [binstr,{exact,null}]}},
                                                 tool => {required,binstr},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 durationMs =>
                                                  {optional,
                                                   {any_of,
@@ -18699,12 +21392,26 @@
                                                  {optional,
                                                   {any_of,
                                                    [binstr,{exact,null}]}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 reasoningEffort =>
                                                  {optional,
                                                   {any_of,
                                                    [{ref,
                                                      <<"ReasoningEffort">>},
                                                     {exact,null}]}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 agentsStates =>
                                                  {required,
                                                   {map,
@@ -18728,12 +21435,26 @@
                                                  {required,
                                                   {ref,
                                                    <<"SubAgentActivityKind">>}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 reasoningEffort =>
                                                  {optional,
                                                   {any_of,
                                                    [{ref,
                                                      <<"ReasoningEffort">>},
                                                     {exact,null}]}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 agentPath => {required,binstr},
                                                 agentThreadId =>
                                                  {required,binstr}}},
@@ -18748,6 +21469,20 @@
                                                    [{ref,
                                                      <<"WebSearchAction">>},
                                                     {exact,null}]}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 results =>
                                                  {optional,
                                                   {default,
@@ -18762,11 +21497,39 @@
                                                 path =>
                                                  {required,
                                                   {ref,
-                                                   <<"LegacyAppPathString">>}}}},
+                                                   <<"LegacyAppPathString">>}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}}}},
                                              {struct,
                                               #{id => {required,binstr},
                                                 type =>
                                                  {required,{enum,[sleep]}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 durationMs =>
                                                  {required,integer}}},
                                              {any_of,
@@ -18785,6 +21548,27 @@
                                                          <<"ImageGenerationFailure">>},
                                                         {exact,null}]}}}},
                                                   fileId => {required,binstr},
+                                                  startedAtMs =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [integer,
+                                                        {exact,null}]}}}},
+                                                  completedAtMs =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [integer,
+                                                        {exact,null}]}}}},
+                                                  generationId =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [binstr,
+                                                        {exact,null}]}}}},
                                                   inputImages =>
                                                    {optional,
                                                     {list,
@@ -18822,6 +21606,27 @@
                                                          <<"ImageGenerationFailure">>},
                                                         {exact,null}]}}}},
                                                   result => {required,binstr},
+                                                  startedAtMs =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [integer,
+                                                        {exact,null}]}}}},
+                                                  completedAtMs =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [integer,
+                                                        {exact,null}]}}}},
+                                                  generationId =>
+                                                   {optional,
+                                                    {default,
+                                                     {null,
+                                                      {any_of,
+                                                       [binstr,
+                                                        {exact,null}]}}}},
                                                   inputImages =>
                                                    {optional,
                                                     {list,
@@ -18849,19 +21654,60 @@
                                                 type =>
                                                  {required,
                                                   {enum,[enteredReviewMode]}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 review => {required,binstr}}},
                                              {struct,
                                               #{id => {required,binstr},
                                                 type =>
                                                  {required,
                                                   {enum,[exitedReviewMode]}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
                                                 review => {required,binstr}}},
                                              {struct,
                                               #{id => {required,binstr},
                                                 type =>
                                                  {required,
-                                                  {enum,
-                                                   [contextCompaction]}}}}]},
+                                                  {enum,[contextCompaction]}},
+                                                startedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}},
+                                                completedAtMs =>
+                                                 {optional,
+                                                  {default,
+                                                   {null,
+                                                    {any_of,
+                                                     [integer,
+                                                      {exact,null}]}}}}}}]},
                                           <<"McpToolCallResult">> =>
                                            {struct,
                                             #{'_meta' => {optional,term},
@@ -19259,7 +22105,7 @@
     {thread_section_delete_params, {struct,#{sectionId => {required,binstr}}}},
     {thread_section_delete_response, {map,{binstr,term}}},
     {review_start_params, {with_defs,
-                           {#{<<"ReviewDelivery">> => {enum,[inline,detached]},
+                           {#{<<"ReviewDelivery">> => {enum,[inline]},
                               <<"ReviewTarget">> =>
                                {any_of,
                                 [{struct,
@@ -19379,9 +22225,13 @@
                                           {any_of,
                                            [{ref,<<"ImageDetail">>},
                                             {exact,null}]}}}}}},
-                                   {struct,
-                                    #{type => {required,{enum,[audio]}},
-                                      url => {required,binstr}}},
+                                   {any_of,
+                                    [{struct,
+                                      #{type => {required,{enum,[audio]}},
+                                        url => {required,binstr}}},
+                                     {struct,
+                                      #{type => {required,{enum,[audio]}},
+                                        fileId => {required,binstr}}}]},
                                    {struct,
                                     #{type => {required,{enum,[localAudio]}},
                                       path => {required,binstr}}},
@@ -19646,7 +22496,8 @@
                                      sessionBudgetExceeded,usageLimitExceeded,
                                      rateLimitExceeded,flexUnavailable,
                                      serverOverloaded,modelNotFound,
-                                     cyberPolicy,misalignmentPolicyViolation,
+                                     policyCapacityUnavailable,cyberPolicy,
+                                     misalignmentPolicyViolation,
                                      tooManyDenials,internalServerError,
                                      unauthorized,badRequest,
                                      threadRollbackFailed,sandboxError,other]},
@@ -19698,12 +22549,32 @@
                                       type => {required,{enum,[userMessage]}},
                                       content =>
                                        {required,{list,{ref,<<"UserInput">>}}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       clientId =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type => {required,{enum,[hookPrompt]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       fragments =>
                                        {required,
                                         {list,
@@ -19735,6 +22606,16 @@
                                              {ref,
                                               <<"AsyncUserInputQuestion">>}},
                                             {exact,null}]}}}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       memoryCitation =>
                                        {optional,
                                         {default,
@@ -19752,19 +22633,48 @@
                                        {required,{enum,[functionCallOutput]}},
                                       namespace =>
                                        {optional,
-                                        {any_of,[binstr,{exact,null}]}}}},
+                                        {any_of,[binstr,{exact,null}]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type => {required,{enum,[plan]}},
-                                      text => {required,binstr}}},
+                                      text => {required,binstr},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type => {required,{enum,[reasoning]}},
                                       summary =>
                                        {optional,{default,{[],{list,binstr}}}},
                                       content =>
+                                       {optional,{default,{[],{list,binstr}}}},
+                                      startedAtMs =>
                                        {optional,
-                                        {default,{[],{list,binstr}}}}}},
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}}}},
                                    {struct,
                                     #{command => {required,binstr},
                                       id => {required,binstr},
@@ -19792,9 +22702,19 @@
                                         {default,
                                          {null,
                                           {any_of,[binstr,{exact,null}]}}}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       commandActions =>
                                        {required,
                                         {list,{ref,<<"CommandAction">>}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       aggregatedOutput =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
@@ -19814,6 +22734,16 @@
                                       status =>
                                        {required,{ref,<<"PatchApplyStatus">>}},
                                       type => {required,{enum,[fileChange]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       changes =>
                                        {required,
                                         {list,{ref,<<"FileUpdateChange">>}}}}},
@@ -19839,6 +22769,16 @@
                                       pluginId =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       durationMs =>
                                        {optional,
                                         {any_of,[integer,{exact,null}]}},
@@ -19864,14 +22804,24 @@
                                         {ref,<<"DynamicToolCallStatus">>}},
                                       type =>
                                        {required,{enum,[dynamicToolCall]}},
+                                      arguments => {required,term},
                                       success =>
                                        {optional,
                                         {any_of,[boolean,{exact,null}]}},
-                                      arguments => {required,term},
                                       namespace =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
                                       tool => {required,binstr},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       durationMs =>
                                        {optional,
                                         {any_of,[integer,{exact,null}]}},
@@ -19901,11 +22851,21 @@
                                       model =>
                                        {optional,
                                         {any_of,[binstr,{exact,null}]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       reasoningEffort =>
                                        {optional,
                                         {any_of,
                                          [{ref,<<"ReasoningEffort">>},
                                           {exact,null}]}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       agentsStates =>
                                        {required,
                                         {map,
@@ -19924,11 +22884,21 @@
                                       kind =>
                                        {required,
                                         {ref,<<"SubAgentActivityKind">>}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       reasoningEffort =>
                                        {optional,
                                         {any_of,
                                          [{ref,<<"ReasoningEffort">>},
                                           {exact,null}]}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       agentPath => {required,binstr},
                                       agentThreadId => {required,binstr}}},
                                    {struct,
@@ -19940,6 +22910,16 @@
                                         {any_of,
                                          [{ref,<<"WebSearchAction">>},
                                           {exact,null}]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       results =>
                                        {optional,
                                         {default,
@@ -19951,10 +22931,30 @@
                                       type => {required,{enum,[imageView]}},
                                       path =>
                                        {required,
-                                        {ref,<<"LegacyAppPathString">>}}}},
+                                        {ref,<<"LegacyAppPathString">>}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type => {required,{enum,[sleep]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       durationMs => {required,integer}}},
                                    {any_of,
                                     [{struct,
@@ -19971,6 +22971,21 @@
                                                <<"ImageGenerationFailure">>},
                                               {exact,null}]}}}},
                                         fileId => {required,binstr},
+                                        startedAtMs =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[integer,{exact,null}]}}}},
+                                        completedAtMs =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[integer,{exact,null}]}}}},
+                                        generationId =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[binstr,{exact,null}]}}}},
                                         inputImages =>
                                          {optional,
                                           {list,
@@ -20004,6 +23019,21 @@
                                                <<"ImageGenerationFailure">>},
                                               {exact,null}]}}}},
                                         result => {required,binstr},
+                                        startedAtMs =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[integer,{exact,null}]}}}},
+                                        completedAtMs =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[integer,{exact,null}]}}}},
+                                        generationId =>
+                                         {optional,
+                                          {default,
+                                           {null,
+                                            {any_of,[binstr,{exact,null}]}}}},
                                         inputImages =>
                                          {optional,
                                           {list,
@@ -20027,17 +23057,47 @@
                                     #{id => {required,binstr},
                                       type =>
                                        {required,{enum,[enteredReviewMode]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       review => {required,binstr}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type =>
                                        {required,{enum,[exitedReviewMode]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
                                       review => {required,binstr}}},
                                    {struct,
                                     #{id => {required,binstr},
                                       type =>
-                                       {required,
-                                        {enum,[contextCompaction]}}}}]},
+                                       {required,{enum,[contextCompaction]}},
+                                      startedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,[integer,{exact,null}]}}}},
+                                      completedAtMs =>
+                                       {optional,
+                                        {default,
+                                         {null,
+                                          {any_of,
+                                           [integer,{exact,null}]}}}}}}]},
                                 <<"McpToolCallResult">> =>
                                  {struct,
                                   #{'_meta' => {optional,term},
@@ -21523,6 +24583,8 @@
                                                   {any_of,
                                                    [{map,{binstr,term}},
                                                     {exact,null}]}}}},
+                                            <<"OtelHttpProtocol">> =>
+                                             {enum,[binary,json]},
                                             <<"LegacyAppPathString">> =>
                                              binstr,
                                             <<"NewThreadModelDefaults">> =>
@@ -21660,6 +24722,10 @@
                                                  {optional,
                                                   {any_of,
                                                    [boolean,{exact,null}]}}}},
+                                            <<"OtelToolResultLogConfig">> =>
+                                             {struct,
+                                              #{max_bytes =>
+                                                 {required,integer}}},
                                             <<"SandboxMode">> =>
                                              {enum,
                                               ['read-only','workspace-write',
@@ -21822,6 +24888,12 @@
                                                    [{ref,
                                                      <<"ModelsRequirements">>},
                                                     {exact,null}]}},
+                                                otel =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"OtelRequirements">>},
+                                                    {exact,null}]}},
                                                 sqliteHome =>
                                                  {optional,
                                                   {any_of,
@@ -21884,6 +24956,59 @@
                                                  {optional,
                                                   {any_of,
                                                    [boolean,{exact,null}]}}}},
+                                            <<"OtelRequirements">> =>
+                                             {struct,
+                                              #{tracestate =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{map,{binstr,term}},
+                                                    {exact,null}]}},
+                                                environment =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                exporter =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,<<"OtelExporter">>},
+                                                    {exact,null}]}},
+                                                log_agent_responses =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [boolean,{exact,null}]}},
+                                                log_guardian_assessments =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [boolean,{exact,null}]}},
+                                                log_sse_deltas =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [boolean,{exact,null}]}},
+                                                log_user_prompt =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [boolean,{exact,null}]}},
+                                                metrics_exporter =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,<<"OtelExporter">>},
+                                                    {exact,null}]}},
+                                                span_attributes =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{map,{binstr,term}},
+                                                    {exact,null}]}},
+                                                tool_result =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,
+                                                     <<"OtelToolResultLogConfig">>},
+                                                    {exact,null}]}},
+                                                trace_exporter =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [{ref,<<"OtelExporter">>},
+                                                    {exact,null}]}}}},
                                             <<"ResidencyRequirement">> =>
                                              {enum,[us]},
                                             <<"FeedbackRequirements">> =>
@@ -21904,6 +25029,61 @@
                                                   {any_of,
                                                    [{list,binstr},
                                                     {exact,null}]}}}},
+                                            <<"OtelExporter">> =>
+                                             {any_of,
+                                              [{enum,[none,statsig]},
+                                               {struct,
+                                                #{'otlp-http' =>
+                                                   {required,
+                                                    {struct,
+                                                     #{protocol =>
+                                                        {required,
+                                                         {ref,
+                                                          <<"OtelHttpProtocol">>}},
+                                                       headers =>
+                                                        {required,
+                                                         {map,
+                                                          {binstr,binstr}}},
+                                                       endpoint =>
+                                                        {required,binstr},
+                                                       tls =>
+                                                        {optional,
+                                                         {any_of,
+                                                          [{ref,
+                                                            <<"OtelTlsConfig">>},
+                                                           {exact,
+                                                            null}]}}}}}}},
+                                               {struct,
+                                                #{'otlp-grpc' =>
+                                                   {required,
+                                                    {struct,
+                                                     #{headers =>
+                                                        {required,
+                                                         {map,
+                                                          {binstr,binstr}}},
+                                                       endpoint =>
+                                                        {required,binstr},
+                                                       tls =>
+                                                        {optional,
+                                                         {any_of,
+                                                          [{ref,
+                                                            <<"OtelTlsConfig">>},
+                                                           {exact,
+                                                            null}]}}}}}}}]},
+                                            <<"OtelTlsConfig">> =>
+                                             {struct,
+                                              #{'ca-certificate' =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                'client-certificate' =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}},
+                                                'client-private-key' =>
+                                                 {optional,
+                                                  {any_of,
+                                                   [binstr,{exact,null}]}}}},
                                             <<"AllowDenyRequirement">> =>
                                              {enum,[allow,deny]},
                                             <<"ApplicationRequirements">> =>
@@ -22073,7 +25253,10 @@
                                        {required,
                                         {any_of,[binstr,{exact,null}]}},
                                       planType =>
-                                       {required,{ref,<<"PlanType">>}}}},
+                                       {required,{ref,<<"PlanType">>}},
+                                      workspaceName =>
+                                       {optional,
+                                        {any_of,[binstr,{exact,null}]}}}},
                                    {struct,
                                     #{type =>
                                        {required,{enum,[amazonBedrock]}},
@@ -22451,7 +25634,10 @@
                                            {required,
                                             {list,
                                              {ref,
-                                              <<"ThreadUsageBreakdownGroup">>}}}}},
+                                              <<"ThreadUsageBreakdownGroup">>}}},
+                                          nativeUsageUsdMicros =>
+                                           {optional,
+                                            {any_of,[integer,{exact,null}]}}}},
                                       <<"ThreadUsageBreakdownGroup">> =>
                                        {struct,
                                         #{speed =>
@@ -22552,7 +25738,10 @@
                                                           {required,
                                                            {ref,
                                                             <<"AddCreditsNudgeEmailStatus">>}}}}}}},
-    {hooks_list_params, {struct,#{cwds => {optional,{list,binstr}}}}},
+    {hooks_list_params, {struct,
+                            #{threadId =>
+                                  {optional,{any_of,[binstr,{exact,null}]}},
+                              cwds => {optional,{list,binstr}}}}},
     {hooks_list_response, {with_defs,
                            {#{<<"AbsolutePathBuf">> => binstr,
                               <<"HookErrorInfo">> =>
@@ -22578,6 +25767,8 @@
                                      {required,{ref,<<"HookSource">>}},
                                     sourcePath =>
                                      {required,{ref,<<"AbsolutePathBuf">>}},
+                                    environmentId =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     pluginId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     displayOrder => {required,integer},
@@ -22605,6 +25796,8 @@
                                     sourcePath =>
                                      {required,{ref,<<"AbsolutePathBuf">>}},
                                     tool => {required,binstr},
+                                    environmentId =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     pluginId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     displayOrder => {required,integer},
@@ -22630,6 +25823,8 @@
                                      {required,{ref,<<"HookSource">>}},
                                     sourcePath =>
                                      {required,{ref,<<"AbsolutePathBuf">>}},
+                                    environmentId =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     pluginId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     displayOrder => {required,integer},
@@ -22655,6 +25850,8 @@
                                      {required,{ref,<<"HookSource">>}},
                                     sourcePath =>
                                      {required,{ref,<<"AbsolutePathBuf">>}},
+                                    environmentId =>
+                                     {optional,{any_of,[binstr,{exact,null}]}},
                                     pluginId =>
                                      {optional,{any_of,[binstr,{exact,null}]}},
                                     displayOrder => {required,integer},
