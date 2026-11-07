@@ -1,6 +1,7 @@
-# Codex 0.165.0 x86_64-unknown-linux-musl
-5e874c18162cf492481cef6e5dff5e88c91d3dc70bd0558738116b8723e1fb7c  bin/codex-app-server
-0288e565a758e43d9603afb295c3e74d66f9b82113040caddb06e3f3c6eddd1d  bin/codex-code-mode-host
-74b6c75e7e2c606ebbdf1e314fbe276dc1e3bb3b8617ba1429025be8029646a8  codex-package.json
+# Codex 0.167.0 x86_64-unknown-linux-musl
+94d8d5f26531a1846c5d943eef57d7ab80b1eef86b6edf5a3b4a78fb8bf063ee  bin/codex-app-server
+f0e4089289214279a161029f66efc61cfbd36472132e201af00e7b5de22bf69b  bin/codex-code-mode-host
+a2ee2f19c05777eb09f9af6e66417314165f2609f74e4f39c6759b97fa8d1524  bin/codex-exec-server
+ceae638a6a3752b6eeee20586b0aa6a14fd78e128f8d6b4c2b07b68be3925606  codex-package.json
 e62198eb19b136b88c330af83647b5a962cb99b6b1f066758568f12de1974849  codex-path/rg
-755c8d6a9b893905a4aabab058bd6c02c453e5e8653adb84fc08e570607f3f36  codex-resources/bwrap
+77360cb751ccedc5971391444ac86a8a33c15b04d6b4a6fe45f5d25496e62c4c  codex-resources/bwrap
